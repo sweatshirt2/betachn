@@ -6,3 +6,6 @@ export * from './sessions.model';
 export * from './people.model';
 export * from './roles.model';
 export * from './identity.relations';
+export * from './home.model';
+export * from './resources.model';
+export * from './home-resources.relations';
