@@ -13,6 +13,11 @@
     "db:migrate": "pnpm --filter @chorify/db migrate",
     "db:seed": "pnpm --filter @chorify/db seed"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "typescript": "^5.7.2"
