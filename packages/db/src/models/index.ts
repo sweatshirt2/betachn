@@ -1,4 +1,8 @@
-// Domain model barrels land here (household, people, roles, responsibilities,
-// occurrences, rooms, assets, supplies, shopping, activity, notifications…).
-// drizzle-kit points at this folder.
-export {};
+// Domain models. drizzle-kit points at this folder; every table and its
+// relations() must be re-exported here for the relational query builder.
+export * from './households.model';
+export * from './users.model';
+export * from './sessions.model';
+export * from './people.model';
+export * from './roles.model';
+export * from './identity.relations';
