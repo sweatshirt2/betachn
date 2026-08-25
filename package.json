@@ -1,0 +1,20 @@
+{
+  "name": "chorify",
+  "private": true,
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --stream run dev",
+    "test": "pnpm -r run test",
+    "typecheck": "pnpm -r run typecheck",
+    "db:generate": "pnpm --filter @chorify/db generate",
+    "db:migrate": "pnpm --filter @chorify/db migrate",
+    "db:seed": "pnpm --filter @chorify/db seed"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2"
+  }
+}
