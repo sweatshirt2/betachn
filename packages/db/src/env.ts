@@ -1,5 +1,10 @@
-import { z } from 'zod';
+import { join } from 'node:path';
+import { config as loadDotenv } from 'dotenv';
 
+// Repo-root .env (gitignored); no-op when the file is absent.
+loadDotenv({ path: join(import.meta.dirname, '../../../.env') });
+
+import { z } from 'zod';
 const envSchema = z.object({
   DATABASE_URL: z
     .string()
