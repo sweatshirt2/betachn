@@ -9,3 +9,6 @@ export * from './identity.relations';
 export * from './home.model';
 export * from './resources.model';
 export * from './home-resources.relations';
+export * from './scheduling.model';
+export * from './social.model';
+export * from './scheduling-social.relations';
