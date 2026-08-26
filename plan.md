@@ -1,9 +1,9 @@
 # Chorify — Master Plan & Decision Record
 
 **Project:** Household Operating System + Household-Only Financial Tracker (first market: Ethiopia)
-**Working directory:** `/home/bekur/Desktop/vibes/chorify` (empty except this file — no code written yet)
-**Document status:** Planning complete; awaiting user's execution command. This file is the single source of truth. It supersedes all prior chat context — a fresh session must be able to continue planning or start implementing from here alone.
-**Canonical internal copy:** session-local `local://chorify-mvp-plan.md` (slug `chorify-mvp`). Keep byte-identical when editing.
+**Working directory:** `/home/bekur/Desktop/vibes/chorify`
+**Document status:** Planning complete; implementation IN PROGRESS — see **§16 Implementation Status & Hand-off** for exactly what exists (with commit hashes), what is verified, and what comes next. This file is the single source of truth and supersedes all prior chat context.
+**Canonical internal copy:** the planning-era `local://chorify-mvp-plan.md` predates code and is NO LONGER kept in sync — this on-disk file is authoritative.
 
 ---
 
@@ -13,7 +13,7 @@
 2. Check **§1 Decision History** — every choice below is traceable to an explicit user answer; do not relitigate settled questions unless the user reopens them.
 3. Check **§10 Explicitly Rejected / Removed** — never reintroduce these (rewards/points, leaderboards/ranking, loans/debt, resident/dependent classification, refusal workflow, silent-merge imports, etc.).
 4. If continuing planning: work the **§13 Open Items / Future Backlog**, update this file, keep the local copy in sync.
-5. If implementing: follow **§12 Implementation Order** strictly; prove work with **§11 Verification**. Do not scaffold anything until the user says execute.
+5. If implementing: start at **§16 Implementation Status & Hand-off** (exact progress + next actions), then follow **§12 Implementation Order**; prove work with **§11 Verification**.
 6. Known harness issue: the plan-approval device (`xd://propose`) has been failing with "No plan is awaiting approval" (see **Appendix B**) — approvals have been happening via direct user commands in chat instead.
 7. Reference convention: **CN §n** refers to section *n* of the original concept note (summarized in §2 below with its numbering preserved).
 
@@ -557,11 +557,12 @@ Auth-iteration removals (Turns 13+): printed recovery/backup codes (Google + ver
 
 **Commit discipline (user law, D47):** many small commits over bulky ones — one concern per commit; aim ≤ ~300 changed lines; conventional messages (`feat(chores): …`, `fix(db): …`, `chore(worker): …`); commit at every green checkpoint (a §12 step completed, or a passing test batch) instead of accumulating multi-feature diffs; refactors ride ALONE in their own commits, never mixed into features; generated artifacts (drizzle migrations, PWA icons) commit separately from hand-written edits; working tree clean before any hand-off.
 
-1. Scaffold workspaces, tsconfig base, Tailwind v4 in web, `.env.example`, root scripts. ✅ done (`chore(repo)`)
-2. packages/db — pg schema per §4.5 (+indexes §9), drizzle-kit generate+migrate, seed.ts per §7. ✅ done
-3. packages/core — zod contracts (mobile truth), permissions, schedule, calendar, txt, notify, activity builders, service modules — **dialect-neutral over the injected executor** (must run against pg AND sqlite executors).
-4. **packages/local-db** — SQLite-WASM/OPFS mirrors of all tables (sqlite-core dialect), own drizzle migration track, `pending_ops` queue, capability ladder (OPFS → IndexedDB-VFS → online-mode), passcode gate/encryption hooks.
-5. **Sync engine** — push/pull/bootstrap clients, flusher triggers (on-write acks, reconnect, focus, 30s interval), LWW application + conflict notifications, stale-banner state.
+1. Scaffold workspaces, tsconfig base, Tailwind v4 in web, `.env.example`, root scripts. ✅ DONE
+2. packages/db — pg schema per §4.5 (+indexes §9), drizzle-kit generate+migrate, seed.ts per §7. ✅ DONE (migrations 0000+0001 applied; fixture verified)
+3. packages/core — zod contracts (mobile truth), permissions, schedule, calendar, txt, notify, activity builders, service modules — **dialect-neutral over the injected executor** (must run against pg AND sqlite executors). ◐ STARTED: errors/permissions/schedule engines + ports kernel + auth/households/sync/occurrences contracts & rules all DONE with 53 tests; REMAINING: calendar.ts, txt.ts, notify.ts, activity builders, per-domain service classes, Executor typing unification. Detail → §16.
+4. **packages/local-db** ⬜ NOT STARTED — SQLite-WASM/OPFS mirrors of all tables (sqlite-core dialect), own drizzle migration track, `pending_ops` queue, capability ladder (OPFS → IndexedDB-VFS → online-mode), passcode gate/encryption hooks.
+5. **Sync engine** ⬜ NOT STARTED — push/pull/bootstrap clients, flusher triggers (on-write acks, reconnect, focus, 30s interval), LWW application + conflict notifications, stale-banner state.
+
 6. Auth services + middleware (session→activePerson, requirePermission, view-as gate, Postgres rate limiter) + routes: /auth/register-online (google|phone) · /auth/login {code,username,password} · /auth/google · /auth/link-google · /auth/logout · /me · /profiles · /profiles/switch.
 7. People/roles routes (reset, LAST_OWNER, R2 contact enforcement on owner-targeted creation/promotion).
 8. Responsibilities/routines/occurrences routes + /today aggregate.
@@ -578,6 +579,8 @@ Auth-iteration removals (Turns 13+): printed recovery/backup codes (Google + ver
 19. Full §11 verification pass; fix and re-run until green.
 
 Dependencies: 3 unblocks (4..10 ∥); 4→5 before 12; frontend 12→(13..17 in route order as APIs land)→18→19.
+
+Live progress ledger for every step: **§16 Implementation Status & Hand-off**.
 
 ---
 
@@ -648,3 +651,38 @@ Finance module schema + flows (income/expense/account/bill/budget/goal, assigned
 ## 15. Appendix B — Harness Issue Log
 
 `xd://propose` rejected every submission while plan mode was active — verbatim error: *"No plan is awaiting approval — xd://propose only accepts a plan title while plan mode is active."* Attempts: 7 (payload formats tried: `slug:/title:` pair · `Title [slug]` · bare slug · repeat after report). Reported via `xd://report_issue` (acknowledged, unfixed). Consequence: approvals proceeded via direct user commands in chat. Any new session hitting this should not stall — record and continue per user instruction.
+
+
+---
+
+
+## 16. Implementation Status & Hand-off (live ledger — update at every green checkpoint)
+
+**Last updated:** end of the scaffold→core build session. Working tree clean. HEAD at hand-off: `docs: register ports kernel and households/sync domains in anatomy` (preceded by `feat(core)` ×2, `chore(db)`, `feat(db)`, `docs` D49–D66).
+
+### 16.1 What exists — verified green
+
+| Layer | State | Notes / evidence |
+|---|---|---|
+| Workspace scaffold | ✅ | Root scripts dev/test/typecheck/db:generate/db:migrate/db:seed; tsconfig.base strict + noUncheckedIndexedAccess + `@chorify/*` path aliases; `.env.example`; pnpm 10.33 / Node 22.12 |
+| packages/db | ✅ | 24 tables per §4.5 (incl. oauth_accounts, verification_challenges, auth_attempts, blocklist_words, household_changes); migrations **0000 + 0001 applied**; drizzle client + `withTransaction` + fail-fast zod env; seed.ts re-runnable fixture — login `hana / hana1234`, household code `BEKELE`, blocklist seeded (25 words), 43 occurrences (30 pending / 12 completed / 1 missed) |
+| apps/worker | ✅ shell only | Express :4001 + pg-boss started; `/health`; `/admin/jobs` + `/admin/jobs/:name/run` behind timing-safe WORKER_ADMIN_TOKEN bearer; writes jobs_audit; `jobRegistry` intentionally EMPTY until §12 step 11 lands real handlers (unknown job ⇒ 404 envelope). Live-smoked: 401 no/bad token · 200 with token · 404 unknown |
+| packages/core | ◐ ~60% | ✅ errors kernel (`AppError` frozen codes) · permissions kernel (catalog, 11 factory matrices, 4-tier resolvePermission, requirePermission) · schedule engine (`expandRule` all 8 patterns, anchored rotation, date helpers) · **ports kernel** (Clock, IdGenerator, RandomSource, PasswordHasher, BlocklistChecker — DIP seams) · modules/auth (zod wire contracts register-online/login/link-google/switch-profile; username/password/E.164 helpers; R2 blocker rules) · modules/households (code plausibility/normalization/collision+blocklist generation loop) · modules/sync (DOMAIN_VIEW_KEY gate + live symbolic-audience `matchesViewer`) · modules/occurrences (grace-window cadence table). **53 tests / 6 files green** |
+| apps/web | ⬜ nothing yet |
+| packages/local-db | ⬜ nothing yet |
+
+### 16.2 What's left, in execution order
+
+1. **Finish core step-3 remainder:** `txt.ts` (serialize/parse + roundtrip test), `notify.ts` recipient resolver (+prefs-filter tests), `calendar.ts` (Gregorian↔Ethiopic; Node ICU lacks ethioptic calendar — use arithmetic conversion table), activity event builders; then per-domain **service classes** (executor-injected, transaction-wrapped). FIRST decide the dialect-neutral Executor typing (recommendation: minimal structural interface in a core kernel; pg/sqlite adapters cast at their package edges). Auth services consume auth.rules verbatim — contracts are frozen.
+2. **packages/local-db** (§12 step 4): sqlite-core mirrors, own drizzle migration track, `pending_ops`, capability ladder OPFS→IDB-VFS→online-mode, passcode gate/AES-GCM hooks (D63).
+3. **Sync engine** (step 5): push/pull/bootstrap clients, flusher triggers, LWW apply + coalesced conflict notifications (`sync.changeOverwritten`/`changeRejected`), stale-banner state machine (D65 thresholds).
+4. Steps 6–11: routes (auth routes enforce uniform-error + Postgres rate limiter via auth_attempts; people/roles call accountCreationBlockers/promotionBlockers for R2; occurrences reuse graceWindowDays) and worker jobs incl. household_changes pruning.
+5. Steps 12–19 web foundation → screens → Amharic parity → full §11 pass (item 7 = auth & sync scenarios).
+
+### 16.3 Session gotchas (learned the hard way)
+
+- The drizzle migration journal lives in schema **`drizzle`**, not `public` — wiping `public` alone leaves a stale journal and the next migrate skips 0000 (hit this; fixed by dropping both schemas).
+- Adding a NOT NULL column to a non-empty table fails plain ALTER (`households.code`) — dev DBs: rebuild from migrations instead of editing generated SQL.
+- tsx auto-injects repo-root `.env` AND `db/env.ts` calls dotenv explicitly — idempotent, keep both.
+- Worker runs as hub process name `worker` (`pnpm --filter @chorify/worker dev`); stopped at hand-off.
+- Test fakes pattern: deterministic `RandomSource` replays scripted strings then falls back — reuse for any new randomness-dependent rule.
