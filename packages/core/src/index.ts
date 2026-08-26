@@ -10,6 +10,7 @@ export * from './modules/auth';
 export * from './modules/households';
 export * from './modules/occurrences';
 export * from './modules/people';
+export * from './modules/portability';
 export * from './modules/home';
 export * from './modules/responsibilities';
 export * from './modules/resources';

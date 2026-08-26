@@ -87,15 +87,23 @@ export class AuthService {
 
     const passwordHash = await this.hasher.hash(input.password);
     return this.uow.transact(async (tx) => {
+      // Placeholder person gives the pre-import session a seat; /import
+      // adoption repoints onto the imported owner and deletes it (S4.11).
+      const [placeholder] = await tx.insert(people).values({
+        householdId: household.id,
+        name: input.username,
+        avatarEmoji: '👤',
+        permissionOverrides: {},
+      }).returning();
+      const personId = String(placeholder!.id);
       const [user] = await tx.insert(users).values({
         username: input.username,
         passwordHash,
         phone: input.phone,
-        personId: null,
+        personId,
         householdId: household.id,
       }).returning();
       const created = insertedUserRow.parse(user);
-      // activePerson attaches once import/profile setup maps a seat.
       return this.mintSessionTx(tx, created.id, created.personId, household.id);
     });
   }
@@ -114,11 +122,18 @@ export class AuthService {
       if (linked) {
         throw new AppError('CONFLICT', 'This Google account is already linked to another user');
       }
+      const [placeholder] = await tx.insert(people).values({
+        householdId: household.id,
+        name: 'Me',
+        avatarEmoji: '👤',
+        permissionOverrides: {},
+      }).returning();
+      const personId = String(placeholder!.id);
       const [user] = await tx.insert(users).values({
         username: null,
         passwordHash: null,
         phone: null,
-        personId: null,
+        personId,
         householdId: household.id,
       }).returning();
       await tx.insert(oauthAccounts).values({
