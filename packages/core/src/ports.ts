@@ -29,3 +29,14 @@ export interface PasswordHasher {
 export interface BlocklistChecker {
   isBlocked(word: string): boolean | Promise<boolean>;
 }
+
+/** Cryptographically strong session-token material (base64url) — distinct
+ * from RandomSource's A-Z alphabet, which exists for human-typable codes. */
+export interface SecureTokens {
+  nextToken(byteLength?: number): string;
+}
+
+/** Sessions persist ONLY the digest of the raw bearer token (§8). */
+export interface TokenDigester {
+  sha256(value: string): string;
+}

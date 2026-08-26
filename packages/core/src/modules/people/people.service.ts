@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { activityEvents, oauthAccounts, people, roles, sessions, users } from '@chorify/db';
 import { buildActivity } from '../../activity';
+import { allPermKeys, resolvePermission, type PermissionMap } from '../../permissions';
 import { AppError } from '../../errors';
 import type { Executor, UnitOfWork } from '../../db';
 import { accountCreationBlockers, promotionBlockers } from '../auth';
@@ -231,4 +232,35 @@ export async function ownerHolderPersonIds(exec: Executor, householdId: string):
     with: { role: { columns: { isOwnerRole: true } } },
   }) as unknown as RoleFlagRow[];
   return rows.filter((r) => r.role?.isOwnerRole === true).map((r) => r.id);
+}
+
+/** Full display/authorization map for a person — overrides > owner > role > false. */
+export async function permissionMapForPerson(exec: Executor, personId: string) {
+  const rows = await exec.query.people!.findMany({
+    where: eq(people.id, personId),
+    columns: { id: true, permissionOverrides: true },
+    with: { role: { columns: { isOwnerRole: true, permissions: true } } },
+  }) as unknown as Array<{
+    id: string;
+    permissionOverrides: Partial<Record<string, boolean>>;
+    role: { isOwnerRole: boolean; permissions: Record<string, boolean> } | null;
+  }>;
+  const row = rows[0];
+  if (!row) throw new AppError('NOT_FOUND', 'Person not found');
+  const map = {} as PermissionMap;
+  for (const key of allPermKeys()) {
+    map[key] = resolvePermission(
+      {
+        permissionOverrides: row.permissionOverrides as Partial<PermissionMap>,
+        role: row.role
+          ? {
+              isOwnerRole: row.role.isOwnerRole,
+              permissions: row.role.permissions as Partial<PermissionMap>,
+            }
+          : null,
+      },
+      key,
+    );
+  }
+  return map;
 }
