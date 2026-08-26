@@ -4,3 +4,5 @@ export * from './permissions';
 export * from './schedule';
 export * from './modules/auth';
 export * from './modules/households';
+export * from './modules/occurrences';
+export * from './modules/sync';
