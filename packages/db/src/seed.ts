@@ -13,6 +13,7 @@ import {
   activityEvents,
   assets,
   assignmentRules,
+  blocklistWords,
   households,
   occurrences,
   people,
@@ -49,15 +50,26 @@ async function main(): Promise<void> {
     TRUNCATE households, users, sessions, people, roles, routines, responsibilities,
       subtasks, assignment_rules, occurrences, rooms, assets, service_records,
       supplies, shopping_items, activity_events, notifications, notification_prefs,
-      jobs_audit RESTART IDENTITY CASCADE
+      jobs_audit, oauth_accounts, household_changes RESTART IDENTITY CASCADE
   `);
 
+
+  // ── Household-code blocklist (config-like; idempotent) ───────────────────
+  const STARTER_BLOCKLIST = [
+    'anal', 'anus', 'bastard', 'bitch', 'boobs', 'cock', 'cunt', 'dick', 'fag',
+    'fart', 'fuck', 'hitler', 'jihad', 'nazi', 'nigger', 'penis', 'porn', 'pussy',
+    'rape', 'sex', 'shit', 'slut', 'terror', 'vagina', 'whore',
+  ];
+  await db
+    .insert(blocklistWords)
+    .values(STARTER_BLOCKLIST.map((word) => ({ word })))
+    .onConflictDoNothing();
   const today = todayISO();
 
   // ── Household ────────────────────────────────────────────────────────────
   const [household] = await db
     .insert(households)
-    .values({ name: 'Bekele Family' })
+    .values({ name: 'Bekele Family', code: 'BEKELE' })
     .returning();
   if (!household) throw new Error('seed: household insert failed');
 

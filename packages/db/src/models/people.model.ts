@@ -18,6 +18,7 @@ export const people = pgTable('people', {
     .$type<Record<string, boolean>>()
     .notNull()
     .default({}),
+  phone: text('phone'),
   language: text('language'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });

@@ -11,4 +11,7 @@ export * from './resources.model';
 export * from './home-resources.relations';
 export * from './scheduling.model';
 export * from './social.model';
+export * from './security.models';
+export * from './sync.models';
+export * from './security-sync.relations';
 export * from './scheduling-social.relations';
