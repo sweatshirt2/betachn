@@ -92,6 +92,9 @@ User set binding engineering laws for all future code: modular backend folders p
 ### Turn 11 — Five technical threads locked (Q&A)
 Assistant proposed, user decided: **completion conflicts = first-write-wins** (`409 ALREADY_DONE`, history stays truthful) · **error-code set expanded + UX map frozen** (adds VALIDATION_ERROR 422, RATE_LIMITED 429, ALREADY_DONE 409) · **workspace TS strategy = internal TS-source packages** (`@chorify/core`, `@chorify/db` consumed as source; Next transpiles; worker under tsx) · **Drizzle reads = relational-first** (typed `relations()` everywhere; joins/sql only for aggregates; zod-parse at service boundary) · **offline outbox = allowlist** after a worked-example deep-dive: six self-contained idempotent mutation types queue offline, everything else disables-with-hint. User amendments on the allowlist: **cap raised to ~100** (soft warning at 80, oldest-evicted with visible notice), plus two laws — **loading/disabled button discipline** everywhere and an explicit **idempotency stack** (client-intent uuid header + local dedupe + convergent server semantics).
 
+### Turns 13+ — Auth redesign & local-first pivot (user-driven scope expansion)
+User reopened deferred connected-tier identity and pulled true local-first storage into v1. Iterated over multiple grilling rounds (assistant challenged: Google phone-scope reality, shared-family-phone norms, composite-username recall, SIM-swap, recovery gaps, offline-vs-server architecture cost). Outcomes codified as **D49–D66** with §4.5/§4.6/§4.12/§4.14 rewrites. Key reversals of earlier defaults: outbox allowlist (D41/D42) superseded by universal local-first sync; global username uniqueness replaced by per-household two-field login; standalone email signup dropped in favor of Google-only SSO; recovery codes rejected (Google + later-OTP only). Full Q&A lives in session transcript; this file is authoritative.
+
 ---
 
 ## 2. Product Definition — Complete Requirements Digest (from the original concept note)
@@ -232,10 +235,10 @@ Node v22.12.0 · pnpm 10.33.2 · Linux x64 · dev ports: web :3000, worker :4001
 ### 4.5 Data model (packages/db/src/schema.ts) — complete
 Conventions: every table has `id uuid pk default gen_random_uuid()`, `createdAt timestamptz default now()` unless noted; household-scoped tables carry `householdId uuid not null`.
 
-- **households**: `name text` · `currency text default 'ETB'` · `timezone text default 'Africa/Addis_Ababa'` · `lastExportAt timestamptz null`. (Calendar preference deliberately NOT here — device-level per CN §86.)
-- **users**: `username text unique` · `passwordHash text` (argon2; REQUIRED whenever a user row exists) · `personId uuid null` · `householdId uuid null`. Credential doctrine: person **with** user row = credentialed identity (password-gated switching; max ONE user per person); person **without** = passwordless quick-switch profile (children default).
+- **households**: `name text` · `code text` (6 random A-Z letters, unique, immutable, blocklist-checked — D52) · `currency text default 'ETB'` · `timezone text default 'Africa/Addis_Ababa'` · `syncedAt timestamptz null` (null = offline-only household) · `lastExportAt timestamptz null`. (Calendar preference deliberately NOT here — device-level per CN §86.)
+- **users**: `username text` · `passwordHash text null` (argon2; nullable because Google-only accounts may have no password — D50) · `phone text null` (E.164, GLOBALLY UNIQUE recovery credential, D55) · `personId uuid null` · `householdId uuid null`. Credential doctrine: person **with** user row = credentialed identity (password-gated switching; max ONE user per person); person **without** = passwordless quick-switch profile. Username uniqueness is `(householdId, lower(username))`, NOT global.
 - **sessions**: `userId uuid null` · `activePersonId uuid not null` · `tokenHash text` (sha256 of 32-byte random token; raw token only ever in cookie/body) · `expiresAt` (sliding 30-day). One session per login; **profile switching mutates activePersonId (+userId when target credentialed)** instead of minting sessions.
-- **people**: `name text` · `sex text null` (`male|female` only, CN §30) · `birthDate date null` · `age int null` (when birthDate unknown; suggestions only) · `avatarEmoji text default '🙂'` · `roleId uuid null` · `permissionOverrides jsonb default '{}'` (partial Record<PermKey,boolean>) · `language text null` (reserved connected-tier; device localStorage governs v1).
+- **people**: `name text` · `sex text null` (`male|female` only, CN §30) · `birthDate date null` · `age int null` (when birthDate unknown; suggestions only) · `avatarEmoji text default '🙂'` · `roleId uuid null` · `permissionOverrides jsonb default '{}'` (partial Record<PermKey,boolean>) · `phone text null` (contact info; duplicates legal, optional on add-member form — D55) · `language text null` (reserved connected-tier; device localStorage governs v1).
 - **roles**: `builtinKey text null` (set on the 11 presets) · `name text` · `description text null` · `isOwnerRole boolean default false` · `isBuiltin boolean` · `permissions jsonb` (complete Record<PermKey,boolean>) · `defaultPermissions jsonb` (reset snapshot: factory matrix for builtins; copy of permissions at creation for custom).
 - **routines**: `name` · `icon text default '🌅'` · `timeBucket text` (`morning|afternoon|evening|anytime`).
 - **responsibilities**: `title` · `notes text null` · `routineId uuid null` · `roomId uuid null` · `archivedAt timestamptz null` · `createdByPersonId uuid null` · `icon text default '📌'`.
@@ -251,19 +254,33 @@ Conventions: every table has `id uuid pk default gen_random_uuid()`, `createdAt 
 - **notifications**: `recipientPersonId` · `category text` (`assignment|reminder|completion|missed|finance|bill|backup`) · `type text` (i18n key like `notify.reminder.digest`) · `paramsJson jsonb` · `linkPath text null` · `readAt timestamptz null`. **No persisted prose — clients localize historical entries.**
 - **notification_prefs**: `personId pk` · `categories jsonb` (partial toggles; defaults all-true except finance/bill false).
 - **jobs_audit**: `name text` · `ranAt timestamptz` · `result jsonb` (worker bookkeeping surfaced by admin endpoint).
+- **oauth_accounts**: `userId` · `provider text default 'google'` · `providerAccountId text` · UNIQUE(provider, providerAccountId) — one identity ↔ one user (D50).
+- **verification_challenges**: `kind text` (`sms|email`) · `targetNormalized text` · `codeHash text` · `expiresAt` · `attempts int` — reserved until the SMS milestone; unused rows pruned by a worker job.
+- **auth_attempts**: `identifier text` · `ip text` · `windowStart timestamptz` · `count int` — Postgres-backed rate limiter (D66).
+- **blocklist_words**: `word text pk` — seeded via migration, maintained as data; checked at household-code generation (D52).
+- **household_changes**: sync feed per §4.12 — `householdId` · `seq bigint` (per-household monotonic) · `actorPersonId` · `entity text` · `entityId` · `op text` (`create|update|delete`) · `payload jsonb` (after-state) · `audienceType text` (`members|roles|all`) · `audienceIds jsonb` (symbolic, evaluated live at pull) · `domain text` (permission gate) · `createdAt`. Index (householdId, seq); pruned past 90 days by a worker job.
 
 No loans/debt tables (CN exclusion). No rewards/points tables (user removal, Turn 7).
 
-### 4.6 Identity, auth, sessions, profile switching
-- Register: username+password+displayName → single transaction creates: user · household · creator person attached to a preset role **cloned with isOwnerRole=true** · all 11 builtin role rows · starter template rows. Auto-login.
-- Login: verify argon2 hash → create session row (random 32-byte token; sha256 stored) → returns `{token, user, activePerson, household, permissionMap}`. **Bearer-token-only transport (user decision D36):** no cookies; the axios request interceptor attaches `Authorization: Bearer <token>` from the RTK slice; redux-persist keeps it in localStorage (Flutter later: secure storage). Logout deletes the session server-side and clears redux-persist + query cache.
-- `/me` returns `{user, activePerson, household, permissionMap}` for the current session.
-- Profiles: `GET /profiles` → people each flagged `{requiresPassword}` (=has linked user). `POST /profiles/switch {personId, password?}`: target credentialed → password REQUIRED, verified against THAT user (`401 PASSWORD_REQUIRED` absent · `401 WRONG_PASSWORD` incorrect); target passwordless → instant switch. Session mutates in place.
-- Every request resolves permissions from `session.activePersonId`.
-- View-as (owner simulation): header `X-View-As-Person-Id`, allowed only if actor resolves `configure_permissions` OR `manage_ownership`; **strictly read-only — any mutation returns `403 VIEW_AS_READONLY`**; acting for someone happens via profile switch.
-- Self-service: change OWN password freely; create/change ANOTHER person's account requires `configure_permissions`.
-- Person deletion cascades linked user + revokes their sessions (LAST_OWNER still guards). Activity keeps actor ids displayable.
-- Security: login rate limit 5 failures/min per username+IP (in-memory); sessions never store raw tokens.
+### 4.6 Identity, auth, sessions, profile switching (rewritten — D49–D57)
+**Signup modes.**
+- **Offline-local (default, D49):** create household with zero credentials — name + auto-generated code; creator person attached to a preset role cloned with `isOwnerRole=true`; all 11 builtin roles; starter templates. Rows live ONLY in the device DB (§4.12). No account, no server contact, fully usable forever.
+- **Continue-with-Google (D50):** real OAuth chooser; Google-verified email counts as the contact; password optional afterwards (nullable hash); later username+password login possible once set.
+- **Phone-collect + password (D51):** phone stored unverified (E.164), password ≥6 required. Verification arrives with the SMS vendor milestone; until then collected numbers NEVER appear in recovery UI. Standalone email-field signup: none — Google owns verified-email identity.
+
+**Household codes & usernames (D52/D53):** code = 6 random A-Z letters, collision-retried against existing households AND the persistent `blocklist_words` table, immutable, case-insensitive input, shown in Settings/TXT header/login field. Username = `^[A-Za-z]{2,30}$`, unique `(householdId, lower(username))`, chosen at creation (self or owner-created members) with a Generate button emitting 3–6 pronounceable letters; typed nicknames encouraged.
+
+**Owner asymmetry (R2, D54):** an account created FOR an owner-role holder requires a phone number; promoting a contactless person to owner is blocked (`409 CONFLICT`-family error with clear copy); the initial creator is exempt and may remain contactless (residual lockout risk accepted, D56 — Settings nags until a recovery method exists).
+
+**Login:** form = `{code, username, password}` (code+username case-insensitive) OR the Google button (OAuth identity lookup replaces the form). Unknown code / unknown username / wrong password return ONE uniform generic error (no enumeration, D66). Rate limiting via Postgres-backed attempts table: 5 failures/min per identifier+IP.
+
+**Sessions & switching (unchanged core):** argon2 hashes; session rows store sha256(32B token) only; Bearer-only transport (D36); `/me`, `GET /profiles`, `POST /profiles/switch {personId,password?}` semantics exactly as before — credentialed targets demand that user's password (`401 PASSWORD_REQUIRED`/`WRONG_PASSWORD`), passwordless switch instantly; permissions always resolve from `session.activePersonId`. Device passcode layer per §4.12/D63 sits ON TOP for shared devices.
+
+**Google linking rules (D50):** one OAuth identity ↔ one user globally; linking Google to an existing phone/password account requires fresh password confirmation; unlink keeps credentials if password exists else blocked.
+
+**Recovery (D51/D56):** Google-button sign-in is always available to linked users regardless of password state. OTP-by-SMS unlocks only after the vendor lands AND only for numbers that completed verification. Recovery codes were considered and REJECTED. Owner password resets by another person still require `configure_permissions`; self-service own-password change remains free; person deletion cascades user + sessions (LAST_OWNER guards).
+
+**View-as:** unchanged — `X-View-As-Person-Id`, gated on `configure_permissions`/`manage_ownership`, strictly read-only (`403 VIEW_AS_READONLY`).
 
 ### 4.7 Permission system (packages/core/src/permissions.ts)
 Catalog (domain → keys), fixed forever:
@@ -324,21 +341,26 @@ Activity events persist `{type, params}` + permission `domain`; feed filtered se
 Export: `GET /api/v1/export/household.txt` → `### CHORIFY-HOUSEHOLD v1` header line + pretty-printed JSON of all household tables (EXCLUDES password hashes/sessions/user credentials — CN §62 "your password is not included"); sets households.lastExportAt; Content-Disposition filename `My-Household-YYYY-MM-DD.txt`.
 Import: `POST /api/v1/import` text/plain. Validate header + shape. Version ≤ current major required (`409 IMPORT_TOO_NEW` otherwise; older majors parse leniently). **Conflict policy: any target-household rows beyond the registering trio (own user/person/household) → `409 IMPORT_CONFLICT`, zero writes** (CN §67 message shown verbatim in UI). Fresh adoption maps importer onto imported owner seat: `users.personId` repoints to imported owner-role holder, placeholder register-person deleted, everything else adopted verbatim, one transaction; session stays valid.
 
-### 4.12 Offline model (v1)
-Hosting is ours and always-on; clients may be offline anytime. **Reads:** TanStack Query persisted to IndexedDB (idb-keyval persister) — the worker pre-materializes 14 days of occurrences, so upcoming chores exist on-device before disconnection. **Writes — outbox allowlist (D41), FIFO replay through the same axios client, sequential never parallel:**
+### 4.12 Local-first data & sync (supersedes the outbox model — D58)
+Hosting stays ours and always-on (D12), but the DEVICE database is now the system of record until a household signs up. One client stack serves both worlds: offline-only households (data never leaves the device) and synced households (local writes first, background sync).
 
-| Queued mutation | Safety basis |
-|---|---|
-| PATCH /occurrences/:id complete / skip | uuid pre-exists (materialized ahead); non-pending → ALREADY_DONE dropped gently |
-| PATCH /occurrences/:id reassign | absolute personIds set — replay-convergent |
-| PATCH /supplies/:id {state} | absolute enum set — newest intent wins |
-| POST /shopping-items | client-generated uuid, server upserts ON CONFLICT DO NOTHING → replay-proof |
-| POST /shopping-items/:id/purchase | no-op when purchasedAt already set |
-| notification read / read-all | boolean flags |
+**Engine:** SQLite compiled to WASM persisted via OPFS, accessed through Drizzle's SQLite dialect in `packages/local-db` (mirrors of all §4.5 tables + `pending_ops`). Capability ladder: OPFS+sync-access-handles (Chrome 108+/Safari 16.4+/Firefox 111+) → SQLite-over-IndexedDB VFS fallback → ancient browsers get read-cache-only with online-required mutations. Proxy mini-browsers (Opera Mini class) unsupported → "use Chrome" hint.
 
-**Cap 100 intents (user decision):** soft warning banner at 80 ("Sync queue getting long"), oldest-evicted beyond 100 with a visible notice. Replay order global FIFO by enqueue time. Every intent carries header `X-Chorify-Intent: <intent-uuid>` for tracing; the outbox dedupes locally by intent id before send (never re-fires a settled intent, even across restarts). Server-side idempotency inventory: purchase purchasedAt-guard · shopping upsert-by-id · occurrence terminal guards · supply/notification absolute sets — a shared Idempotency-Key memo table is reserved as future hardening if Flutter needs broader coverage.
-**Online-required (controls disabled with calm hint "You're offline — this needs a connection", CN micro-59):** responsibilities/routines/rooms/assets/people/roles/import/settings/profile-switch — chained ids or fresh-state invariants make queuing dishonest.
-**Busy & disabled discipline (D46):** every mutation control shows pending spinner and blocks re-submit while in flight; forms validate via feature zod schemas before firing; outboxable controls stay enabled offline and gain a "will sync" dot after enqueue; non-outboxable ones disable per above. SyncStatus chip: ✓ Up to date / ↻ Syncing… (with queued count) / Offline — changes saved (CN micro-58/59). Full multi-device merge stays Phase 7.
+**Two-half change log:** device-side `pending_ops` `{uuid, entity, op, payload, createdAt, syncedAt?}` records every local write (UI applies instantly, zero spinner); server-side `household_changes` `{seq(per household), householdId, actorPersonId, entity, entityId, op, payload(after), audienceType(members|roles|all), audienceIds, domain, createdAt}` is the authoritative feed. Push = `POST /sync/push` batched FIFO, uuid-idempotent, EVERY op re-authorized against the actor's CURRENT roles (offline demotion ⇒ rejected + notified — sync is not a permission bypass). Pull triggers: push acks, `online` event, tab focus, 30s foreground tick.
+
+**Conflicts:** pure row-level Last-Write-Wins by server arrival order, resurrection allowed (D60). Losing/rejected ops create persisted, per-entity-coalesced notifications (`sync.changeOverwritten` / `sync.changeRejected`, `{title,count,byName}` params, i18n keys per §6.13); self-conflicts record silently.
+
+**Audiences:** stored symbolic (`members|roles|all`) exactly as written, evaluated LIVE at pull against the requester's current identity/roles, AND filtered by permission domain (finance rows never reach devices whose active person lacks `finances.view` — CN XIX-4). Retention ≥90 days then prune; stale-past-retention devices do full bootstrap resync via `GET /sync/bootstrap`; cursors live client-side per device.
+
+**Offline→online conversion (D62):** register (Google or phone+password) → client serializes its local DB through the TXT export format → `POST /import` into the fresh account (freshness/conflict rules already guaranteed §4.11) → household flips synced; every write becomes apply-local + queue-op thereafter.
+
+**Client-side jobs for offline-only households (D64):** missed-sweep runs on app open; due-today digest computed locally — server jobs (§4.9) only ever see synced households' rows.
+
+**Device passcode (D63):** optional lock over profile switching/app entry. Synced accounts: gate-only hash — forgotten ⇒ online re-auth unlocks and resets it. Offline-only households may opt into true AES-GCM at-rest encryption keyed by the passcode, with an explicit "forget it and nothing can recover the data" warning.
+
+**Stale-offline banner (D65):** driven by `lastSuccessfulSyncAt` + pending count — warn ≥48h or ≥25 ops ("changes are saved on this device; others' recent changes aren't shown"), strong ≥14d or ≥80, resync heads-up ≥60d. Thresholds are tunable constants; Settings always shows full status.
+
+**Supersessions:** D41's six-entry allowlist and D42's cap/evict are GONE — no data mutation is ever dropped or blocked offline; the old `X-Chorify-Intent` header concept generalizes into `pending_ops.uuid`. Busy/disabled discipline (D46) unchanged; SyncStatus chip now reflects pending-op count + last sync age.
 
 ### 4.13 PWA / service worker
 manifest.webmanifest (name Chorify, standalone, theme #FAF6F0, icons 192/512+maskable generated by sharp script `pnpm --filter web icons`) + apple-touch/meta tags. Hand-rolled `public/sw.js`, registered production-only: precache `/_next/static/**` cache-first (content-hashed), navigation network-first with last-cached-document fallback, runtime-cache Google Fonts; caches versioned by Next buildId; skipWaiting+clientsClaim.
@@ -346,7 +368,7 @@ manifest.webmanifest (name Chorify, standalone, theme #FAF6F0, icons 192/512+mas
 ### 4.14 REST API surface (apps/web/src/app/api/v1)
 Envelope `{data}` / `{error:{code,message,missingPermission?,params?}}`. Error codes: 401 UNAUTHENTICATED · 401 PASSWORD_REQUIRED / WRONG_PASSWORD · 403 FORBIDDEN(+missingPermission) / VIEW_AS_READONLY · 404 NOT_FOUND · 409 CONFLICT / LAST_OWNER / IN_USE / IMPORT_CONFLICT / IMPORT_TOO_NEW / ALREADY_DONE(+who/when) · 422 VALIDATION_ERROR(+zod issues) · 429 RATE_LIMITED(+retryAfterSeconds). Frozen code→UX map lives in §5.8.
 
-- Auth/me: POST /auth/register · POST /auth/login · POST /auth/logout · GET /me · GET /profiles · POST /profiles/switch
+- Auth/me: POST /auth/register-online {mode: google|phone} · POST /auth/login {code, username, password} · POST /auth/google (OAuth code exchange; also recovery path) · POST /auth/link-google (fresh password confirm required, D50) · POST /auth/logout · GET /me · GET /profiles · POST /profiles/switch
 - Meta/static: GET /permissions (catalog+presets) · GET /meta (locales, currencies, Ethiopia starter profile templates)
 - People/roles: GET|POST /people · PATCH|DELETE /people/:id · GET|POST /roles · PATCH /roles/:id · POST /roles/:id/reset
 - Chores: GET|POST /responsibilities (payload nests subtasks+assignmentRules) · PATCH|DELETE /responsibilities/:id (archive) · GET|POST /routines · PATCH|DELETE /routines/:id · GET /occurrences?from&to&personId&status · PATCH /occurrences/:id {action: complete|skip|reopen|reassign, note?, skipReason?, personIds?}
@@ -355,6 +377,7 @@ Envelope `{data}` / `{error:{code,message,missingPermission?,params?}}`. Error c
 - Resources: GET|POST /supplies · PATCH /supplies/:id (state transitions; activity only entering low/out) · GET|POST /shopping-items · PATCH /shopping-items/:id · POST /shopping-items/:id/purchase (idempotent; supply→available; activity)
 - Social: GET /activity?cursor&member&action&chore&from&to · GET /notifications?unread · PATCH /notifications/:id/read · POST /notifications/read-all · GET|PUT /notifications/preferences
 - Portability: GET /export/household.txt · POST /import
+- Sync: POST /sync/push (batched pending_ops, uuid-idempotent, per-op re-authorization) · GET /sync/pull?since=cursor (audience + permission-domain filtered) · GET /sync/bootstrap (full visible snapshot + fresh cursor)
 
 No rewards endpoints — feature removed by user decision.
 
@@ -370,7 +393,7 @@ Reusable permission management: `usePermission(permKey)` boolean hook + `<Can I=
 Profile switching / view-as exit / logout call `queryClient.clear()` + reset the RTK session fields — cached server data is person-scoped, so wholesale clear is the correct simple policy (D38).
 
 ### 4.16 Tooling & quality pins
-typescript-eslint strict type-checked · `eslint-plugin-boundaries` with element types (shared-kernel / module / controller / feature / ui-primitive / app) expressing the barrel law mechanically (D37) alongside import/no-restricted-paths · eslint-plugin-react-hooks · Prettier + prettier-plugin-tailwindcss (printWidth 100, single quotes) · vitest workspace: packages/core unit suite only in v1 (no jsdom yet) · zod env schemas parsed at boot, fail-fast (`DATABASE_URL` required in web+worker; `WORKER_ADMIN_TOKEN` worker-only) · no git hooks/CI in v1 (deployment = dev scripts).
+typescript-eslint strict type-checked · `eslint-plugin-boundaries` with element types (shared-kernel / module / controller / feature / ui-primitive / app) expressing the barrel law mechanically (D37) alongside import/no-restricted-paths · eslint-plugin-react-hooks · Prettier + prettier-plugin-tailwindcss (printWidth 100, single quotes) · vitest workspace: packages/core unit suite only in v1 (no jsdom yet) · zod env schemas parsed at boot, fail-fast (`DATABASE_URL` required in web+worker; `WORKER_ADMIN_TOKEN` worker-only; `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` web, required once the Google route is enabled) · `blocklist_words` table seeded via migration and maintained as data (D52) · no git hooks/CI in v1 (deployment = dev scripts).
 
 ### 4.17 Workspace TypeScript strategy
 Internal TS-source packages (D44): `@chorify/core` and `@chorify/db` export `src/index.ts` directly via package.json `main`; tsconfig path aliases resolve them; Next transpiles them; worker runs under `tsx` in dev (`tsc --noEmit` typecheck scripts per package; worker prod start also tsx). No dist builds, no project references — least ceremony, Turborepo-compatible later.
@@ -469,10 +492,20 @@ All copy renders via i18n dictionaries keyed on code + params — never raw keys
 21. Self-service own-password change always allowed; others' accounts need configure_permissions.
 22. Person deletion cascades user row + sessions; history preserves actor ids.
 23. Import version policy + conflict blocking + owner-seat mapping exactly per §4.11.
-24. Login rate limit 5 fails/min per username+IP, in-memory.
-25. Completion/skip on non-pending occurrences → `409 ALREADY_DONE` (first-write-wins); outbox drops such replays with gentle toast.
-26. Outbox = six-entry allowlist, FIFO sequential replay, cap 100 (warn 80, oldest evict), X-Chorify-Intent dedupe; all other mutations online-required with disabled-with-hint UI.
-27. Busy/disabled discipline applies to every mutation surface; forms zod-validate before fire.
+24. Rate limiting lives in a Postgres-backed attempts table (5 fails/min per identifier+IP; survives restarts) — supersedes the original in-memory note.
+25. Completion/skip on non-pending occurrences → `409 ALREADY_DONE` (first-write-wins); stale synced replays drop with a gentle toast.
+26. EVERY data mutation is local-first: applied to the device DB, queued in `pending_ops` (client uuid = idempotency key), pushed FIFO on ack/reconnect/focus/30s tick. Only identity flows are online-required: Google OAuth, registration/login, later OTP.
+
+27. Busy/disabled discipline applies to every mutation surface; forms zod-validate before fire; controls show pending spinners and never double-fire.
+28. Sync conflicts resolve as pure row-level LWW by server arrival order — resurrection allowed. The losing actor gets a persisted, coalesced `sync.changeOverwritten`/`sync.changeRejected` notification (`{title,count,byName}` params); self-conflicts stay silent.
+29. `household_changes` audiences stored symbolic (`members|roles|all`) and evaluated LIVE at pull against the requester's current roles, plus a permission-domain filter so restricted domains never reach unauthorized devices.
+30. Feed retention ≥90 days; devices offline past retention perform a full bootstrap resync; cursors live client-side per device (cleared storage ⇒ resync).
+31. Household codes: 6 random A-Z letters, blocklist-checked at generation, immutable, case-insensitive input, shown in Settings/login/TXT header. Usernames `^[A-Za-z]{2,30}$`, unique per household casefolded; generator emits 3–6 letters.
+32. Owner-targeted account creation requires a phone number (R2); promoting a contactless person to owner is blocked; the initial creator is exempt.
+33. Recovery: Google-button always available to linked users; OTP only for numbers that passed SMS verification once the vendor lands; unverified contacts never appear in recovery UI; contactless owners nagged in Settings until they add contact or accept the lockout risk.
+34. Local passcode: gate-only for synced accounts (online re-auth resets); optional AES-GCM encryption for offline-only households with an explicit unrecoverable warning.
+35. Offline-only households run missed-sweep and due-today digest locally on app open; server jobs operate solely on synced households' rows.
+36. Stale-offline banner thresholds: warn ≥48h or ≥25 pending ops; strong ≥14d or ≥80; resync heads-up ≥60d (hard prune 90d).
 
 
 ## 7. Demo Data & Seed (packages/db/src/seed.ts)
@@ -485,6 +518,8 @@ Household "Bekele Family": Hana (Mother — role cloned isOwnerRole=true, creden
 
 argon2 hashing (library defaults) · session tokens random 32B, stored sha256-only · **Bearer-only transport (D36 — user decision): tokens live in redux-persist localStorage; accepted XSS-sensitive tradeoff, mitigated by the no-`dangerouslySetInnerHTML` policy, CSP baseline, and server-side revocation on logout/password change** · no cookies ⇒ CSRF out of threat model; CORS stays same-origin for web, explicit origin allowlist when Flutter arrives · authorization checked server-side on EVERY handler (permission map client-side is cosmetic) · cross-household ids return 404 (never confirm existence) · worker admin endpoints behind WORKER_ADMIN_TOKEN bearer · login rate limit 5/min per username+IP · export files exclude all credential material · personal data limited to product needs (names, optional age/sex, emojis) · no third-party analytics/telemetry v1 · 401 interceptor purge is the single session-invalidation UX path.
 
+**Additions (D49–D66):** `users.phone` is credential-scope PII (globally unique, recovery-target); `people.phone` is contact info, duplicates legal, optional for minors — exports EXCLUDE phone numbers and OAuth ids alongside password hashes (CN §62 spirit: identity material is not household content) · one OAuth identity binds to exactly one user; linking requires fresh password confirm · every pushed sync op re-authorized server-side against the actor's CURRENT roles (offline demotion ⇒ rejected + notified; sync is never a permission bypass) · unknown code/username/password produce one uniform error (no enumeration) · local passcode follows the §4.12 gate/encryption split; offline-household encryption warns that forgetting = unrecoverable.
+
 ## 9. Indexes & Performance Notes
 
 Required indexes beyond PKs/uniques already stated: occurrences(householdId, dueDate) · partial index occurrences(status='pending') on dueDate for sweeper · activity_events(householdId, createdAt DESC) · notifications(recipientPersonId) partial WHERE readAt IS NULL · sessions(tokenHash) unique lookup · assignment_rules(responsibilityId) · FK columns generally indexed.
@@ -495,6 +530,8 @@ Budgets/guidelines: /today is ONE round-trip (aggregated endpoint) — target sn
 ## 10. Explicitly Rejected / Removed (never reintroduce without user reversal)
 
 Rewards/points/stars economies (removed Turn 7) · leaderboards/ranking of members (CN §69 invariant) · loans/debt concepts (CN §51) · resident/non-resident/dependent classification (CN §7) · refusal/reject-task workflow (CN §43) · Parent/Grandparent/Adult-Child role names (CN §9 removals) · silent merge or overwrite imports (CN §67) · cloud dependency in free tier (CN §2) · per-record privacy configuration requirement (CN micro-55) · supermarket-centric shopping assumptions (CN §91) · gender-stereotyped default assignments (CN §95) · server actions / RSC data fetching / direct DB access from pages (architecture mandate) · self-hosted deployment assumption (Turn 6 clarification: hosting is ours, always-on) · Docker deliverable in v1 (dev scripts only).
+
+Auth-iteration removals (Turns 13+): printed recovery/backup codes (Google + verified-OTP only) · composite prefixed usernames like `LLUMbekele` (code and username are separate fields) · standalone email-field signup (Google SSO owns verified-email identity) · global username uniqueness (per-household instead).
 
 ---
 
@@ -512,6 +549,7 @@ Rewards/points/stars economies (removed Turn 7) · leaderboards/ranking of membe
 4. **Portability:** export downloads `My-Household-YYYY-MM-DD.txt` · re-import into SAME household → 409 IMPORT_CONFLICT with row counts unchanged · drop DB → fresh register → import succeeds AND /me resolves activePerson = imported owner Hana with placeholder person gone · forged header version → IMPORT_TOO_NEW.
 5. **Browser walkthrough (390×844 then 1280×800):** login hana/hana1234 → direct Today · complete chore → confetti + Undo genuinely rolls back · toggle አማርኛ → EVERY screen renders Amharic incl. Ethiopic glyphs, data untouched · customize Guardian permissions then Reset → factory defaults return · rename role → permissions unchanged · name-only custom role saves · view-as Sami → admin nav hidden, finances absent, banner shown, writes blocked · profile-switch Sami (no prompt) ↔ Hana (password gate works both ways) · detergent Out → Add-to-shopping → purchase → supply Available + activity entry · Save household copy downloads correct filename · DevTools-offline → complete Trash offline (queued indicator) → online → outbox replays, activity records Daniel completing Trash, SyncStatus ✓ Up to date · `/print` preview correct with defaults untouched; browser print preview chrome-free with Amharic + Ethiopic date line · `curl -I /manifest.webmanifest` → 200 · LAST_OWNER guard fires when demoting sole owner role.
 6. **Regression guard:** `pnpm test` green + typecheck clean before hand-off.
+7. **Auth & sync checks:** offline-create household → banner appears → sign up via phone+password → local rows imported through /import path, session intact · Google-linked user logs in via button without password · unknown code/username/password all return the SAME generic error · owner-creates-owner without phone → blocked (R2) · promote contactless person → blocked · link-Google demands password confirm · two devices: device B completes Trash offline, device A edits it offline; both push → LWW winner stands AND A's loss notification exists, coalesced per entity · role-scoped change reaches a freshly promoted Guardian after their next pull · finance-domain change never reaches a device whose active person lacks finances.view · 90-day-stale device performs full bootstrap resync · synced account: forgot local passcode → online re-auth unlocks and resets gate.
 
 ---
 
@@ -519,25 +557,27 @@ Rewards/points/stars economies (removed Turn 7) · leaderboards/ranking of membe
 
 **Commit discipline (user law, D47):** many small commits over bulky ones — one concern per commit; aim ≤ ~300 changed lines; conventional messages (`feat(chores): …`, `fix(db): …`, `chore(worker): …`); commit at every green checkpoint (a §12 step completed, or a passing test batch) instead of accumulating multi-feature diffs; refactors ride ALONE in their own commits, never mixed into features; generated artifacts (drizzle migrations, PWA icons) commit separately from hand-written edits; working tree clean before any hand-off.
 
-1. Scaffold workspaces, tsconfig base, Tailwind v4 in web, `.env.example`, root scripts. (Postgres assumed running per user; dev-scripts deployment.)
-2. packages/db — schema per §4.5 (+indexes §9), drizzle-kit generate+migrate, seed.ts per §7.
-3. packages/core — zod contracts, permissions.ts, schedule.ts, calendar.ts, txt.ts, notify.ts, activity builders, service modules (auth, people, roles, responsibilities/occurrences, rooms/assets, supplies/shopping, notifications, portability) — pure over injected db. Contracts unblock 4–8 in parallel.
-4. Auth + middleware (session→activePerson resolution, requirePermission, view-as gate, rate limit) + /auth/* · /me · /profiles* · /permissions · /meta routes.
-5. People/roles routes (reset, LAST_OWNER, cascade delete).
-6. Responsibilities/routines/occurrences routes + /today aggregate.
-7. Rooms/assets/service-records + supplies/shopping(+purchase) routes.
-8. Activity(filters), notifications(+prefs), export/import routes.
-9. Worker app: pg-boss wiring, four jobs calling core services, admin endpoints, jobs_audit.
-10. Web foundation: theme tokens, Providers (redux-persist store + QueryClient + async persister + i18n + SW registration), axios client + interceptors, endpoints registries + generic query/mutation factories, outbox + SyncStatus, app shell (tabs/rail, watermarks, FAB, avatar/profile-switcher chip, Sheet/Toast kits, motion presets).
-11. Login + onboarding stepper.
-12. Today screen; Chores list/detail/create (+completion micro-interaction, claimable cards).
-13. Household people/roles editors (+overrides, reset, profile switching UI, view-as banner, person stats).
-14. Routines, Home rooms/assets, Supplies, Shopping screens.
-15. Activity (filters), Notifications, Settings, export/import UI, printables (`/print` + print stylesheet).
-16. Full Amharic dictionary parity across ALL screens (am.ts complete, layout QA per CN §75), Ethiopic calendar toggle, PWA manifest/icons/SW polish.
-17. Full §11 verification pass; fix and re-run until green.
+1. Scaffold workspaces, tsconfig base, Tailwind v4 in web, `.env.example`, root scripts. ✅ done (`chore(repo)`)
+2. packages/db — pg schema per §4.5 (+indexes §9), drizzle-kit generate+migrate, seed.ts per §7. ✅ done
+3. packages/core — zod contracts (mobile truth), permissions, schedule, calendar, txt, notify, activity builders, service modules — **dialect-neutral over the injected executor** (must run against pg AND sqlite executors).
+4. **packages/local-db** — SQLite-WASM/OPFS mirrors of all tables (sqlite-core dialect), own drizzle migration track, `pending_ops` queue, capability ladder (OPFS → IndexedDB-VFS → online-mode), passcode gate/encryption hooks.
+5. **Sync engine** — push/pull/bootstrap clients, flusher triggers (on-write acks, reconnect, focus, 30s interval), LWW application + conflict notifications, stale-banner state.
+6. Auth services + middleware (session→activePerson, requirePermission, view-as gate, Postgres rate limiter) + routes: /auth/register-online (google|phone) · /auth/login {code,username,password} · /auth/google · /auth/link-google · /auth/logout · /me · /profiles · /profiles/switch.
+7. People/roles routes (reset, LAST_OWNER, R2 contact enforcement on owner-targeted creation/promotion).
+8. Responsibilities/routines/occurrences routes + /today aggregate.
+9. Rooms/assets/service-records + supplies/shopping(+purchase) routes.
+10. Activity(filters), notifications(+prefs), export/import (+offline-conversion path D62).
+11. Worker app: pg-boss wiring, four jobs calling core services, admin endpoints, jobs_audit, household_changes pruning.
+12. Web foundation: theme tokens, Providers (redux-persist store + QueryClient + async persister + i18n + SW registration), axios client + interceptors, endpoint registries + generic factories, local-db wiring + SyncStatus, app shell (tabs/rail, watermarks, FAB, avatar/profile-switcher chip, Sheet/Toast kits, motion presets).
+13. Login + onboarding stepper (offline-create first-run, signup banner per D49/D65).
+14. Today screen; Chores list/detail/create (+completion micro-interaction, claimable cards).
+15. Household people/roles editors (+overrides, reset, profile switching UI, view-as banner, person stats).
+16. Routines, Home rooms/assets, Supplies, Shopping screens.
+17. Activity (filters), Notifications, Settings (incl. link-Google, passcode, export/import UI), printables.
+18. Full Amharic dictionary parity across ALL screens, Ethiopic calendar toggle, PWA manifest/icons/SW polish.
+19. Full §11 verification pass; fix and re-run until green.
 
-Dependencies: 2→3→(4..8 ∥)→9; frontend 10→(11..15 in route order as APIs land)→16→17. Steps 4–8 mutually independent once core contracts exist.
+Dependencies: 3 unblocks (4..10 ∥); 4→5 before 12; frontend 12→(13..17 in route order as APIs land)→18→19.
 
 ---
 
@@ -586,6 +626,24 @@ Finance module schema + flows (income/expense/account/bill/budget/goal, assigned
 | D46 | Global busy/disabled mutation discipline + offline hints + will-sync dots | User mandate, Turn 11 |
 | D47 | Incremental small commits: one concern, ≤~300 lines, conventional messages, refactors isolated, green-checkpoint cadence | User, Turn 12 |
 | D48 | AGENTS.md as the binding agent rulebook complementing plan.md | User, Turn 12 |
+| D49 | Signup modes: offline-local default (zero credentials, device-resident) · Continue-with-Google · phone-collect+password; standalone email-field signup dropped (Google covers verified email identity) | User, auth iteration |
+| D50 | Google SSO: verified email counts as contact; local password optional afterwards; linking Google requires fresh password confirm; one OAuth identity ↔ exactly one user, globally | User |
+| D51 | Phone collected UNVERIFIED until an SMS vendor lands; OTP recovery enabled only for numbers that passed verification post-SMS; printed recovery codes explicitly rejected | User |
+| D52 | Household code = 6 random A-Z letters (no digits), collision-retried, checked against a persistent DB blocklist, immutable, case-insensitive input | User; blocklist-as-table per assistant |
+| D53 | Username `^[A-Za-z]{2,30}$`, unique `(householdId, lower(username))`; Generate button emits 3–6 pronounceable letters; typed nicknames encouraged over generation | User |
+| D54 | R2 locked: an account created FOR an owner-role holder requires a phone number; promoting a person to owner blocked until they have contact; sole exemption = initial creator | User |
+| D55 | Two phone concepts: `users.phone` = login/recovery credential, globally unique, nullable; `people.phone` = contact info, free duplicates, optional on add-member form | User |
+| D56 | Password recovery = Google button until SMS ships; thereafter OTP gated on verified numbers; contactless-owner permanent lockout accepted, settings nags until a recovery method exists | User |
+| D57 | Password policy: ≥6 chars, length-only; small static common-password denylist retained | User + assistant default |
+| D58 | LOCAL-FIRST PIVOT: device SQLite (WASM/OPFS, fallback ladder) is the system of record for unsynced households; supersedes outbox allowlist D41/D42 | User |
+| D59 | Sync protocol: `pending_ops` (device) + `household_changes` (server feed); POST /sync/push · GET /sync/pull · GET /sync/bootstrap; cursors held per-device client-side; no device registry v1 | User + assistant shape |
+| D60 | Conflicts = pure row-level Last-Write-Wins by server arrival order, resurrection allowed; losing/rejected ops produce persisted coalesced notifications; self-conflicts silent | User |
+| D61 | Change audiences stored SYMBOLIC (members / roles / all), evaluated live at pull time against current roles, PLUS permission-domain filter (no indirect leakage CN XIX-4) | User overrode write-time snapshotting |
+| D62 | Offline→online conversion reuses the TXT export/import pipeline (§4.11): serialize local DB → import into fresh account → flip synced | Assistant proposal, user accepted |
+| D63 | Device passcode split: gate-only hash check for synced accounts (recoverable via online identity); optional AES-GCM encryption offered for offline-only households with unrecoverable-if-forgotten warning | User + assistant crypto analysis |
+| D64 | Offline-only households run missed-sweep + due-today digest CLIENT-side; server jobs see only synced data | User |
+| D65 | Stale-offline banner: warn at ≥48h offline OR ≥25 pending ops; strong at ≥14d OR ≥80; resync heads-up at ≥60d (hard prune 90d). Thresholds = tunable constants | User concept, assistant defaults |
+| D66 | Login/OTP rate limiting moves to a Postgres-backed attempts table; unknown-code/username/password return one uniform generic error | Assistant default accepted |
 
 ## 15. Appendix B — Harness Issue Log
 
