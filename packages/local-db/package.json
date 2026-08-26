@@ -1,0 +1,25 @@
+{
+  "name": "@chorify/local-db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "generate": "drizzle-kit generate"
+  },
+  "dependencies": {
+    "@chorify/core": "workspace:*",
+    "@sqlite.org/sqlite-wasm": "3.53.0-build1",
+    "drizzle-orm": "^0.44.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.4.1",
+    "drizzle-kit": "^0.31.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  }
+}
