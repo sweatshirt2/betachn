@@ -222,3 +222,13 @@ export class PeopleService {
     return { hasPhone: Boolean(parsed.phone), hasVerifiedEmail: Boolean(oauth) };
   }
 }
+
+/** Owner-permission-role holders for a household — notification recipients, LAST_OWNER counts. */
+export async function ownerHolderPersonIds(exec: Executor, householdId: string): Promise<string[]> {
+  const rows = await exec.query.people!.findMany({
+    where: eq(people.householdId, householdId),
+    columns: { id: true },
+    with: { role: { columns: { isOwnerRole: true } } },
+  }) as unknown as RoleFlagRow[];
+  return rows.filter((r) => r.role?.isOwnerRole === true).map((r) => r.id);
+}
