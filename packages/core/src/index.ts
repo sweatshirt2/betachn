@@ -3,6 +3,7 @@ export * from './errors';
 export * from './ports';
 export * from './permissions';
 export * from './schedule';
+export * from './txt';
 export * from './modules/auth';
 export * from './modules/households';
 export * from './modules/occurrences';
