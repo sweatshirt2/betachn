@@ -3,6 +3,7 @@ export * from './errors';
 export * from './ports';
 export * from './permissions';
 export * from './schedule';
+export * from './activity';
 export * from './notify';
 export * from './txt';
 export * from './modules/auth';
