@@ -48,6 +48,9 @@ importers:
       '@chorify/db':
         specifier: workspace:*
         version: link:../db
+      drizzle-orm:
+        specifier: ^0.44.7
+        version: 0.44.7(@types/pg@8.23.1)(pg@8.23.0)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
