@@ -9,4 +9,5 @@ export * from './txt';
 export * from './modules/auth';
 export * from './modules/households';
 export * from './modules/occurrences';
+export * from './modules/roles';
 export * from './modules/sync';
