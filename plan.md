@@ -559,9 +559,9 @@ Auth-iteration removals (Turns 13+): printed recovery/backup codes (Google + ver
 
 1. Scaffold workspaces, tsconfig base, Tailwind v4 in web, `.env.example`, root scripts. ✅ DONE
 2. packages/db — pg schema per §4.5 (+indexes §9), drizzle-kit generate+migrate, seed.ts per §7. ✅ DONE (migrations 0000+0001 applied; fixture verified)
-3. packages/core — zod contracts (mobile truth), permissions, schedule, calendar, txt, notify, activity builders, service modules — **dialect-neutral over the injected executor** (must run against pg AND sqlite executors). ◐ STARTED: errors/permissions/schedule engines + ports kernel + auth/households/sync/occurrences contracts & rules all DONE with 53 tests; REMAINING: calendar.ts, txt.ts, notify.ts, activity builders, per-domain service classes, Executor typing unification. Detail → §16.
-4. **packages/local-db** ⬜ NOT STARTED — SQLite-WASM/OPFS mirrors of all tables (sqlite-core dialect), own drizzle migration track, `pending_ops` queue, capability ladder (OPFS → IndexedDB-VFS → online-mode), passcode gate/encryption hooks.
-5. **Sync engine** ⬜ NOT STARTED — push/pull/bootstrap clients, flusher triggers (on-write acks, reconnect, focus, 30s interval), LWW application + conflict notifications, stale-banner state.
+3. packages/core — zod contracts, permissions, schedule, calendar, txt, notify, activity builders, service modules over the dialect-neutral executor. ✅ COMPLETE this session (all 12 domains; kernels + services + 97 tests). Detail → §16.
+4. **packages/local-db** ◐ ~85% — mirrors+migration track+queue+capability ladder+passcode hooks DONE with live better-sqlite3 smoke; browser OPFS MigrationClient adapter + worker wiring remain for the web-foundation step. Detail → §16.
+5. **Sync engine** ◐ STARTED — transport port landed; REMAINING: LWW applier + coalesced conflict notifications, flusher triggers, engine smoke (this session).
 
 6. Auth services + middleware (session→activePerson, requirePermission, view-as gate, Postgres rate limiter) + routes: /auth/register-online (google|phone) · /auth/login {code,username,password} · /auth/google · /auth/link-google · /auth/logout · /me · /profiles · /profiles/switch.
 7. People/roles routes (reset, LAST_OWNER, R2 contact enforcement on owner-targeted creation/promotion).
@@ -658,31 +658,52 @@ Finance module schema + flows (income/expense/account/bill/budget/goal, assigned
 
 ## 16. Implementation Status & Hand-off (live ledger — update at every green checkpoint)
 
-**Last updated:** mid of the core-remainder→local-db→sync session (§12 steps 3→5 in flight). Kernels committed: `feat(core)` ×5 — Executor/UnitOfWork kernel (`aa1f655`), TXT portability + roundtrips (`7826249`), Ethiopic calendar (`b254c60`), notify resolver (`f7bf2e6`), activity builders (`0cc1b50`). **77 tests / 9 files green.**
+**Last updated:** mid of the steps-3→5 session, Phase C (sync engine client) in flight. Phases A (core remainder) and B (local-db) COMPLETE; sync transport landed (`9431878`). Suites: core 97 tests / 15 files ✅ · local-db 13 tests ✅ · all four packages typecheck clean. Working tree clean at every commit.
+
+### 16.0 Commit trail of this session (oldest → newest)
+
+`aa1f655` Executor/UnitOfWork kernel · `7826249` TXT portability + roundtrips · `b254c60` Ethiopic calendar · `f7bf2e6` notify resolver · `0cc1b50` activity builders · `60f127c` ledger checkpoint · `f9187ea` pg UnitOfWork adapter · `0792ea2` roles module · `3d16b65` people module · `9c0cd2a` routines module · `763a3b3` occurrences service (+`6547198` fix) · `e229565` responsibilities module · `7cebb64` db migration 0002 nullable users.username · `3ddc91b`/`f944953`/`87e1a5e` home/resources/social modules (parallel task agents) · `846818d` builtin role seeding · `c77a4d5` households service · `68b1d33` secure-token ports + permissionMapForPerson · `7742f24` auth service · `c0b4147` migration 0003 clientOpUuid · `dd84434`+`88a24c2` migration 0004 unique partial index · `329751f` sync service · `5bfb662` portability service · placeholder-person fix commit · `1336e32` local-db mirrors+migrations+smoke · `716fb20` queue+capability+passcode · `9431878` sync transport + unions move to core.
 
 ### 16.1 What exists — verified green
 
-| Layer | State | Notes / evidence |
+| Layer | State | Notes |
 |---|---|---|
-| Workspace scaffold | ✅ | Root scripts dev/test/typecheck/db:generate/db:migrate/db:seed; tsconfig.base strict + noUncheckedIndexedAccess + `@chorify/*` path aliases; `.env.example`; pnpm 10.33 / Node 22.12 |
-| packages/db | ✅ | 24 tables per §4.5 (incl. oauth_accounts, verification_challenges, auth_attempts, blocklist_words, household_changes); migrations **0000 + 0001 applied**; drizzle client + `withTransaction` + fail-fast zod env; seed.ts re-runnable fixture — login `hana / hana1234`, household code `BEKELE`, blocklist seeded (25 words), 43 occurrences (30 pending / 12 completed / 1 missed) |
-| apps/worker | ✅ shell only | Express :4001 + pg-boss started; `/health`; `/admin/jobs` + `/admin/jobs/:name/run` behind timing-safe WORKER_ADMIN_TOKEN bearer; writes jobs_audit; `jobRegistry` intentionally EMPTY until §12 step 11 lands real handlers (unknown job ⇒ 404 envelope). Live-smoked: 401 no/bad token · 200 with token · 404 unknown |
-| packages/core | ◐ ~75% | Kernels ✅ (see header) + prior state: errors (`AppError` frozen codes) · permissions kernel · schedule engine · ports kernel · modules auth/households/sync/occurrences rules. **Executor decision (D67):** dialect-neutral structural `Executor` + `UnitOfWork` in `core/db.ts`; concrete drizzle handles cast via `asExecutor` at package edges; rows cross domains only through zod `.parse()` — device stack reuses PURE RULES, never pg-bound services (matches D58 split write paths). TXT: header `### CHORIFY-HOUSEHOLD v1` + pretty JSON; strips hashes/sessions/phones/OAuth ids; version gate IMPORT_TOO_NEW, lenient older majors. Calendar: integer-JDN arithmetic, epoch **1724221** derived from two independent anchors (millennium 2007-09-12 ↔ EC 2000-01-01; Enkutatash 2025-09-11 ↔ EC 2018-01-01), leap = year%4==3. Notify: six kinds → recipients minus actor; supply alerts ride the `reminder` prefs toggle (no dedicated category — defaults ON). Activity: full v1 type catalog with static DOMAIN_BY_TYPE gate map. **77 tests / 9 files green** |
+| Workspace scaffold | ✅ | unchanged from prior session |
+| packages/db | ✅ | + migrations **0002** (nullable username, D50), **0003/0004** (household_changes.client_op_uuid + unique partial index = push idempotency). Sync wire unions now re-exported FROM core (single source of truth). `pgUnitOfWork` edge adapter exported. |
+| apps/worker | ✅ shell | unchanged |
+| packages/core | ✅ COMPLETE (§12 step 3 done) | Kernels: db.ts (Executor/UnitOfWork/asExecutor) · txt.ts (v1 header+pretty JSON; strips hashes/sessions/phones/OAuth ids; IMPORT_TOO_NEW gate; lenient older majors) · calendar.ts (integer-JDN, epoch **1724221** derived from millennium+Enkutatash anchors; leap=year%4==3; exhaustive 1601–2199 roundtrip test) · notify.ts (6 kinds→recipients minus actor; supplyAlert rides `reminder` prefs toggle — D68; defaults matrix finance/bill OFF) · activity.ts (33-type catalog + DOMAIN_BY_TYPE gate map). Modules with schema/rules/service: auth (register phone/google w/ placeholder person D72, uniform-error login, linkGoogle fresh-password confirm, switchProfile password gates, resolve/logout/me) · households (code claiming via blocklist loop, builtin role seeding, markSynced/markExported) · people (R2 create/promotion blockers vs users.phone+oauth contact, LAST_OWNER guards, cascade user+sessions+oauth delete, ownerHolderPersonIds + permissionMapForPerson helpers) · roles (resetMatrixFor builtin-vs-snapshot, lastOwnerBlockers, IN_USE delete guard) · routines (IN_USE guard) · responsibilities (nested subtasks+rules replace-on-PATCH, instant materialization via shared expandRulesIntoWindow/regenerateForwardTx exports) · occurrences (applyCompletion/Skip/Reopen pure rules incl. subtask auto-check §6.7 and 10-min undo §6.6; materializeRules onConflictDoNothing idempotent; sweepMissed; act() emits activity+notifications per §4.10) · home (rooms/assets/serviceRecords, nextMaintenanceDue rule, room IN_USE, asset cascade) · resources (supplyActivityType only-enters-low/out §6.11, purchaseGuard §6.12, silent restock) · social (notifications list/read/readAll/prefs-upsert; domain-gated batch-filling activity feed cursor D73) · sync (push per-op re-auth + uuid duplicate detection + seq retry on 23505; pull live symbolic-audience eval with batch fill; recordChange for routes) · portability (exportHousehold filename stamping; importForAdoption: fresh-target trio conflict scan → verbatim-id adoption → owner-seat repoint → placeholder deletion → syncedAt). **97 tests green.** |
+| packages/local-db | ◐ ~85% (step 4 nearly done) | ✅ mirror schema (17 content tables + pending_ops + device_sync_state; server-only tables deliberately excluded — D70), own drizzle sqlite track (migrations/0000 applied via applyDeviceMigrations using user_version watermark + bundled migrations.generated.ts artifact via scripts/bundle-migrations.ts), PendingOpQueue FIFO, capability ladder detectCapability/staleBannerState (D65 thresholds incl. never-synced-with-ops ⇒ strong), passcode PBKDF2-gate + AES-GCM encryptJson/decryptJson hooks (WebCrypto, node-testable), openNodeDevice better-sqlite3 opener + LIVE smoke (uniqueness law, relational reads, queue FIFO), fetchSyncTransport over frozen §4.14 endpoints. REMAINING: apply.ts LWW applier + coalesced conflict notifications, engine.ts flusher triggers, browser OPFS MigrationClient adapter (node one exists), worker-context wiring note for web step. **13 tests green.** |
 | apps/web | ⬜ nothing yet |
-| packages/local-db | ⬜ nothing yet |
 
 ### 16.2 What's left, in execution order
 
-1. **Finish core step-3 remainder:** `txt.ts` (serialize/parse + roundtrip test), `notify.ts` recipient resolver (+prefs-filter tests), `calendar.ts` (Gregorian↔Ethiopic; Node ICU lacks ethioptic calendar — use arithmetic conversion table), activity event builders; then per-domain **service classes** (executor-injected, transaction-wrapped). FIRST decide the dialect-neutral Executor typing (recommendation: minimal structural interface in a core kernel; pg/sqlite adapters cast at their package edges). Auth services consume auth.rules verbatim — contracts are frozen.
-2. **packages/local-db** (§12 step 4): sqlite-core mirrors, own drizzle migration track, `pending_ops`, capability ladder OPFS→IDB-VFS→online-mode, passcode gate/AES-GCM hooks (D63).
-3. **Sync engine** (step 5): push/pull/bootstrap clients, flusher triggers, LWW apply + coalesced conflict notifications (`sync.changeOverwritten`/`changeRejected`), stale-banner state machine (D65 thresholds).
-4. Steps 6–11: routes (auth routes enforce uniform-error + Postgres rate limiter via auth_attempts; people/roles call accountCreationBlockers/promotionBlockers for R2; occurrences reuse graceWindowDays) and worker jobs incl. household_changes pruning.
-5. Steps 12–19 web foundation → screens → Amharic parity → full §11 pass (item 7 = auth & sync scenarios).
+1. **Finish sync engine client (step 5):** `packages/local-db/src/sync-engine/apply.ts` (LWW row application keyed by SYNC_ENTITIES registry ↔ local mirror tables; resurrection allowed; self-changes silent) + coalesced `sync.changeOverwritten`/`sync.changeRejected` notification rows written LOCALLY when a pulled change collides with own pending_ops (server only writes rejections) · `engine.ts` flush(): push FIFO batch → outcomes accepted/duplicate removeAcked, rejected ⇒ drop op + local notification → pull since cursor → apply → update cursor+lastSuccessfulSyncAt; FlushScheduler triggers (after-write debounce, online event, focus/visibility, 30s tick — injectable timers for tests) · engine smoke against fake transport + real better-sqlite3.
+2. Steps 6–11 (next sessions): route handlers consuming the services as-is (auth middleware: Bearer resolve → UnitOfWork assembly; rate limiter on auth_attempts; view-as gate), worker job handlers (materializeHousehold/sweepMissed/digest/backup-nudge + household_changes pruning ≥90d).
+3. Steps 12–19 web foundation → screens → Amharic parity → full §11 pass.
 
-### 16.3 Session gotchas (learned the hard way)
+### 16.3 Session gotchas (learned the hard way — cumulative)
 
-- The drizzle migration journal lives in schema **`drizzle`**, not `public` — wiping `public` alone leaves a stale journal and the next migrate skips 0000 (hit this; fixed by dropping both schemas).
-- Adding a NOT NULL column to a non-empty table fails plain ALTER (`households.code`) — dev DBs: rebuild from migrations instead of editing generated SQL.
-- tsx auto-injects repo-root `.env` AND `db/env.ts` calls dotenv explicitly — idempotent, keep both.
-- Worker runs as hub process name `worker` (`pnpm --filter @chorify/worker dev`); stopped at hand-off.
-- Test fakes pattern: deterministic `RandomSource` replays scripted strings then falls back — reuse for any new randomness-dependent rule.
+- Prior-session gotchas stand: drizzle journal lives in schema `drizzle`; rebuild dev DBs from migrations instead of ALTERing non-empty tables; tsx auto-injects root `.env` (idempotent with db/env.ts); worker hub process name `worker`; scripted-string RandomSource fake pattern.
+- **TS-source packages:** never set `rootDir` in a package tsconfig that imports another workspace package's src (core↔db↔local-db) — TS6059 flood. Omit rootDir; noEmit typecheck doesn't need it.
+- **pnpm 10 blocks native builds by default** → root package.json `"pnpm.onlyBuiltDependencies": ["better-sqlite3"]`, then reinstall.
+- drizzle-kit generate parses model files at runtime: any helper used inside index/where callbacks (e.g. `sql`) must be imported IN THAT FILE or generation dies with opaque ReferenceError.
+- Loose-row friction pattern (noUncheckedIndexedAccess): table access is `exec.query.<t>!`; returning rows are `Record<string, unknown>` → parse through module-level zod micro-schemas (insertedUserRow, sessionCoreRow, ownerFlagRow…) before use. Never cast rows to domain types directly.
+- `and(...)` returns SQL|undefined under strict TS — non-null assert when passing to .where().
+- Occurrence transitions/subtask auto-check/reopen window live ONLY in occurrences.rules (device applier reuses them verbatim — D67 split).
+- Activity feed AND sync pull pages FILL by batching: post-fetch filtering (domain gate, matchesViewer) shrinks batches, so limit+1 single-fetch silently truncates (fixed twice).
+- Registration mints a placeholder person so a session exists before import; adoption deletes it after owner-seat repoint (D72).
+- Parallel task agents built home/resources/social cleanly given: exemplar file pointers, executor `!` convention, micro-parse pattern, inline activity insert, no-root-barrel rule. Review still caught a real pagination bug — always re-review delegated code.
+
+### 16.4 Decisions taken this session (Appendix A additions)
+
+| # | Decision |
+|---|---|
+| D67 | Dialect-neutral structural `Executor`/`UnitOfWork` in core/db kernel; concrete handles cast at edges via `asExecutor` (pg adapter in packages/db, node+browser openers in local-db). Device stack reuses PURE RULES, not pg-bound services. |
+| D68 | Supply alerts ride the `reminder` notification-prefs toggle (frozen category set has no supply bucket; reminder defaults ON). |
+| D69 | Sync wire unions (`ChangeOp/AudienceType/SyncDomain/SyncEntity`) owned by core sync module; packages/db re-exports for column annotations. |
+| D70 | Device mirrors exclude server-only tables (sessions, oauth_accounts, verification_challenges, auth_attempts, blocklist_words, jobs_audit, household_changes); identity material stays off shared devices (D55 spirit). users mirror keeps nullable username (migration 0002). |
+| D71 | Push idempotency = unique partial index on household_changes.client_op_uuid (migrations 0003/0004); duplicates report status without re-applying. |
+| D72 | Registration creates household claim + placeholder person + user(personId)+session in one tx; import adoption repoints seat to imported owner-role holder then deletes the placeholder (§4.11 refinement). |
+| D73 | Cursor pagination over post-filtered feeds fills by batching (activity feed + sync pull share the pattern). |
+| D74 | Stale banner: registered-but-never-sync-completed while holding ops ⇒ 'strong'. |
+
