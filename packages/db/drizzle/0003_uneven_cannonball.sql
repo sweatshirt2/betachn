@@ -1,0 +1,1 @@
+ALTER TABLE "household_changes" ADD COLUMN "client_op_uuid" text;

@@ -26,6 +26,8 @@ export const householdChanges = pgTable(
     op: text('op').$type<ChangeOp>().notNull(),
     payload: jsonb('payload').$type<Record<string, unknown>>().notNull().default({}),
     audienceType: text('audience_type').$type<AudienceType>().notNull(),
+    /** Client idempotency key (= pending_ops.uuid); null for server-made rows. */
+    clientOpUuid: text('client_op_uuid'),
     audienceIds: jsonb('audience_ids').$type<string[]>().notNull().default([]),
     domain: text('domain').$type<SyncDomain>().notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
