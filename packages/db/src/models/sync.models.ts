@@ -32,7 +32,13 @@ export const householdChanges = pgTable(
     domain: text('domain').$type<SyncDomain>().notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex('household_changes_seq_key').on(t.householdId, t.seq)],
+  (t) => [
+    uniqueIndex('household_changes_seq_key').on(t.householdId, t.seq),
+    // Replay protection: a pending_ops uuid may produce AT MOST one change.
+    uniqueIndex('household_changes_client_op_key')
+      .on(t.clientOpUuid)
+      .where(sql`client_op_uuid is not null`),
+  ],
 );
 
 export type HouseholdChange = typeof householdChanges.$inferSelect;
