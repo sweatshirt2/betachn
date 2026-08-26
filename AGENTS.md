@@ -32,7 +32,7 @@ Dev: `pnpm dev` runs web :3000 + worker :4001 concurrently. Env: `DATABASE_URL` 
 
 ## 2. Backend module anatomy (`packages/core/src/modules/<domain>/`)
 
-Domains: auth, people, roles, responsibilities, occurrences, routines, rooms, assets, supplies, shopping, notifications, activity, portability.
+Domains: auth, households, people, roles, responsibilities, occurrences, routines, rooms, assets, supplies, shopping, notifications, activity, sync, portability.
 
 Each module contains EXACTLY:
 | File | Contents |
@@ -47,7 +47,7 @@ Each module contains EXACTLY:
 
 - Drizzle table definitions live in `packages/db/src/models/<domain>.model.ts` (drizzle-kit points at the folder).
 - Route handlers mirror domains: `app/api/v1/<module>/…` = parse → requirePermission → service → serialize. Zero logic in controllers.
-- Shared kernels, importable by anyone: `core/errors` (`AppError{code,httpStatus}` mapping 1:1 to API error codes), `core/permissions`, `core/db`.
+- Shared kernels, importable by anyone: `core/errors` (`AppError{code,httpStatus}` mapping 1:1 to API error codes), `core/permissions`, `core/ports` (Clock, IdGenerator, RandomSource, PasswordHasher, BlocklistChecker — DIP seams), `core/db`.
 - **No stray utils/types/helpers anywhere else. Ever.**
 
 ## 3. Frontend anatomy (`apps/web/src/features/<feature>/`)
