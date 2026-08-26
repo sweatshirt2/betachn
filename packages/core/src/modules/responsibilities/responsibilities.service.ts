@@ -26,6 +26,7 @@ import { normalizeRuleDates } from './responsibilities.rules';
 function ruleToMaterializable(rule: RuleInput & { id: string; responsibilityId: string }): MaterializableRule {
   return {
     responsibilityId: rule.responsibilityId,
+    id: rule.id,
     pattern: rule.pattern,
     interval: rule.interval ?? null,
     daysOfWeek: rule.daysOfWeek ?? null,
