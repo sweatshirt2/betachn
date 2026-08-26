@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "household_changes_client_op_key" ON "household_changes" USING btree ("client_op_uuid") WHERE client_op_uuid is not null;

@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { bigint, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { households } from './households.model';
 import { people } from './people.model';
