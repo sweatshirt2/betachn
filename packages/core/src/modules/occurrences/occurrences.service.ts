@@ -29,7 +29,7 @@ export function generationWindow(todayIso: string): { start: string; end: string
 }
 
 /** Rule fields materialization needs — satisfied by assignment_rules rows. */
-type MaterializableRule = Pick<
+export type MaterializableRule = Pick<
   ExpandableRule,
   'pattern' | 'interval' | 'daysOfWeek' | 'anchorDate' | 'monthDay' | 'dates' | 'startDate' | 'endDate' | 'rotation' | 'personIds'
 > & { id: string; responsibilityId: string };
@@ -96,20 +96,7 @@ export class OccurrencesService {
     householdId: string,
     rules: MaterializableRule[],
   ): Promise<number> {
-    const window = generationWindow(isoToday(this.clock));
-    const values = rules.flatMap((rule) =>
-      expandRule(expandable(rule), window.start, window.end).map((hit) => ({
-        householdId,
-        responsibilityId: rule.responsibilityId,
-        ruleId: rule.id,
-        dueDate: hit.date,
-        personIds: hit.personIds,
-        subtaskStates: {} as Record<string, OccurrenceSubtaskState>,
-      })),
-    );
-    if (values.length === 0) return 0;
-    const inserted = await tx.insert(occurrences).values(values).onConflictDoNothing().returning();
-    return inserted.length;
+    return expandRulesIntoWindow(tx, householdId, rules, isoToday(this.clock));
   }
 
   /** Whole-household sweep — worker cron entry point. */
@@ -124,34 +111,9 @@ export class OccurrencesService {
    * stay immutable.
    */
   async regenerateForward(responsibilityId: string): Promise<void> {
-    await this.uow.transact(async (tx) => {
-      const ownerRow = await tx.query.responsibilities!.findFirst({
-        where: eq(responsibilities.id, responsibilityId),
-        columns: { householdId: true },
-      });
-      if (!ownerRow) throw new AppError('NOT_FOUND', 'Responsibility not found');
-      const householdId = String(ownerRow.householdId);
-      const today = isoToday(this.clock);
-
-      const rules = (await tx.query.assignmentRules!.findMany({
-        where: eq(assignmentRules.responsibilityId, responsibilityId),
-        columns: {
-          id: true, responsibilityId: true, pattern: true, interval: true,
-          daysOfWeek: true, anchorDate: true, monthDay: true, dates: true,
-          startDate: true, endDate: true, rotation: true, personIds: true,
-        },
-      })) as unknown as MaterializableRule[];
-      if (rules.length === 0) return;
-
-      await tx.delete(occurrences).where(
-        and(
-          inArray(occurrences.ruleId, rules.map((r) => r.id)),
-          gte(occurrences.dueDate, today),
-          eq(occurrences.status, 'pending'),
-        )!,
-      );
-      await this.materializeRules(tx, householdId, rules);
-    });
+    return this.uow.transact((tx) =>
+      regenerateForwardTx(tx, responsibilityId, isoToday(this.clock)),
+    );
   }
 
   async act(
@@ -357,4 +319,65 @@ function toTransition(row: OccurrenceRecord) {
 
 function isoToday(clock: Clock): string {
   return clock.now().toISOString().slice(0, 10);
+}
+
+/**
+ * Shared expansion primitive: upserts rule hits into the horizon window.
+ * One implementation, several callers — worker generator, responsibilities
+ * create/update flows (§4.8).
+ */
+export async function expandRulesIntoWindow(
+  tx: Executor,
+  householdId: string,
+  rules: MaterializableRule[],
+  todayIso: string,
+): Promise<number> {
+  const window = generationWindow(todayIso);
+  const values = rules.flatMap((rule) =>
+    expandRule(expandable(rule), window.start, window.end).map((hit) => ({
+      householdId,
+      responsibilityId: rule.responsibilityId,
+      ruleId: rule.id,
+      dueDate: hit.date,
+      personIds: hit.personIds,
+      subtaskStates: {} as Record<string, OccurrenceSubtaskState>,
+    })),
+  );
+  if (values.length === 0) return 0;
+  const inserted = await tx.insert(occurrences).values(values).onConflictDoNothing().returning();
+  return inserted.length;
+}
+
+/**
+ * Forward-only regeneration (§6.1): pending ∧ dueDate ≥ today deleted and
+ * re-expanded; terminal rows untouched. Caller's transaction scope.
+ */
+export async function regenerateForwardTx(
+  tx: Executor,
+  responsibilityId: string,
+  todayIso: string,
+): Promise<void> {
+  const ownerRow = await tx.query.responsibilities!.findFirst({
+    where: eq(responsibilities.id, responsibilityId),
+    columns: { householdId: true },
+  });
+  if (!ownerRow) throw new AppError('NOT_FOUND', 'Responsibility not found');
+  const rules = (await tx.query.assignmentRules!.findMany({
+    where: eq(assignmentRules.responsibilityId, responsibilityId),
+    columns: {
+      id: true, responsibilityId: true, pattern: true, interval: true,
+      daysOfWeek: true, anchorDate: true, monthDay: true, dates: true,
+      startDate: true, endDate: true, rotation: true, personIds: true,
+    },
+  })) as unknown as MaterializableRule[];
+  if (rules.length === 0) return;
+
+  await tx.delete(occurrences).where(
+    and(
+      inArray(occurrences.ruleId, rules.map((r) => r.id)),
+      gte(occurrences.dueDate, todayIso),
+      eq(occurrences.status, 'pending'),
+    )!,
+  );
+  await expandRulesIntoWindow(tx, String(ownerRow.householdId), rules, todayIso);
 }
