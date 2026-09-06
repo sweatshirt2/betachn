@@ -8,7 +8,15 @@ import {
   pgUnitOfWork,
   systemClock,
 } from '@chorify/db';
-import { AuthService, HouseholdsService, PeopleService, RolesService } from '@chorify/core';
+import {
+  AuthService,
+  HouseholdsService,
+  OccurrencesService,
+  PeopleService,
+  ResponsibilitiesService,
+  RolesService,
+  RoutinesService,
+} from '@chorify/core';
 
 /**
  * Route-layer composition root: core services bound to the pg edge exactly
@@ -30,5 +38,11 @@ export const authService = new AuthService(
 export const peopleService = new PeopleService(uow);
 
 export const rolesService = new RolesService(uow);
+
+export const routinesService = new RoutinesService(uow);
+
+export const responsibilitiesService = new ResponsibilitiesService(uow, systemClock);
+
+export const occurrencesService = new OccurrencesService(uow, systemClock);
 
 export { uow };
