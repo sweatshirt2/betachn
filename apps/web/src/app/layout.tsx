@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import '../styles/globals.css';
+import { Shell } from '@/components/shell';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
@@ -18,7 +19,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
       <body>
-        <Providers>{children}</Providers>
+        <Providers>
+          <Shell>{children}</Shell>
+        </Providers>
       </body>
     </html>
   );

@@ -6,6 +6,7 @@ import { I18nextProvider } from 'react-i18next';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import i18n from '@/i18n';
+import { ToastProvider } from '@/components/ui';
 import { setQueryClientForApi } from '@/lib/api';
 import { persistor, store } from '@/store';
 
@@ -38,7 +39,9 @@ export function Providers({ children }: { children: ReactNode }) {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <QueryClientProvider client={queryClient}>
-          <I18nextProvider i18n={i18n}>{children}</I18nextProvider>
+          <I18nextProvider i18n={i18n}>
+            <ToastProvider>{children}</ToastProvider>
+          </I18nextProvider>
         </QueryClientProvider>
       </PersistGate>
     </Provider>
