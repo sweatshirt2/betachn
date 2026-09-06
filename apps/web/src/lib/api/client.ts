@@ -32,6 +32,11 @@ export function setQueryClientForApi(client: QueryClient | null): void {
   queryClientRef = client;
 }
 
+/** Wholesale cache clear on profile switch / view-as exit / logout (D38). */
+export function clearApiCache(): void {
+  queryClientRef?.clear();
+}
+
 let viewAsPersonId: string | null = null;
 /** Set when entering view-as preview; cleared on exit/logout. */
 export function setViewAsPersonId(id: string | null): void {
