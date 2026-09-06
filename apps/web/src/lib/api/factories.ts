@@ -7,7 +7,7 @@ import {
 import { ApiError, api } from './client';
 
 export type Endpoint = {
-  method: 'get' | 'post' | 'patch' | 'delete';
+  method: 'get' | 'post' | 'patch' | 'put' | 'delete';
   /** Path template, e.g. `/occurrences/:id`. URLs never hardcode in components. */
   path: string;
 };
@@ -68,6 +68,10 @@ export function useApiMutation<TData, TVariables = unknown>(config: MutationConf
       }
       if (method === 'patch') {
         const res = await api.patch<TData>(path, variables);
+        return res as unknown as TData;
+      }
+      if (method === 'put') {
+        const res = await api.put<TData>(path, variables);
         return res as unknown as TData;
       }
       const res = await api.delete<TData>(path, { data: variables });
