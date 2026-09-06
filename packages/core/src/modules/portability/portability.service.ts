@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import {
   activityEvents,
   assets,
@@ -148,6 +148,11 @@ export class PortabilityService {
     sections.notification_prefs = prefsRows as unknown as Row[];
 
     for (const section of SCOPED_SECTIONS) {
+      if (section === 'subtasks' || section === 'assignment_rules') {
+        // Nested rows scope through their parent responsibility (§4.5).
+        sections[section] = await this.exportNested(exec, section, householdId);
+        continue;
+      }
       const table = tableFor(section);
       const rows = await exec.query[SECTION_RELATIONS[section]]!.findMany({
         where: eq(table.householdId, householdId),
@@ -159,6 +164,27 @@ export class PortabilityService {
     const today = this.clock.now();
     await this.householdsService.markExported(householdId, today);
     return { text, filename: `My-Household-${today.toISOString().slice(0, 10)}.txt` };
+  }
+
+  /**
+   * Subtasks and assignment rules carry no householdId — they export through
+   * their parent responsibilities' ids.
+   */
+  private async exportNested(
+    exec: Executor,
+    section: 'subtasks' | 'assignment_rules',
+    householdId: string,
+  ): Promise<Row[]> {
+    const parents = (await exec.query[SECTION_RELATIONS.responsibilities]!.findMany({
+      where: eq(responsibilities.householdId, householdId),
+      columns: { id: true },
+    })) as unknown as Array<{ id: string }>;
+    const ids = parents.map((p) => p.id);
+    if (ids.length === 0) return [];
+    const table = section === 'subtasks' ? subtasks : assignmentRules;
+    return (await exec.query[SECTION_RELATIONS[section]]!.findMany({
+      where: inArray(table.responsibilityId, ids),
+    })) as unknown as Row[];
   }
 
   /**
