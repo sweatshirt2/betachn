@@ -37,18 +37,22 @@ export function clearApiCache(): void {
   queryClientRef?.clear();
 }
 
-let viewAsPersonId: string | null = null;
-/** Set when entering view-as preview; cleared on exit/logout. */
+let viewAsOverride: string | null = null;
+/**
+ * View-as target — normally mirrored from the RTK slice (enterViewAs);
+ * the override exists so non-React call sites can preview without dispatch.
+ */
 export function setViewAsPersonId(id: string | null): void {
-  viewAsPersonId = id;
+  viewAsOverride = id;
 }
 
 export const api = axios.create({ baseURL: '/api/v1' });
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = store.getState().auth.token;
-  if (token) config.headers.set('Authorization', `Bearer ${token}`);
-  if (viewAsPersonId) config.headers.set('X-View-As-Person-Id', viewAsPersonId);
+  const auth = store.getState().auth;
+  if (auth.token) config.headers.set('Authorization', `Bearer ${auth.token}`);
+  const viewAs = viewAsOverride ?? auth.viewAsPersonId;
+  if (viewAs) config.headers.set('X-View-As-Person-Id', viewAs);
   return config;
 });
 

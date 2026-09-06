@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Button, Sheet } from '@/components/ui';
-import type { RootState } from '@/store';
+import { clearApiCache, queryKeys, useApiQuery } from '@/lib/api';
+import { exitViewAs, type RootState } from '@/store';
+import { ProfileSwitcher } from './ProfileSwitcher';
 
 const TABS = [
   { href: '/', label: 'Today', icon: '🏠' },
@@ -31,9 +33,18 @@ const CHROMELESS = ['/login', '/onboarding'];
 /** App shell (§5.1): greeting bar + bottom tabs on mobile, left rail wide. */
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const dispatch = useDispatch();
   const [createOpen, setCreateOpen] = useState(false);
+  const [profilesOpen, setProfilesOpen] = useState(false);
   const activePerson = useSelector((state: RootState) => state.auth.activePerson);
   const token = useSelector((state: RootState) => state.auth.token);
+  const viewAsPersonId = useSelector((state: RootState) => state.auth.viewAsPersonId);
+  const people = useApiQuery<{ people: Array<{ id: string; name: string }> }>({
+    endpoint: { method: 'get', path: '/profiles' },
+    key: queryKeys.profiles(),
+    options: { enabled: token !== null },
+  });
+  const viewedName = people.data?.people.find((p) => p.id === viewAsPersonId)?.name;
 
   if (CHROMELESS.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
     return <>{children}</>;
@@ -69,12 +80,33 @@ export function Shell({ children }: { children: React.ReactNode }) {
               </span>
             )}
             {activePerson && (
-              <span className="bg-surface border-line rounded-md border px-2 py-1 text-sm" aria-hidden>
+              <button
+                className="bg-surface border-line rounded-md border px-2 py-1 text-sm"
+                onClick={() => setProfilesOpen(true)}
+                aria-label={`Switch profile (currently ${activePerson.name})`}
+              >
                 🙂
-              </span>
+              </button>
             )}
           </div>
         </header>
+
+        {viewAsPersonId && (
+          <div className="bg-mustard text-ink mx-4 mt-2 flex items-center justify-between rounded-md px-3 py-2 text-sm font-semibold" role="status">
+            <span>Previewing as {viewedName ?? 'member'} — read-only</span>
+            <button
+              className="underline"
+              onClick={() => {
+                dispatch(exitViewAs());
+                clearApiCache();
+              }}
+            >
+              Exit
+            </button>
+          </div>
+        )}
+
+        <ProfileSwitcher open={profilesOpen} onClose={() => setProfilesOpen(false)} />
 
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-2 lg:pb-12">{children}</main>
 
