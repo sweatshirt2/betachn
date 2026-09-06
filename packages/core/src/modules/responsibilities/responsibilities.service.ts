@@ -9,6 +9,7 @@ import { buildActivity, type ActivityType } from '../../activity';
 import { AppError } from '../../errors';
 import type { Clock } from '../../ports';
 import type { Executor, UnitOfWork } from '../../db';
+import type { SchedulePattern } from '../../schedule';
 import {
   expandRulesIntoWindow,
   regenerateForwardTx,
@@ -20,8 +21,20 @@ import type {
   RuleInput,
   UpdateResponsibilityInput,
 } from './responsibilities.schema';
-import { responsibilityRowSchema } from './responsibilities.schema';
+import { responsibilityRowSchema, schedulePatternSchema } from './responsibilities.schema';
 import { normalizeRuleDates } from './responsibilities.rules';
+import { z } from 'zod';
+
+const ruleScheduleRow = z.object({
+  id: z.string().uuid(),
+  assignmentRules: z.array(
+    z.object({
+      id: z.string().uuid(),
+      pattern: schedulePatternSchema,
+      interval: z.number().int().nullable(),
+    }),
+  ),
+});
 
 function ruleToMaterializable(rule: RuleInput & { id: string; responsibilityId: string }): MaterializableRule {
   return {
@@ -191,6 +204,28 @@ export class ResponsibilitiesService {
     });
     if (!row) throw new AppError('NOT_FOUND', 'Responsibility not found');
     return responsibilityRowSchema.parse(row);
+  }
+
+  /**
+   * ruleId → schedule shape for grace-window evaluation (§4.9). Read-only;
+   * consumed by the /today aggregate — no occurrence writes involved.
+   */
+  async ruleScheduleMap(
+    householdId: string,
+  ): Promise<Record<string, { pattern: SchedulePattern; interval: number | null }>> {
+    const rows = await this.uow.exec.query.responsibilities!.findMany({
+      where: eq(responsibilities.householdId, householdId),
+      columns: { id: true },
+      with: { assignmentRules: { columns: { id: true, pattern: true, interval: true } } },
+    });
+    const map: Record<string, { pattern: SchedulePattern; interval: number | null }> = {};
+    for (const row of rows) {
+      const parsed = ruleScheduleRow.parse(row);
+      for (const rule of parsed.assignmentRules) {
+        map[rule.id] = { pattern: rule.pattern, interval: rule.interval };
+      }
+    }
+    return map;
   }
 }
 
