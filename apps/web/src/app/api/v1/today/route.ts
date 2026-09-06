@@ -1,4 +1,9 @@
-import { DOMAIN_VIEW_KEY, isWithinGraceWindow, type ActivityDomain } from '@chorify/core';
+import {
+  DOMAIN_VIEW_KEY,
+  isWithinGraceWindow,
+  type ActivityDomain,
+  type OccurrenceRecord,
+} from '@chorify/core';
 import {
   authenticate,
   homeService,
@@ -9,6 +14,9 @@ import {
   route,
   socialService,
 } from '@/lib/server';
+
+/** Occurrences render with their chore title — one round trip, no join client-side. */
+export type TitledOccurrence = OccurrenceRecord & { title: string };
 
 function todayIn(timezone: string): string {
   return new Intl.DateTimeFormat('en-CA', {
@@ -42,30 +50,46 @@ export async function GET(req: Request) {
     const household = await householdsService.get(householdId);
     const today = todayIn(household.timezone);
 
-    const [dueToday, schedules, supplies, shoppingItems, assets, allowedActivity] =
-      await Promise.all([
-        occurrencesService.listRange(householdId, { from: today, to: today }),
-        responsibilitiesService.ruleScheduleMap(householdId),
-        resourcesService.listSupplies(householdId),
-        resourcesService.listShoppingItems(householdId),
-        homeService.listAssets(householdId),
-        (async () => {
+    const [
+      dueToday,
+      schedules,
+      supplies,
+      shoppingItems,
+      assets,
+      allowedActivity,
+      responsibilities,
+    ] = await Promise.all([
+      occurrencesService.listRange(householdId, { from: today, to: today }),
+      responsibilitiesService.ruleScheduleMap(householdId),
+      resourcesService.listSupplies(householdId),
+      resourcesService.listShoppingItems(householdId),
+      homeService.listAssets(householdId),
+      (async () => {
           const allowedDomains = (Object.keys(DOMAIN_VIEW_KEY) as ActivityDomain[]).filter(
             (domain) => ctx.permissionMap[DOMAIN_VIEW_KEY[domain]],
           );
           const page = await socialService.listActivity(householdId, allowedDomains, { limit: 5 });
           return page.events;
         })(),
+        responsibilitiesService.list(householdId),
       ]);
 
-    const todayOccurrences = dueToday.filter((o) => o.status === 'pending');
+    const titles = new Map(responsibilities.map((r) => [r.id, r.title] as const));
+    const withTitle = (o: OccurrenceRecord): TitledOccurrence => ({
+      ...o,
+      title: titles.get(o.responsibilityId) ?? 'Chore',
+    });
+
+    const todayOccurrences = dueToday.filter((o) => o.status === 'pending').map(withTitle);
 
     const missedAll = await occurrencesService.listRange(householdId, { status: 'missed' });
-    const missedInGrace = missedAll.filter((o) => {
-      const schedule = schedules[o.ruleId];
-      if (!schedule) return false;
-      return isWithinGraceWindow(schedule.pattern, schedule.interval, o.dueDate, today, diffDays);
-    });
+    const missedInGrace = missedAll
+      .filter((o) => {
+        const schedule = schedules[o.ruleId];
+        if (!schedule) return false;
+        return isWithinGraceWindow(schedule.pattern, schedule.interval, o.dueDate, today, diffDays);
+      })
+      .map(withTitle);
 
     const upcoming = (
       await occurrencesService.listRange(householdId, {
@@ -73,7 +97,9 @@ export async function GET(req: Request) {
         to: addDaysIso(today, 7),
         status: 'pending',
       })
-    ).slice(0, 20);
+    )
+      .slice(0, 20)
+      .map(withTitle);
 
     const lowSupplies = supplies.filter((s) => s.state === 'low' || s.state === 'out');
     const openShoppingItems = shoppingItems.filter((i) => i.purchasedAt === null).slice(0, 20);

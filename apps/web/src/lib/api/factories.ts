@@ -44,6 +44,8 @@ export function useApiQuery<TData>(config: QueryConfig<TData>) {
 
 type MutationConfig<TData, TVariables> = {
   endpoint: Endpoint;
+  /** Fill `:param` segments from the mutation variables (default: `id`). */
+  pathParams?: (variables: TVariables) => Record<string, string>;
   options?: Omit<UseMutationOptions<TData, ApiError, TVariables>, 'mutationFn'>;
 };
 
@@ -51,7 +53,15 @@ type MutationConfig<TData, TVariables> = {
 export function useApiMutation<TData, TVariables = unknown>(config: MutationConfig<TData, TVariables>) {
   return useMutation<TData, ApiError, TVariables>({
     mutationFn: async (variables) => {
-      const { method, path } = config.endpoint;
+      let params: Record<string, string> = {};
+      if (config.pathParams) {
+        params = config.pathParams(variables);
+      } else {
+        const maybeId = (variables as { id?: unknown }).id;
+        if (typeof maybeId === 'string') params = { id: maybeId };
+      }
+      const path = fillPath(config.endpoint.path, params);
+      const { method } = config.endpoint;
       if (method === 'post') {
         const res = await api.post<TData>(path, variables);
         return res as unknown as TData;
