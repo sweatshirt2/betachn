@@ -5,4 +5,4 @@ export { ok, route, readJson, toErrorResponse } from './http';
 export { exchangeOAuthCode } from './google';
 export type { GoogleIdentity } from './google';
 export { checkRateLimit, recordAuthFailure, clearAuthFailures, clientIp } from './rateLimit';
-export { authService, householdsService, occurrencesService, peopleService, responsibilitiesService, rolesService, routinesService, uow } from './services';
+export { authService, homeService, householdsService, occurrencesService, peopleService, resourcesService, responsibilitiesService, rolesService, routinesService, uow } from './services';

@@ -10,9 +10,11 @@ import {
 } from '@chorify/db';
 import {
   AuthService,
+  HomeService,
   HouseholdsService,
   OccurrencesService,
   PeopleService,
+  ResourcesService,
   ResponsibilitiesService,
   RolesService,
   RoutinesService,
@@ -44,5 +46,9 @@ export const routinesService = new RoutinesService(uow);
 export const responsibilitiesService = new ResponsibilitiesService(uow, systemClock);
 
 export const occurrencesService = new OccurrencesService(uow, systemClock);
+
+export const homeService = new HomeService(uow);
+
+export const resourcesService = new ResourcesService(uow, systemClock);
 
 export { uow };
