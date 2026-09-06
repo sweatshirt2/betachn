@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, EmptyState, Field, Skeleton } from '@/components/ui';
 import { useAssets, useCreateAsset, useCreateRoom, useRooms } from '@/features/home';
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const rooms = useRooms();
   const assets = useAssets();
   const createRoom = useCreateRoom();
@@ -21,7 +23,7 @@ export default function HomePage() {
     );
   }
   if (rooms.isError || assets.isError) {
-    return <EmptyState emoji="😕" title="Couldn't load home" hint="Check your connection and try again." action={<Button onClick={() => { rooms.refetch(); assets.refetch(); }}>Retry</Button>} />;
+    return <EmptyState emoji="😕" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => { rooms.refetch(); assets.refetch(); }}>{t('common.retry')}</Button>} />;
   }
 
   async function onCreateRoom(event: React.FormEvent) {
@@ -40,9 +42,9 @@ export default function HomePage() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl">Home</h1>
-      <section aria-label="Rooms" className="mt-3">
-        <h2 className="font-display text-lg">Rooms</h2>
+      <h1 className="font-display text-2xl">{t('ops.home')}</h1>
+      <section aria-label={t('ops.rooms')} className="mt-3">
+        <h2 className="font-display text-lg">{t('ops.rooms')}</h2>
         <div className="mt-2 grid grid-cols-2 gap-2">
           {rooms.data.rooms.map((r) => (
             <Card key={r.id} className="py-3 text-center">
@@ -51,22 +53,22 @@ export default function HomePage() {
               </p>
               <p className="text-sm font-semibold">{r.name}</p>
               <p className="text-muted text-xs">
-                {assets.data.assets.filter((a) => a.roomId === r.id).length} assets
+                {t('ops.assetsCount', { count: assets.data.assets.filter((a) => a.roomId === r.id).length })}
               </p>
             </Card>
           ))}
         </div>
         <Card className="mt-2">
           <form onSubmit={onCreateRoom} className="flex gap-2">
-            <Field label="New room" value={roomName} onChange={(e) => setRoomName(e.target.value)} placeholder="Kitchen" />
+            <Field label={t('ops.newRoom')} value={roomName} onChange={(e) => setRoomName(e.target.value)} placeholder={t('ops.roomPlaceholder')} />
             <Button type="submit" disabled={createRoom.isPending || roomName.trim().length === 0}>
-              Add
+              {t('common.add')}
             </Button>
           </form>
         </Card>
       </section>
-      <section aria-label="Assets" className="mt-5">
-        <h2 className="font-display text-lg">Assets</h2>
+      <section aria-label={t('ops.assets')} className="mt-5">
+        <h2 className="font-display text-lg">{t('ops.assets')}</h2>
         <div className="mt-2 flex flex-col gap-2">
           {assets.data.assets.map((a) => (
             <Card key={a.id} className="flex items-center gap-3 py-2">
@@ -79,15 +81,15 @@ export default function HomePage() {
         </div>
         <Card className="mt-2">
           <form onSubmit={onCreateAsset} className="flex flex-col gap-2">
-            <Field label="New asset" value={assetName} onChange={(e) => setAssetName(e.target.value)} placeholder="Washing machine" />
+            <Field label={t('ops.newAsset')} value={assetName} onChange={(e) => setAssetName(e.target.value)} placeholder={t('ops.assetPlaceholder')} />
             <label className="block">
-              <span className="text-sm font-semibold">Room (optional)</span>
+              <span className="text-sm font-semibold">{t('ops.roomOptional')}</span>
               <select
                 className="bg-surface text-ink border-line mt-1 w-full rounded-md border px-3 py-2 text-sm"
                 value={assetRoom}
                 onChange={(e) => setAssetRoom(e.target.value)}
               >
-                <option value="">No room</option>
+                <option value="">{t('ops.noRoom')}</option>
                 {rooms.data.rooms.map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.name}
@@ -96,7 +98,7 @@ export default function HomePage() {
               </select>
             </label>
             <Button type="submit" disabled={createAsset.isPending || assetName.trim().length === 0}>
-              Add asset
+              {t('ops.addAsset')}
             </Button>
           </form>
         </Card>

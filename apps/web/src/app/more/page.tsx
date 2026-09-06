@@ -1,24 +1,26 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui';
 
 const LINKS = [
-  { href: '/activity', label: 'Activity', icon: '📜' },
-  { href: '/notifications', label: 'Notifications', icon: '🔔' },
-  { href: '/supplies', label: 'Supplies', icon: '🧴' },
-  { href: '/shopping', label: 'Shopping', icon: '🛒' },
-  { href: '/home', label: 'Home', icon: '🏡' },
-  { href: '/routines', label: 'Routines', icon: '🌅' },
-  { href: '/print', label: 'Print week', icon: '🖨️' },
-  { href: '/settings', label: 'Settings', icon: '🔧' },
-  { href: '/theme-preview', label: 'Theme preview', icon: '🎨' },
-];
+  { href: '/activity', key: 'activity', icon: '📜' },
+  { href: '/notifications', key: 'notifications', icon: '🔔' },
+  { href: '/supplies', key: 'supplies', icon: '🧴' },
+  { href: '/shopping', key: 'shopping', icon: '🛒' },
+  { href: '/home', key: 'home', icon: '🏡' },
+  { href: '/routines', key: 'routines', icon: '🌅' },
+  { href: '/print', key: 'printWeek', icon: '🖨️' },
+  { href: '/settings', key: 'settings', icon: '🔧' },
+  { href: '/theme-preview', key: 'themePreview', icon: '🎨' },
+] as const;
 
 export default function MorePage() {
+  const { t } = useTranslation();
   return (
     <div>
-      <h1 className="font-display text-2xl">More</h1>
+      <h1 className="font-display text-2xl">{t('nav.more')}</h1>
       <div className="mt-3 flex flex-col gap-2">
         {LINKS.map((l) => (
           <Card key={l.href} className="py-2">
@@ -26,7 +28,10 @@ export default function MorePage() {
               <span className="text-xl" aria-hidden>
                 {l.icon}
               </span>
-              <span className="text-sm font-semibold">{l.label}</span>
+              <span className="text-sm font-semibold">{t(`nav.${l.key}`)}</span>
+              <span className="text-terracotta ml-auto" aria-hidden>
+                ›
+              </span>
             </Link>
           </Card>
         ))}

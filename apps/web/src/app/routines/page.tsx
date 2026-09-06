@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, Chip, EmptyState, Field, Skeleton } from '@/components/ui';
 import { useCreateRoutine, useDeleteRoutine, useRoutines } from '@/features/routines';
 
 export default function RoutinesPage() {
+  const { t } = useTranslation();
   const routines = useRoutines();
   const create = useCreateRoutine();
   const remove = useDeleteRoutine();
@@ -19,7 +21,7 @@ export default function RoutinesPage() {
   }
   if (routines.isError) {
     return (
-      <EmptyState emoji="😕" title="Couldn't load routines" hint="Check your connection and try again." action={<Button onClick={() => routines.refetch()}>Retry</Button>} />
+      <EmptyState emoji="😕" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => routines.refetch()}>{t('common.retry')}</Button>} />
     );
   }
 
@@ -32,8 +34,8 @@ export default function RoutinesPage() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl">Routines</h1>
-      <p className="text-muted mt-1 text-sm">Buckets that organize chores — they never schedule anything themselves.</p>
+      <h1 className="font-display text-2xl">{t('ops.routines')}</h1>
+      <p className="text-muted mt-1 text-sm">{t('ops.routinesHint')}</p>
       <div className="mt-3 flex flex-col gap-2">
         {routines.data.routines.map((r) => (
           <Card key={r.id} className="flex items-center gap-3 py-2">
@@ -45,20 +47,20 @@ export default function RoutinesPage() {
               <p className="text-muted text-xs">{r.timeBucket}</p>
             </div>
             <Button tone="quiet" disabled={remove.isPending} onClick={() => remove.mutate({ id: r.id })}>
-              Remove
+              {t('common.remove')}
             </Button>
           </Card>
         ))}
       </div>
       <Card className="mt-4">
         <form onSubmit={onCreate} className="flex gap-2">
-          <Field label="New routine" value={name} onChange={(e) => setName(e.target.value)} placeholder="Morning" />
+          <Field label={t('ops.newRoutine')} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('ops.routinePlaceholder')} />
           <Button type="submit" disabled={create.isPending || name.trim().length === 0}>
-            Add
+            {t('common.add')}
           </Button>
         </form>
       </Card>
-      {routines.data.routines.length > 0 && <Chip>Organizational only</Chip>}
+      {routines.data.routines.length > 0 && <Chip>{t('ops.organizationalOnly')}</Chip>}
     </div>
   );
 }
