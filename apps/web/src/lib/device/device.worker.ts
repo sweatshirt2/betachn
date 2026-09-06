@@ -5,7 +5,7 @@
  * track (same track as Node, via the wasm MigrationClient adapter) →
  * serve query messages for the sqlite-proxy drizzle handle in openDevice.ts.
  */
-import { applyDeviceMigrations } from '@chorify/local-db';
+import { applyDeviceMigrations } from '@chorify/local-db/apply-migrations';
 import { DEVICE_DB_PATH, sqliteWasmMigrationClient, type DeviceRequest, type DeviceResponse, type WasmDb } from './migrationClient';
 
 type SqliteInit = (options?: {

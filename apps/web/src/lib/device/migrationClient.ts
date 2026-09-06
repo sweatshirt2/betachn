@@ -1,4 +1,4 @@
-import type { MigrationClient } from '@chorify/local-db';
+import type { MigrationClient } from '@chorify/local-db/apply-migrations';
 
 /** Device database file inside OPFS. */
 export const DEVICE_DB_PATH = '/chorify.sqlite3';

@@ -1,5 +1,7 @@
-import { FACTORY_MATRICES, builtinRoleSeedRows } from '@chorify/core';
-import { PendingOpQueue, schema } from '@chorify/local-db';
+import { FACTORY_MATRICES } from '@chorify/core/permissions';
+import { builtinRoleSeedRows } from '@chorify/core/roles-rules';
+import { PendingOpQueue } from '@chorify/local-db/queue';
+import * as schema from '@chorify/local-db/schema';
 import type { BrowserDevice } from './openDevice';
 import { openBrowserDevice } from './openDevice';
 import { randomCode, randomId } from './random';

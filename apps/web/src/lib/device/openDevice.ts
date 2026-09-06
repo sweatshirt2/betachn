@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/sqlite-proxy';
-import { detectBrowserCapability, type DeviceCapability } from '@chorify/local-db';
-import { schema } from '@chorify/local-db';
+import { detectBrowserCapability, type DeviceCapability } from '@chorify/local-db/capability';
+import * as schema from '@chorify/local-db/schema';
 import type { DeviceRequest, DeviceResponse } from './migrationClient';
 
 export type BrowserDevice =

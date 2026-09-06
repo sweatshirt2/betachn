@@ -15,8 +15,14 @@
     "baseUrl": ".",
     "paths": {
       "@chorify/core": ["packages/core/src/index.ts"],
+      "@chorify/core/permissions": ["packages/core/src/permissions.ts"],
+      "@chorify/core/roles-rules": ["packages/core/src/modules/roles/roles.rules.ts"],
       "@chorify/db": ["packages/db/src/index.ts"],
-      "@chorify/local-db": ["packages/local-db/src/index.ts"]
+      "@chorify/local-db": ["packages/local-db/src/index.ts"],
+      "@chorify/local-db/schema": ["packages/local-db/src/schema/index.ts"],
+      "@chorify/local-db/queue": ["packages/local-db/src/queue.ts"],
+      "@chorify/local-db/capability": ["packages/local-db/src/capability.ts"],
+      "@chorify/local-db/apply-migrations": ["packages/local-db/src/apply-migrations.ts"]
     }
   }
 }
