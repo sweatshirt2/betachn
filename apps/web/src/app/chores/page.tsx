@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, Chip, EmptyState, SectionWatermark, Skeleton } from '@/components/ui';
 import { useOccurrenceAct, useOccurrences, type TitledOccurrence } from '@/features/chores';
 import { queryKeys, useApiQuery } from '@/lib/api';
@@ -16,6 +17,7 @@ function todayIso(): string {
 }
 
 export default function ChoresPage() {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>('everyone');
   const activePersonId = useSelector((state: RootState) => state.auth.activePerson?.id ?? null);
   const token = useSelector((state: RootState) => state.auth.token);
@@ -35,11 +37,11 @@ export default function ChoresPage() {
     return (
       <EmptyState
         emoji="🧺"
-        title="Sign in to see chores"
-        hint="Your household's responsibilities live here."
+        title={t('chores.title')}
+        hint={t('today.empty')}
         action={
           <Link href="/login">
-            <Button>Sign in</Button>
+            <Button>{t('auth.signIn')}</Button>
           </Link>
         }
       />
@@ -57,7 +59,7 @@ export default function ChoresPage() {
 
   if (occurrences.isError) {
     return (
-      <EmptyState emoji="😕" title="Couldn't load chores" hint="Check your connection and try again." action={<Button onClick={() => occurrences.refetch()}>Retry</Button>} />
+      <EmptyState emoji="😕" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => occurrences.refetch()}>{t('common.retry')}</Button>} />
     );
   }
 
@@ -71,32 +73,32 @@ export default function ChoresPage() {
         : all;
 
   const label = (o: TitledOccurrence) =>
-    o.personIds.length === 0 ? 'Up for grabs' : o.personIds.map((id) => names.get(id) ?? '…').join(', ');
+    o.personIds.length === 0 ? t('today.upForGrabs') : o.personIds.map((id) => names.get(id) ?? '…').join(', ');
 
   return (
     <div className="relative">
       <SectionWatermark variant="bubbles" />
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl">Chores</h1>
+        <h1 className="font-display text-2xl">{t('chores.title')}</h1>
         <Link href="/chores/new">
-          <Button tone="quiet">+ New</Button>
+          <Button tone="quiet">+ {t('chores.newChore')}</Button>
         </Link>
       </div>
-      <div className="mt-3 flex gap-2" role="tablist" aria-label="Chore scope">
-        {(['mine', 'everyone', 'overdue'] as Tab[]).map((t) => (
+      <div className="mt-3 flex gap-2" role="tablist" aria-label={t('chores.scope')}>
+        {(['mine', 'everyone', 'overdue'] as Tab[]).map((tabOption) => (
           <button
-            key={t}
+            key={tabOption}
             role="tab"
-            aria-selected={tab === t}
-            onClick={() => setTab(t)}
-            className={`rounded-sm px-3 py-1 text-sm font-semibold ${tab === t ? 'bg-terracotta text-terracotta-ink' : 'bg-surface text-ink border-line border'}`}
+            aria-selected={tab === tabOption}
+            onClick={() => setTab(tabOption)}
+            className={`rounded-sm px-3 py-1 text-sm font-semibold ${tab === tabOption ? 'bg-terracotta text-terracotta-ink' : 'bg-surface text-ink border-line border'}`}
           >
-            {t === 'mine' ? 'Mine' : t === 'everyone' ? 'Everyone' : `Overdue${overdue.length > 0 ? ` · ${overdue.length}` : ''}`}
+            {tab === 'mine' ? t('chores.mine') : tab === 'everyone' ? t('chores.everyone') : `${t('chores.overdue')}${overdue.length > 0 ? ` · ${overdue.length}` : ''}`}
           </button>
         ))}
       </div>
       {visible.length === 0 ? (
-        <EmptyState emoji="✨" title="All clear" hint="Nothing here — enjoy it while it lasts." />
+        <EmptyState emoji="✨" title={t('chores.allClear')} hint={t('chores.allClearHint')} />
       ) : (
         <div className="mt-3 flex flex-col gap-2">
           {visible.map((o) => (
@@ -107,8 +109,8 @@ export default function ChoresPage() {
                   {o.dueDate} · {label(o)}
                 </p>
               </Link>
-              {o.status === 'pending' && o.dueDate < from && <Chip tone="danger">Missed</Chip>}
-              <Button tone="quiet" disabled={act.isPending} onClick={() => act.mutate({ id: o.id, action: 'complete' })} aria-label={`Complete ${o.title}`}>
+              {o.status === 'pending' && o.dueDate < from && <Chip tone="danger">{t('household.missed')}</Chip>}
+              <Button tone="quiet" disabled={act.isPending} onClick={() => act.mutate({ id: o.id, action: 'complete' })} aria-label={t('chores.completeAria', { title: o.title })}>
                 ✓
               </Button>
             </Card>

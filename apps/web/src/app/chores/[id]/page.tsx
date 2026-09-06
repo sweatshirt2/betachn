@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { use } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { Button, Card, Chip, EmptyState, Skeleton } from '@/components/ui';
 import { useOccurrenceAct, useOccurrences, useResponsibility } from '@/features/chores';
@@ -12,6 +13,7 @@ type Person = { id: string; name: string };
 
 export default function ChoreDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const { t } = useTranslation();
   const token = useSelector((state: RootState) => state.auth.token);
   const detail = useResponsibility(id);
   const act = useOccurrenceAct();
@@ -35,11 +37,11 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
     return (
       <EmptyState
         emoji="😕"
-        title="Chore not found"
-        hint="It may have been archived."
+        title={t('chores.notFound')}
+        hint={t('chores.notFoundHint')}
         action={
           <Link href="/chores">
-            <Button>Back to chores</Button>
+            <Button>{t('chores.backToChores')}</Button>
           </Link>
         }
       />
@@ -54,7 +56,7 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
   return (
     <div>
       <Link href="/chores" className="text-terracotta text-sm font-semibold">
-        ← Chores
+        {t('chores.title')}
       </Link>
       <h1 className="font-display mt-1 text-2xl">
         {responsibility.icon} {responsibility.title}
@@ -67,8 +69,8 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
       </div>
 
       {subtasks.length > 0 && (
-        <section className="mt-4" aria-label="Subtasks">
-          <h2 className="font-display text-lg">Steps</h2>
+        <section className="mt-4" aria-label={t('chores.steps')}>
+          <h2 className="font-display text-lg">{t('chores.steps')}</h2>
           <div className="mt-2 flex flex-col gap-2">
             {subtasks.map((s) => (
               <Card key={s.id} className="flex items-center gap-3 py-2">
@@ -83,15 +85,15 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
       )}
 
       {related.length > 0 && (
-        <section className="mt-4" aria-label="Open occurrences">
-          <h2 className="font-display text-lg">Open</h2>
+        <section className="mt-4" aria-label={t('chores.open')}>
+          <h2 className="font-display text-lg">{t('chores.open')}</h2>
           <div className="mt-2 flex flex-col gap-2">
             {related.map((o) => (
               <Card key={o.id} className="flex items-center gap-3 py-2">
                 <p className="flex-1 text-sm">
-                  Due {o.dueDate} · {(o.personIds.map((pid) => names.get(pid) ?? '…').join(', ') || 'Up for grabs')}
+                  {t('chores.due', { date: o.dueDate })} · {(o.personIds.map((pid) => names.get(pid) ?? '…').join(', ') || t('today.upForGrabs'))}
                 </p>
-                <Button tone="quiet" disabled={act.isPending} onClick={() => act.mutate({ id: o.id, action: 'complete' })} aria-label="Complete">
+                <Button tone="quiet" disabled={act.isPending} onClick={() => act.mutate({ id: o.id, action: 'complete' })} aria-label={t('chores.complete')}>
                   ✓
                 </Button>
               </Card>

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, Field } from '@/components/ui';
 import { useCreateResponsibility } from '@/features/chores';
 import { queryKeys, useApiQuery } from '@/lib/api';
@@ -18,6 +19,7 @@ function todayIso(): string {
 
 /** Minimal chore composer: title + cadence + assignees. Power options (rotation, ranges) arrive next. */
 export default function NewChorePage() {
+  const { t } = useTranslation();
   const router = useRouter();
   const token = useSelector((state: RootState) => state.auth.token);
   const create = useCreateResponsibility();
@@ -52,27 +54,27 @@ export default function NewChorePage() {
   return (
     <div>
       <Link href="/chores" className="text-terracotta text-sm font-semibold">
-        ← Chores
+        ← {t('chores.title')}
       </Link>
-      <h1 className="font-display mt-1 text-2xl">New chore</h1>
+      <h1 className="font-display mt-1 text-2xl">{t('chores.newChore')}</h1>
       <Card className="mt-3">
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
-          <Field label="Title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Take out the trash" />
+          <Field label={t('chores.choreTitle')} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('chores.titlePlaceholder')} />
           <label className="block">
-            <span className="text-sm font-semibold">Repeats</span>
+            <span className="text-sm font-semibold">{t('chores.repeats')}</span>
             <select
               className="bg-surface text-ink border-line mt-1 w-full rounded-md border px-3 py-2 text-sm"
               value={pattern}
               onChange={(e) => setPattern(e.target.value as Pattern)}
             >
-              <option value="once">Just once</option>
-              <option value="daily">Every day</option>
-              <option value="weekly">Every week</option>
-              <option value="monthly">Every month</option>
+              <option value="once">{t('chores.once')}</option>
+              <option value="daily">{t('chores.daily')}</option>
+              <option value="weekly">{t('chores.weekly')}</option>
+              <option value="monthly">{t('chores.monthly')}</option>
             </select>
           </label>
           <fieldset>
-            <legend className="text-sm font-semibold">Assigned to (empty = up for grabs)</legend>
+            <legend className="text-sm font-semibold">{t('chores.assignedTo')}</legend>
             <div className="mt-1 flex flex-wrap gap-2">
               {(people.data?.people ?? []).map((p) => (
                 <button
@@ -88,7 +90,7 @@ export default function NewChorePage() {
             </div>
           </fieldset>
           <Button type="submit" disabled={create.isPending || title.trim().length === 0}>
-            {create.isPending ? 'Adding…' : 'Add chore'}
+            {create.isPending ? t('chores.adding') : t('chores.addChore')}
           </Button>
         </form>
       </Card>
