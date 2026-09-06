@@ -7,15 +7,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "wasm": "node scripts/copy-sqlite-wasm.mjs"
   },
   "dependencies": {
     "@chorify/core": "workspace:*",
     "@chorify/db": "workspace:*",
     "@chorify/local-db": "workspace:*",
     "@reduxjs/toolkit": "^2.12.0",
+    "@sqlite.org/sqlite-wasm": "3.53.0-build1",
     "@tanstack/react-query": "^5.102.8",
     "axios": "^1.20.0",
+    "drizzle-orm": "^0.44.7",
     "i18next": "^26.4.2",
     "next": "^15.5.4",
     "react": "^19.1.1",
