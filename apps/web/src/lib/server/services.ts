@@ -14,10 +14,13 @@ import {
   HouseholdsService,
   OccurrencesService,
   PeopleService,
+  PortabilityService,
   ResourcesService,
   ResponsibilitiesService,
   RolesService,
   RoutinesService,
+  SocialService,
+  SyncService,
 } from '@chorify/core';
 
 /**
@@ -50,5 +53,11 @@ export const occurrencesService = new OccurrencesService(uow, systemClock);
 export const homeService = new HomeService(uow);
 
 export const resourcesService = new ResourcesService(uow, systemClock);
+
+export const socialService = new SocialService(uow, systemClock);
+
+export const syncService = new SyncService(uow);
+
+export const portabilityService = new PortabilityService(uow, systemClock, householdsService);
 
 export { uow };
