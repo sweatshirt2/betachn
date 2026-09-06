@@ -1,6 +1,7 @@
 import { and, desc, eq, isNull, lt } from 'drizzle-orm';
 import { activityEvents, notificationPrefs, notifications } from '@chorify/db';
 import { AppError } from '../../errors';
+import { defaultPrefToggles } from '../../notify';
 import type { Clock } from '../../ports';
 import type { ActivityDomain } from '../../activity';
 import type { UnitOfWork } from '../../db';
@@ -102,9 +103,17 @@ export class SocialService {
     return updated.length;
   }
 
+  /** Stored toggles, or the default matrix when the person never saved prefs. */
+  async getPrefs(personId: string): Promise<NotificationPrefsRecord> {
+    const row = await this.uow.exec.query.notificationPrefs!.findFirst({
+      where: eq(notificationPrefs.personId, personId),
+    });
+    if (!row) return { personId, categories: defaultPrefToggles() };
+    return notificationPrefsRowSchema.parse(row);
+  }
+
   /** Upsert of per-person category toggles (target: personId pk). */
-  async putPrefs(personId: string, input: PutNotificationPrefsInput): Promise<NotificationPrefsRecord> {
-    const [row] = await this.uow.exec
+  async putPrefs(personId: string, input: PutNotificationPrefsInput): Promise<NotificationPrefsRecord> {    const [row] = await this.uow.exec
       .insert(notificationPrefs)
       .values({ personId, categories: input.categories })
       .onConflictDoUpdate({

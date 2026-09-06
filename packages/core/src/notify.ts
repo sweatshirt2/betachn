@@ -98,6 +98,11 @@ const CATEGORY_DEFAULTS: Record<NotifyCategory, boolean> = {
   backup: true,
 };
 
+/** Full default toggle set for preferences UI (absent row ⇒ these). */
+export function defaultPrefToggles(): Record<NotifyCategory, boolean> {
+  return { ...CATEGORY_DEFAULTS };
+}
+
 export function categoryAllowed(
   category: NotifyCategory,
   prefs: PrefToggles | null | undefined,
