@@ -658,7 +658,7 @@ Finance module schema + flows (income/expense/account/bill/budget/goal, assigned
 
 ## 16. Implementation Status & Hand-off (live ledger — update at every green checkpoint)
 
-**Last updated:** Step-11 checkpoint — backend COMPLETE. Tree clean at HEAD `cc40173`. §12 steps 3–11 ✅ COMPLETE (full API + worker). Suites: core 97/15 ✅ · local-db 16/4 ✅ · all packages typecheck clean + reseeded pristine. NEXT: steps 12b–19 screens → Amharic parity → §11 pass.
+**Last updated:** Step-11 checkpoint — backend COMPLETE. Tree clean at HEAD `cc40173`. §12 steps 3–11 ✅ COMPLETE (full API + worker). Suites: core 97/15 ✅ · local-db 16/4 ✅ · all packages typecheck clean + reseeded pristine. NEXT: steps 12b–19 screens → Amharic parity → §11 pass. DONE step 12b-shell (`0bcd264`, 371 lines single surface): Sheet/Toast+Undo/EmptyState/Skeleton/Field/Watermark primitives, bottom tabs + left rail + FAB-create + greeting/SyncStatus shell (chromeless on /login + /onboarding). DONE step 13-partial (`2c84605`): auth feature folder (endpoints registry, wire→slice mapper, login/logout/switch mutations preserving Bearer on switch) + /login screen (busy discipline, uniform-error display, RATE_LIMITED countdown). NEXT: onboarding stepper, then Today + Chores.
 
 ### 16.0 Commit trail of this session (oldest → newest)
 
