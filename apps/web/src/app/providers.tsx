@@ -1,11 +1,12 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { I18nextProvider } from 'react-i18next';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import i18n from '@/i18n';
+import { setQueryClientForApi } from '@/lib/api';
 import { persistor, store } from '@/store';
 
 function registerServiceWorker() {
@@ -25,6 +26,11 @@ export function Providers({ children }: { children: ReactNode }) {
         defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
       }),
   );
+
+  useEffect(() => {
+    setQueryClientForApi(queryClient);
+    return () => setQueryClientForApi(null);
+  }, [queryClient]);
 
   registerServiceWorker();
 
