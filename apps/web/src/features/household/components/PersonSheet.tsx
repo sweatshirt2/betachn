@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, Field, Sheet } from '@/components/ui';
 import { clearApiCache, useApiQuery } from '@/lib/api';
 import { enterViewAs, type RootState } from '@/store';
@@ -29,6 +30,7 @@ export function PersonSheet({
   onClose: () => void;
 }) {
   const dispatch = useDispatch();
+  const { t } = useTranslation();
   const canConfigure = useSelector(
     (state: RootState) => state.auth.permissionMap['household.configure_permissions'] === true,
   );
@@ -66,44 +68,44 @@ export function PersonSheet({
     onClose();
   }
 
-  const roleName = roles.data?.roles.find((r) => r.id === person.roleId)?.name ?? 'No role';
+  const roleName = roles.data?.roles.find((r) => r.id === person.roleId)?.name ?? t('household.noRole');
 
   return (
     <Sheet open onClose={onClose} title={`${person.avatarEmoji} ${person.name}`}>
       <div className="flex flex-col gap-4">
         <Card>
           <p className="text-sm">
-            <span className="text-muted">Role:</span> {roleName}
+            <span className="text-muted">{t('household.roleLabel')}:</span> {roleName}
           </p>
           <div className="mt-3 flex gap-6 text-center">
             <div>
               <p className="font-display text-2xl">{finished}</p>
-              <p className="text-muted text-xs">finished</p>
+              <p className="text-muted text-xs">{t('household.finished')}</p>
             </div>
             <div>
               <p className="font-display text-2xl">{missed}</p>
-              <p className="text-muted text-xs">missed</p>
+              <p className="text-muted text-xs">{t('household.missed')}</p>
             </div>
           </div>
         </Card>
 
         {canConfigure && (
           <Card>
-            <Field label="Name" value={name} onChange={(e) => setName(e.target.value)} />
+            <Field label={t('common.name')} value={name} onChange={(e) => setName(e.target.value)} />
             <div className="mt-2 flex gap-2">
               <Button tone="quiet" disabled={update.isPending} onClick={saveName}>
-                Save name
+                {t('household.saveName')}
               </Button>
             </div>
             <label className="mt-3 block">
-              <span className="text-sm font-semibold">Role</span>
+              <span className="text-sm font-semibold">{t('household.roleLabel')}</span>
               <select
                 className="bg-surface text-ink border-line mt-1 w-full rounded-md border px-3 py-2 text-sm"
                 value={person.roleId ?? ''}
                 onChange={(e) => void saveRole(e.target.value)}
                 disabled={update.isPending}
               >
-                <option value="">No role</option>
+                <option value="">{t('household.noRole')}</option>
                 {(roles.data?.roles ?? []).map((r) => (
                   <option key={r.id} value={r.id}>
                     {r.name}
@@ -121,7 +123,7 @@ export function PersonSheet({
                   onClose();
                 }}
               >
-                Preview as {person.name}
+                {t('household.previewAsName', { name: person.name })}
               </Button>
             </div>
           </Card>
@@ -131,20 +133,20 @@ export function PersonSheet({
           (confirmingDelete ? (
             <Card>
               <p className="text-sm">
-                Remove {person.name}? Their account and sessions go too — history keeps their name.
+                {t('household.removeConfirm', { name: person.name })}
               </p>
               <div className="mt-2 flex gap-2">
                 <Button disabled={remove.isPending} onClick={() => void destroy()}>
-                  Remove
+                  {t('household.removePerson')}
                 </Button>
                 <Button tone="quiet" onClick={() => setConfirmingDelete(false)}>
-                  Keep
+                  {t('household.keep')}
                 </Button>
               </div>
             </Card>
           ) : (
             <Button tone="quiet" onClick={() => setConfirmingDelete(true)}>
-              Remove person
+              {t('household.removePerson')}
             </Button>
           ))}
       </div>

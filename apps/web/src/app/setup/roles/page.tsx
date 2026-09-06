@@ -2,11 +2,13 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, EmptyState, Field, Skeleton } from '@/components/ui';
 import { useCreateRole, useResetRole, useRoles } from '@/features/household';
 
 /** Role editor (§5.5): name-only save, reset-to-default, owner toggle display. */
 export default function RolesPage() {
+  const { t } = useTranslation();
   const roles = useRoles();
   const create = useCreateRole();
   const reset = useResetRole();
@@ -22,7 +24,7 @@ export default function RolesPage() {
   }
   if (roles.isError) {
     return (
-      <EmptyState emoji="😕" title="Couldn't load roles" hint="Check your connection and try again." action={<Button onClick={() => roles.refetch()}>Retry</Button>} />
+      <EmptyState emoji="😕" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => roles.refetch()}>{t('common.retry')}</Button>} />
     );
   }
 
@@ -36,35 +38,33 @@ export default function RolesPage() {
   return (
     <div>
       <Link href="/household" className="text-terracotta text-sm font-semibold">
-        ← Household
+        ← {t('household.title')}
       </Link>
-      <h1 className="font-display mt-1 text-2xl">Family roles</h1>
+      <h1 className="font-display mt-1 text-2xl">{t('household.familyRoles')}</h1>
       <div className="mt-3 flex flex-col gap-2">
         {roles.data.roles.map((r) => (
           <Card key={r.id} className="flex items-center gap-3 py-2">
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">
-                {r.name} {r.isOwnerRole && <span aria-label="owner">●</span>}
+                {r.name} {r.isOwnerRole && <span aria-label={t('household.owner')}>●</span>}
               </p>
               <p className="text-muted text-xs">
-                {r.isBuiltin ? 'Built-in preset' : 'Custom role'} ·{' '}
-                {Object.values(r.permissions).filter(Boolean).length} permissions
+                {r.isBuiltin ? t('household.builtinPreset') : t('household.customRole')} ·{' '}
+                {t('household.permissionsCount', { count: Object.values(r.permissions).filter(Boolean).length })}
               </p>
             </div>
             <Button tone="quiet" disabled={reset.isPending} onClick={() => reset.mutate({ id: r.id })}>
-              Reset
+              {t('household.reset')}
             </Button>
           </Card>
         ))}
       </div>
-      <p className="text-muted mt-2 text-xs">
-        Reset restores factory defaults for built-ins, or the create-time snapshot for custom roles.
-      </p>
+      <p className="text-muted mt-2 text-xs">{t('household.resetExplain')}</p>
       <Card className="mt-4">
         <form onSubmit={onCreate} className="flex gap-2">
-          <Field label="New role name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Homework helper" />
+          <Field label={t('household.newRole')} value={name} onChange={(e) => setName(e.target.value)} />
           <Button type="submit" disabled={create.isPending || name.trim().length === 0}>
-            Add
+            {t('common.add')}
           </Button>
         </form>
       </Card>

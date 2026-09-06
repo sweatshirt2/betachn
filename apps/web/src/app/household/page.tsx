@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, EmptyState, SectionWatermark, Skeleton } from '@/components/ui';
 import { PersonSheet, usePeople, useRoles, type PersonPayload } from '@/features/household';
 
 export default function HouseholdPage() {
+  const { t } = useTranslation();
   const people = usePeople();
   const roles = useRoles();
   const [selected, setSelected] = useState<PersonPayload | null>(null);
@@ -20,12 +22,12 @@ export default function HouseholdPage() {
   }
   if (people.isError) {
     return (
-      <EmptyState emoji="😕" title="Couldn't load household" hint="Check your connection and try again." action={<Button onClick={() => people.refetch()}>Retry</Button>} />
+      <EmptyState emoji="😕" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => people.refetch()}>{t('common.retry')}</Button>} />
     );
   }
 
   const roleName = (roleId: string | null) =>
-    roles.data?.roles.find((r) => r.id === roleId)?.name ?? 'No role';
+    roles.data?.roles.find((r) => r.id === roleId)?.name ?? t('household.noRole');
   const isOwner = (roleId: string | null) =>
     roles.data?.roles.find((r) => r.id === roleId)?.isOwnerRole === true;
 
@@ -33,9 +35,9 @@ export default function HouseholdPage() {
     <div className="relative">
       <SectionWatermark variant="house" />
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl">Household</h1>
+        <h1 className="font-display text-2xl">{t('household.title')}</h1>
         <Link href="/setup/roles">
-          <Button tone="quiet">Roles</Button>
+          <Button tone="quiet">{t('household.roles')}</Button>
         </Link>
       </div>
       <div className="mt-3 flex flex-col gap-2">
@@ -47,7 +49,7 @@ export default function HouseholdPage() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-semibold">
-                  {p.name} {isOwner(p.roleId) && <span aria-label="owner">●</span>}
+                  {p.name} {isOwner(p.roleId) && <span aria-label={t('household.owner')}>●</span>}
                 </span>
                 <span className="text-muted text-xs">{roleName(p.roleId)}</span>
               </span>

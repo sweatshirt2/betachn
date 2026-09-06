@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export function Sheet({
   open,
@@ -13,6 +14,7 @@ export function Sheet({
   title: string;
   children: ReactNode;
 }) {
+  const { t } = useTranslation();
   useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
@@ -33,7 +35,7 @@ export function Sheet({
       <button
         className="absolute inset-0 bg-ink/40"
         onClick={onClose}
-        aria-label="Close dialog"
+        aria-label={t('common.close')}
         tabIndex={-1}
       />
       <div className="bg-surface text-ink relative w-full max-w-lg rounded-t-lg p-5 shadow-lift sm:rounded-lg">

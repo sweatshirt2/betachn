@@ -1,6 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ApiError, queryKeys, useApiMutation } from '@/lib/api';
 import { useToast } from '@/components/ui';
 import { choresEndpoints } from '../chores.endpoints';
@@ -15,6 +16,7 @@ type ActVariables = { id: string } & OccurrenceAction;
 export function useOccurrenceAct() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const refresh = () => {
     void queryClient.invalidateQueries({ queryKey: queryKeys.today() });
@@ -32,18 +34,18 @@ export function useOccurrenceAct() {
       onSuccess: ({ occurrence }) => {
         refresh();
         if (occurrence.status === 'completed') {
-          toast(`${occurrence.title} completed.`, {
-            label: 'Undo',
+          toast(t('activity.occurrenceCompleted', { title: occurrence.title }), {
+            label: t('common.undo'),
             run: () => reopen.mutate({ id: occurrence.id }),
           });
         } else {
-          toast(`${occurrence.title} updated.`);
+          toast(t('chores.updatedToast', { title: occurrence.title }));
         }
       },
       onError: (error) => {
         if (error instanceof ApiError && error.code === 'ALREADY_DONE') {
           refresh();
-          toast('Already handled — list refreshed.');
+          toast(t('chores.alreadyHandled'));
         }
       },
     },

@@ -1,6 +1,7 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useApiMutation, useApiQuery } from '@/lib/api';
 import { useToast } from '@/components/ui';
 import { homeEndpoints } from '../home.endpoints';
@@ -59,13 +60,14 @@ export function useCreateAsset() {
 export function useLogService() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
   return useApiMutation<unknown, { id: string; servicedOn: string }>({
     endpoint: homeEndpoints.logService,
     options: {
       onSuccess: () => {
         void queryClient.invalidateQueries({ queryKey: ['assets'] });
         void queryClient.invalidateQueries({ queryKey: ['asset'] });
-        toast('Service logged.');
+        toast(t('ops.serviceLogged'));
       },
     },
   });

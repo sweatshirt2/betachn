@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/lib/api';
 import { Button, Field, Sheet } from '@/components/ui';
 import { useSwitchProfile } from '@/features/auth';
@@ -13,6 +14,7 @@ import { usePeople } from '@/features/household';
 export function ProfileSwitcher({ open, onClose }: { open: boolean; onClose: () => void }) {
   const people = usePeople();
   const switchMut = useSwitchProfile();
+  const { t } = useTranslation();
   const [gatedId, setGatedId] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [failed, setFailed] = useState(false);
@@ -57,7 +59,7 @@ export function ProfileSwitcher({ open, onClose }: { open: boolean; onClose: () 
   }
 
   return (
-    <Sheet open={open} onClose={onClose} title="Switch profile">
+    <Sheet open={open} onClose={onClose} title={t('auth.switchProfile')}>
       <div className="flex flex-col gap-2">
         {(people.data?.people ?? []).map((p) => (
           <div key={p.id}>
@@ -80,14 +82,14 @@ export function ProfileSwitcher({ open, onClose }: { open: boolean; onClose: () 
                 }}
               >
                 <Field
-                  label={`Password for ${p.name}`}
+                  label={t('auth.passwordFor', { name: p.name })}
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  error={wrongPassword ? 'Wrong password — try again.' : undefined}
+                  error={wrongPassword ? t('auth.wrongPassword') : undefined}
                 />
                 <Button type="submit" disabled={switchMut.isPending || password.length === 0}>
-                  Go
+                  {t('common.go')}
                 </Button>
               </form>
             )}
