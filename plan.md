@@ -658,11 +658,11 @@ Finance module schema + flows (income/expense/account/bill/budget/goal, assigned
 
 ## 16. Implementation Status & Hand-off (live ledger — update at every green checkpoint)
 
-**Last updated:** END of the steps-3→5 session. §12 steps 3 ✅ and 5 ✅ COMPLETE; step 4 ~95% (only the browser-side OPFS MigrationClient adapter remains — it belongs to the web-foundation step 12 where a real worker context exists). Suites: core **97 tests / 15 files** ✅ · local-db **16 tests / 4 files** ✅ · all four packages typecheck clean. Working tree clean; HEAD `615c4d6`.
+**Last updated:** Reconcile checkpoint (theme-first session). Tree clean at HEAD `f6b7886`. §12 steps 3 ✅ and 5 ✅ COMPLETE; step 4 ~95% (only the browser-side OPFS MigrationClient adapter remains — it belongs to the web-foundation step 12 where a real worker context exists). Suites: core **97 tests / 15 files** ✅ · local-db **16 tests / 4 files** ✅ · all four packages typecheck clean. Order change (D78): web + theme scaffold (step 12a) goes FIRST, then steps 6–11 routes.
 
 ### 16.0 Commit trail of this session (oldest → newest)
 
-`aa1f655` Executor/UnitOfWork kernel · `7826249` TXT portability + roundtrips · `b254c60` Ethiopic calendar · `f7bf2e6` notify resolver · `0cc1b50` activity builders · `60f127c` ledger checkpoint · `f9187ea` pg UnitOfWork adapter · `0792ea2` roles module · `3d16b65` people module · `9c0cd2a` routines module · `763a3b3` occurrences service (+`6547198` fix) · `e229565` responsibilities module · `7cebb64` db migration 0002 nullable users.username · `3ddc91b`/`f944953`/`87e1a5e` home/resources/social modules (parallel task agents) · `846818d` builtin role seeding · `c77a4d5` households service · `68b1d33` secure-token ports + permissionMapForPerson · `7742f24` auth service · `c0b4147` migration 0003 clientOpUuid · `dd84434`+`88a24c2` migration 0004 unique partial index · `329751f` sync service · `5bfb662` portability service · placeholder-person fix commit · `1336e32` local-db mirrors+migrations+smoke · `716fb20` queue+capability+passcode · `9431878` sync transport + unions move to core.
+`aa1f655` Executor/UnitOfWork kernel · `7826249` TXT portability + roundtrips · `b254c60` Ethiopic calendar · `f7bf2e6` notify resolver · `0cc1b50` activity builders · `60f127c` ledger checkpoint · `f9187ea` pg UnitOfWork adapter · `0792ea2` roles module · `3d16b65` people module · `9c0cd2a` routines module · `763a3b3` occurrences service (+`6547198` fix) · `e229565` responsibilities module · `7cebb64` db migration 0002 nullable users.username · `3ddc91b`/`f944953`/`87e1a5e` home/resources/social modules (parallel task agents) · `846818d` builtin role seeding · `c77a4d5` households service · `68b1d33` secure-token ports + permissionMapForPerson · `7742f24` auth service · `c0b4147` migration 0003 clientOpUuid · `dd84434`+`88a24c2` migration 0004 unique partial index · `329751f` sync service · `5bfb662` portability service · placeholder-person fix commit · `1336e32` local-db mirrors+migrations+smoke · `716fb20` queue+capability+passcode · `9431878` sync transport + unions move to core · `615c4d6` sync engine LWW+flusher · `13a9b44` ledger close-out D75–D76 · `615c80a` db node port adapters · `f6b7886` core google-login code-exchange schema (dirty-hunk rescue; `cutoff.md` terminal paste deleted).
 
 ### 16.1 What exists — verified green
 
@@ -678,7 +678,8 @@ Finance module schema + flows (income/expense/account/bill/budget/goal, assigned
 ### 16.2 What's left, in execution order
 
 1. ~~Finish sync engine client~~ ✅ DONE (`615c4d6`).
-2. Steps 6–11 (next sessions): route handlers consuming the services as-is (auth middleware: Bearer resolve → UnitOfWork assembly; rate limiter on auth_attempts; view-as gate), worker job handlers (materializeHousehold/sweepMissed/digest/backup-nudge + household_changes pruning ≥90d).
+2. **Step 12a (IN PROGRESS — theme-first):** web + theme scaffold before routes (D78): Next.js 15 shell + Tailwind v4 CSS-first + `styles/tokens.css` trio (D79) + Providers/`useTheme`/`/theme-preview` (static mocks, NOT the Bekele DB seed) + OPFS MigrationClient adapter. Theme mocks stay DB-free so visual iteration never blocks on Postgres.
+3. Steps 6–11 (after 12a): route handlers consuming the services as-is (auth middleware: Bearer resolve → UnitOfWork assembly; rate limiter on auth_attempts; view-as gate), worker job handlers (materializeHousehold/sweepMissed/digest/backup-nudge + household_changes pruning ≥90d).
 3. Steps 12–19 web foundation → screens → Amharic parity → full §11 pass.
 
 ### 16.3 Session gotchas (learned the hard way — cumulative)
@@ -710,4 +711,7 @@ Finance module schema + flows (income/expense/account/bill/budget/goal, assigned
 | D74 | Stale banner: registered-but-never-sync-completed while holding ops ⇒ 'strong'. |
 | D75 | Conflict window = pre-push pending snapshot; loss notifications coalesce per kind+entity with bumping count; rejected pushes write changeRejected with no actor. |
 | D76 | Poison incoming rows are skipped-and-counted per flush (never wedge sync); full-row after-state payloads remain the server contract. |
+| D77 | CSS vars are truth: `styles/tokens.css` owns every raw value; Tailwind `@theme inline` only maps `var(--chorify-*)`; no hex/arbitrary values in features/ui. |
+| D78 | Theme-first order: step 12a (web + theme scaffold) before steps 6–11 routes; theme preview uses static mocks, never the Bekele DB seed. |
+| D79 | Theme trio: `family` (warm light default, §5.2) · `ember` (warm dark) · `highland` (high-contrast light); device-localStorage switch, never in DB. |
 
