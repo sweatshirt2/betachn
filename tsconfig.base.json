@@ -15,7 +15,8 @@
     "baseUrl": ".",
     "paths": {
       "@chorify/core": ["packages/core/src/index.ts"],
-      "@chorify/db": ["packages/db/src/index.ts"]
+      "@chorify/db": ["packages/db/src/index.ts"],
+      "@chorify/local-db": ["packages/local-db/src/index.ts"]
     }
   }
 }

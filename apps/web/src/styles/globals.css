@@ -1,0 +1,44 @@
+@import 'tailwindcss';
+@import './tokens.css';
+
+/**
+ * Tailwind root config (CSS-first, D77). Every entry references a runtime
+ * `--chorify-*` variable — no raw values here. To experiment with the UI,
+ * edit `tokens.css` only.
+ */
+@theme inline {
+  --color-cream: var(--chorify-bg);
+  --color-surface: var(--chorify-surface);
+  --color-ink: var(--chorify-ink);
+  --color-muted: var(--chorify-muted);
+  --color-line: var(--chorify-line);
+  --color-terracotta: var(--chorify-primary);
+  --color-terracotta-ink: var(--chorify-primary-ink);
+  --color-olive: var(--chorify-secondary);
+  --color-mustard: var(--chorify-accent);
+  --color-clay-red: var(--chorify-danger);
+  --color-sky: var(--chorify-info);
+
+  --radius-sm: var(--chorify-radius-sm);
+  --radius-md: var(--chorify-radius-md);
+  --radius-lg: var(--chorify-radius-lg);
+
+  --shadow-soft: var(--chorify-shadow-soft);
+  --shadow-lift: var(--chorify-shadow-lift);
+
+  --font-display: var(--chorify-font-display);
+  --font-body: var(--chorify-font-body);
+}
+
+body {
+  background-color: var(--chorify-bg);
+  color: var(--chorify-ink);
+  font-family: var(--chorify-font-body);
+}
+
+@media print {
+  nav,
+  [data-no-print] {
+    display: none !important;
+  }
+}
