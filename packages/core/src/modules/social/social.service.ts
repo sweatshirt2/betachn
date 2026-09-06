@@ -10,6 +10,7 @@ import {
   notificationPrefsRowSchema,
   notificationRowSchema,
   type ActivityEventRecord,
+  type NotificationCategory,
   type NotificationPrefsRecord,
   type NotificationRecord,
   type PutNotificationPrefsInput,
@@ -110,6 +111,32 @@ export class SocialService {
     });
     if (!row) return { personId, categories: defaultPrefToggles() };
     return notificationPrefsRowSchema.parse(row);
+  }
+
+  /**
+   * Direct notification writer for worker jobs (digest, backup-nudge).
+   * Callers resolve recipients + prefs before calling — this only persists.
+   */
+  async notify(input: {
+    householdId: string;
+    recipientPersonId: string;
+    category: NotificationCategory;
+    type: string;
+    paramsJson: Record<string, unknown>;
+    linkPath?: string;
+  }): Promise<NotificationRecord> {
+    const [row] = await this.uow.exec
+      .insert(notifications)
+      .values({
+        householdId: input.householdId,
+        recipientPersonId: input.recipientPersonId,
+        category: input.category,
+        type: input.type,
+        paramsJson: input.paramsJson,
+        linkPath: input.linkPath ?? null,
+      })
+      .returning();
+    return notificationRowSchema.parse(row);
   }
 
   /** Upsert of per-person category toggles (target: personId pk). */

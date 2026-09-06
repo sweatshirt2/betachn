@@ -71,6 +71,12 @@ export class HouseholdsService {
     return householdRowSchema.parse(row);
   }
 
+  /** Worker fan-out anchor — ids only, details load per household. */
+  async listIds(): Promise<string[]> {
+    const rows = await this.uow.exec.query.households!.findMany({ columns: { id: true } });
+    return rows.map((row) => String((row as Record<string, unknown>).id));
+  }
+
   async update(
     actorPersonId: string | null,
     householdId: string,
