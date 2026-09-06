@@ -16,6 +16,7 @@ export type Dict = {
     back: string;
     go: string;
     name: string;
+    undo: string;
     loadError: string;
     checkConnection: string;
   };
@@ -101,6 +102,8 @@ export type Dict = {
     scope: string;
     due: string;
     titlePlaceholder: string;
+    updatedToast: string;
+    alreadyHandled: string;
   };
   household: {
     title: string;
@@ -121,6 +124,11 @@ export type Dict = {
     customRole: string;
     permissionsCount: string;
     reset: string;
+    saveName: string;
+    previewAsName: string;
+    removeConfirm: string;
+    keep: string;
+    personRemovedToast: string;
   };
   ops: {
     routines: string;
@@ -267,6 +275,7 @@ export const en: Dict = {
     back: 'Back',
     go: 'Go',
     name: 'Name',
+    undo: 'Undo',
     loadError: 'Something failed to load',
     checkConnection: 'Check your connection and try again.',
   },
@@ -352,6 +361,8 @@ export const en: Dict = {
     scope: 'Chore scope',
     due: 'Due {{date}}',
     titlePlaceholder: 'Take out the trash',
+    updatedToast: '{{title}} updated.',
+    alreadyHandled: 'Already handled — list refreshed.',
   },
   household: {
     title: 'Household',
@@ -373,6 +384,12 @@ export const en: Dict = {
     customRole: 'Custom role',
     permissionsCount: '{{count}} permissions',
     reset: 'Reset',
+    saveName: 'Save name',
+    previewAsName: 'Preview as {{name}}',
+    removeConfirm:
+      'Remove {{name}}? Their account and sessions go too — history keeps their name.',
+    keep: 'Keep',
+    personRemovedToast: '{{name}} removed.',
   },
   ops: {
     routines: 'Routines',
@@ -519,6 +536,7 @@ export const am: Dict = {
     back: 'ተመለስ',
     go: 'ግባ',
     name: 'ስም',
+    undo: 'ተመልስ',
     loadError: 'የሆነ ነገር መጫን አልተሳካም',
     checkConnection: 'ግንኙነትዎን ያረጋግጡ እና እንደገና ይሞክሩ።',
   },
@@ -604,6 +622,8 @@ export const am: Dict = {
     scope: 'የሥራ ወሰን',
     due: 'የሚጠበቅበት {{date}}',
     titlePlaceholder: 'መጣጥን አውጣ',
+    updatedToast: '{{title}} ተዘምኗል።',
+    alreadyHandled: 'አስቀድሞ ተከናውኗል — ዝርዝሩ ተባስቷል።',
   },
   household: {
     title: 'ቤተሰብ',
@@ -624,6 +644,11 @@ export const am: Dict = {
     customRole: 'ብጁ ሚና',
     permissionsCount: '{{count}} ፍቃዶች',
     reset: 'ዳግም አስጀምር',
+    saveName: 'ስም አስቀምጥ',
+    previewAsName: 'እንደ {{name}} ቅድመ-እይታ',
+    removeConfirm: '{{name}} ን አስወግድ? መገለጫውና ክፍለ-ጊዜያቱም ይሰረዛሉ — ታሪኩ ስሙን ይጠብቃል።',
+    keep: 'አቆይ',
+    personRemovedToast: '{{name}} ተነሷል።',
   },
   ops: {
     routines: 'ሥርዓቶች',
