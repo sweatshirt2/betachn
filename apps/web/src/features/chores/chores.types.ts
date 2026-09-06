@@ -31,3 +31,18 @@ export type OccurrenceAction =
   | { action: 'skip'; skipReason?: string }
   | { action: 'reopen' }
   | { action: 'reassign'; personIds: string[] };
+
+export type ResponsibilityDetail = {
+  responsibility: { id: string; title: string; notes: string | null; icon: string; routineId: string | null };
+  subtasks: Array<{ id: string; title: string; assigneePersonId: string | null }>;
+  rules: Array<{ id: string; pattern: string; personIds: string[]; startDate: string }>;
+};
+
+export type CreateResponsibilityBody = {
+  title: string;
+  notes?: string;
+  icon?: string;
+  routineId?: string | null;
+  subtasks: Array<{ title: string; assigneePersonId?: string | null }>;
+  rules: Array<{ pattern: 'once' | 'daily' | 'weekly' | 'monthly'; startDate: string; personIds: string[] }>;
+};

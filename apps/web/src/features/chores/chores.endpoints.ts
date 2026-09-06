@@ -6,5 +6,6 @@ export const choresEndpoints = {
   occurrences: { method: 'get', path: '/occurrences' },
   occurrenceAct: { method: 'patch', path: '/occurrences/:id' },
   responsibilities: { method: 'get', path: '/responsibilities' },
+  responsibilityDetail: { method: 'get', path: '/responsibilities/:id' },
   createResponsibility: { method: 'post', path: '/responsibilities' },
 } satisfies Record<string, Endpoint>;

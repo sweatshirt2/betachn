@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ApiError, queryKeys, useApiMutation } from '@/lib/api';
 import { useToast } from '@/components/ui';
 import { choresEndpoints } from '../chores.endpoints';
-import type { OccurrenceAction, TitledOccurrence } from '../chores.types';
+import type { CreateResponsibilityBody, OccurrenceAction, TitledOccurrence } from '../chores.types';
 
 type ActVariables = { id: string } & OccurrenceAction;
 
@@ -50,4 +50,19 @@ export function useOccurrenceAct() {
   });
 
   return act;
+}
+
+export function useCreateResponsibility() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  return useApiMutation<{ responsibility: { id: string; title: string } }, CreateResponsibilityBody>({
+    endpoint: choresEndpoints.createResponsibility,
+    options: {
+      onSuccess: ({ responsibility }) => {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.today() });
+        void queryClient.invalidateQueries({ queryKey: ['occurrences'] });
+        toast(`${responsibility.title} added.`);
+      },
+    },
+  });
 }
