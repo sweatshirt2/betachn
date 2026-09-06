@@ -4,7 +4,11 @@ import { z } from 'zod';
 
 /** Loads the repo-root .env (gitignored); no-op when the file is absent. */
 export function loadRepoEnv(): void {
-  loadDotenv({ path: join(import.meta.dirname, '../../../.env') });
+  // import.meta.dirname exists under tsx/node but NOT in the Next.js bundle —
+  // fall back to cwd-relative resolution there (web cwd = apps/web).
+  const metaDir = (import.meta as unknown as { dirname?: string }).dirname;
+  const repoRoot = metaDir ? join(metaDir, '../../..') : join(process.cwd(), '../..');
+  loadDotenv({ path: join(repoRoot, '.env') });
 }
 
 loadRepoEnv();
