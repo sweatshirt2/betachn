@@ -50,10 +50,17 @@ export const switchProfileSchema = z.object({
 export const linkGoogleSchema = z.object({
   oauthCode: z.string().min(1),
   redirectUri: z.string().url(),
+
   currentPassword: z.string().min(1),
+});
+/** POST /auth/google — OAuth code exchange replaces the password form (D50). */
+export const googleLoginSchema = z.object({
+  oauthCode: z.string().min(1),
+  redirectUri: z.string().url(),
 });
 
 export type RegisterOnlineInput = z.infer<typeof registerOnlineSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type SwitchProfileInput = z.infer<typeof switchProfileSchema>;
 export type LinkGoogleInput = z.infer<typeof linkGoogleSchema>;
+export type GoogleLoginInput = z.infer<typeof googleLoginSchema>;
