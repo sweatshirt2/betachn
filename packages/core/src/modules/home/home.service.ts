@@ -1,4 +1,5 @@
 import { and, eq } from 'drizzle-orm';
+import { z } from 'zod';
 import { activityEvents, assets, rooms, serviceRecords } from '@chorify/db';
 import { buildActivity } from '../../activity';
 import { AppError } from '../../errors';
@@ -101,6 +102,20 @@ export class HomeService {
       where: eq(assets.householdId, householdId),
     });
     return rows.map((row) => assetRowSchema.parse(row));
+  }
+
+  /** All service records across the household's assets (today aggregate feeds). */
+  async listServiceRecords(householdId: string): Promise<ServiceRecordRecord[]> {
+    const rows = await this.uow.exec.query.assets!.findMany({
+      where: eq(assets.householdId, householdId),
+      with: { serviceRecords: true },
+    });
+    const recordSchema = z
+      .object({ serviceRecords: z.array(serviceRecordRowSchema).optional() })
+      .array();
+    return recordSchema
+      .parse(rows)
+      .flatMap((asset) => asset.serviceRecords ?? []);
   }
 
   /** Next due date per §6 semantics — null when no interval or no history. */
