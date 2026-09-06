@@ -1,4 +1,4 @@
-import { and, asc, eq, gt } from 'drizzle-orm';
+import { and, asc, desc, eq, gt } from 'drizzle-orm';
 import { householdChanges } from '@chorify/db';
 import type { ChangeOp, SyncDomain, AudienceType } from '@chorify/db';
 import { AppError } from '../../errors';
@@ -186,7 +186,7 @@ function latestSeqRow(exec: Executor, householdId: string) {
   return exec.query.householdChanges!.findMany({
     where: eq(householdChanges.householdId, householdId),
     columns: { seq: true },
-    orderBy: [{ column: householdChanges.seq, direction: 'desc' }],
+    orderBy: [desc(householdChanges.seq)],
     limit: 1,
   }) as unknown as Promise<Array<{ seq: string | number }>>;
 }
