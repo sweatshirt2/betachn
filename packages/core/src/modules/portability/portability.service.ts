@@ -148,8 +148,8 @@ export class PortabilityService {
     sections.notification_prefs = prefsRows as unknown as Row[];
 
     for (const section of SCOPED_SECTIONS) {
-      if (section === 'subtasks' || section === 'assignment_rules') {
-        // Nested rows scope through their parent responsibility (§4.5).
+      if (section === 'subtasks' || section === 'assignment_rules' || section === 'service_records') {
+        // Nested rows scope through their parents (responsibilities/assets).
         sections[section] = await this.exportNested(exec, section, householdId);
         continue;
       }
@@ -167,14 +167,25 @@ export class PortabilityService {
   }
 
   /**
-   * Subtasks and assignment rules carry no householdId — they export through
-   * their parent responsibilities' ids.
+   * Subtasks/assignment rules carry no householdId — they export through
+   * their parent responsibilities; service records export through assets.
    */
   private async exportNested(
     exec: Executor,
-    section: 'subtasks' | 'assignment_rules',
+    section: 'subtasks' | 'assignment_rules' | 'service_records',
     householdId: string,
   ): Promise<Row[]> {
+    if (section === 'service_records') {
+      const parentAssets = (await exec.query[SECTION_RELATIONS.assets]!.findMany({
+        where: eq(assets.householdId, householdId),
+        columns: { id: true },
+      })) as unknown as Array<{ id: string }>;
+      const assetIds = parentAssets.map((a) => a.id);
+      if (assetIds.length === 0) return [];
+      return (await exec.query[SECTION_RELATIONS[section]]!.findMany({
+        where: inArray(serviceRecords.assetId, assetIds),
+      })) as unknown as Row[];
+    }
     const parents = (await exec.query[SECTION_RELATIONS.responsibilities]!.findMany({
       where: eq(responsibilities.householdId, householdId),
       columns: { id: true },
