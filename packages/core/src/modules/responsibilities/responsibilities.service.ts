@@ -17,11 +17,12 @@ import {
 } from '../occurrences';
 import type {
   CreateResponsibilityInput,
+  ResponsibilityDetail,
   ResponsibilityRecord,
   RuleInput,
   UpdateResponsibilityInput,
 } from './responsibilities.schema';
-import { responsibilityRowSchema, schedulePatternSchema } from './responsibilities.schema';
+import { responsibilityRowSchema, ruleRowSchema, schedulePatternSchema, subtaskRowSchema } from './responsibilities.schema';
 import { normalizeRuleDates } from './responsibilities.rules';
 import { z } from 'zod';
 
@@ -204,6 +205,28 @@ export class ResponsibilitiesService {
     });
     if (!row) throw new AppError('NOT_FOUND', 'Responsibility not found');
     return responsibilityRowSchema.parse(row);
+  }
+
+  /**
+   * Full detail for the chore screen: responsibility + subtasks + rules.
+   * List stays light (header rows only); this is the nested read.
+   */
+  async detail(householdId: string, responsibilityId: string): Promise<ResponsibilityDetail> {
+    const exec = this.uow.exec;
+    const responsibility = await this.getRow(exec, householdId, responsibilityId);
+    const [subtaskRows, ruleRows] = await Promise.all([
+      exec.query.subtasks!.findMany({
+        where: eq(subtasks.responsibilityId, responsibilityId),
+      }),
+      exec.query.assignmentRules!.findMany({
+        where: eq(assignmentRules.responsibilityId, responsibilityId),
+      }),
+    ]);
+    return {
+      responsibility,
+      subtasks: subtaskRows.map((row) => subtaskRowSchema.parse(row)),
+      rules: ruleRows.map((row) => ruleRowSchema.parse(row)),
+    };
   }
 
   /**

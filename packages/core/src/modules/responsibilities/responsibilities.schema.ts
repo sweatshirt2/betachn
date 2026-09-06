@@ -40,6 +40,30 @@ export const subtaskInputSchema = z.object({
   assigneePersonId: z.string().uuid().nullish(),
 });
 
+/** Stored subtask row (detail reads — inputs above are write-only). */
+export const subtaskRowSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string(),
+  sortOrder: z.number().int(),
+  assigneePersonId: z.string().uuid().nullable(),
+});
+
+/** Stored rule row (detail reads). */
+export const ruleRowSchema = z.object({
+  id: z.string().uuid(),
+  pattern: schedulePatternSchema,
+  interval: z.number().int().nullable(),
+  daysOfWeek: z.array(z.number().int()).nullable(),
+  anchorDate: z.string().nullable(),
+  monthDay: z.number().int().nullable(),
+  dates: z.array(z.string()).nullable(),
+  startDate: z.string(),
+  endDate: z.string().nullable(),
+  rotation: rotationSchema.nullable(),
+  personIds: z.array(z.string().uuid()),
+  active: z.boolean(),
+});
+
 export const createResponsibilitySchema = z.object({
   title: z.string().trim().min(1).max(140),
   notes: z.string().max(2000).nullish(),
@@ -80,6 +104,13 @@ export const responsibilityRowSchema = z.object({
 
 export type RuleInput = z.infer<typeof ruleInputSchema>;
 export type SubtaskInput = z.infer<typeof subtaskInputSchema>;
+export type SubtaskRecord = z.infer<typeof subtaskRowSchema>;
+export type RuleRecord = z.infer<typeof ruleRowSchema>;
+export type ResponsibilityDetail = {
+  responsibility: ResponsibilityRecord;
+  subtasks: SubtaskRecord[];
+  rules: RuleRecord[];
+};
 export type CreateResponsibilityInput = z.infer<typeof createResponsibilitySchema>;
 export type UpdateResponsibilityInput = z.infer<typeof updateResponsibilitySchema>;
 export type ResponsibilityRecord = z.infer<typeof responsibilityRowSchema>;

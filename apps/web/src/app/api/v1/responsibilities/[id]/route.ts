@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AppError, updateResponsibilitySchema } from '@chorify/core';
+import { updateResponsibilitySchema } from '@chorify/core';
 import {
   authenticate,
   readJson,
@@ -16,11 +16,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const ctx = await authenticate(req);
     requirePermission(ctx, 'responsibilities.view');
     const { id } = idParams.parse(await params);
-    // No single-get service exists — detail composes from list (household-scale).
-    const all = await responsibilitiesService.list(ctx.session.householdId, { includeArchived: true });
-    const responsibility = all.find((r) => r.id === id);
-    if (!responsibility) throw new AppError('NOT_FOUND', 'Responsibility not found');
-    return { responsibility };
+    return responsibilitiesService.detail(ctx.session.householdId, id);
   });
 }
 
