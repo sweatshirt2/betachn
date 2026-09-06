@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { activityEvents, oauthAccounts, people, roles, sessions, users } from '@chorify/db';
 import { buildActivity } from '../../activity';
-import { allPermKeys, resolvePermission, type PermissionMap } from '../../permissions';
+import { allPermKeys, permissionMapFor, resolvePermission, type PermissionMap } from '../../permissions';
 import { AppError } from '../../errors';
 import type { Executor, UnitOfWork } from '../../db';
 import { accountCreationBlockers, promotionBlockers } from '../auth';
@@ -247,20 +247,13 @@ export async function permissionMapForPerson(exec: Executor, personId: string) {
   }>;
   const row = rows[0];
   if (!row) throw new AppError('NOT_FOUND', 'Person not found');
-  const map = {} as PermissionMap;
-  for (const key of allPermKeys()) {
-    map[key] = resolvePermission(
-      {
-        permissionOverrides: row.permissionOverrides as Partial<PermissionMap>,
-        role: row.role
-          ? {
-              isOwnerRole: row.role.isOwnerRole,
-              permissions: row.role.permissions as Partial<PermissionMap>,
-            }
-          : null,
-      },
-      key,
-    );
-  }
-  return map;
+  return permissionMapFor({
+    permissionOverrides: row.permissionOverrides as Partial<PermissionMap>,
+    role: row.role
+      ? {
+          isOwnerRole: row.role.isOwnerRole,
+          permissions: row.role.permissions as Partial<PermissionMap>,
+        }
+      : null,
+  });
 }

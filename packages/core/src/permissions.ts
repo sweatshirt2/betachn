@@ -185,3 +185,18 @@ export function requirePermission(map: Partial<PermissionMap>, key: PermKey): vo
     });
   }
 }
+
+/**
+ * Full map for one person — same precedence chain as resolvePermission
+ * (override > owner flag > role matrix > false), materialized once for
+ * session contexts (server login responses, device session rehydration).
+ */
+export function permissionMapFor(person: PersonLike): PermissionMap {
+  const map = {} as Record<string, boolean>;
+  for (const domain of Object.keys(PERMISSION_CATALOG) as PermDomain[]) {
+    for (const key of PERMISSION_CATALOG[domain]) {
+      map[`${domain}.${key}`] = resolvePermission(person, `${domain}.${key}` as PermKey);
+    }
+  }
+  return map as PermissionMap;
+}

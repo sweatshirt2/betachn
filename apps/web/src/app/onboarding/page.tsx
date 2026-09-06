@@ -3,6 +3,8 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDispatch } from 'react-redux';
+import { setDeviceSession } from '@/store';
 import { Button, Card, Field } from '@/components/ui';
 import { LANGUAGE_STORAGE_KEY, LOCALES, type Locale } from '@/i18n/dictionaries';
 import {
@@ -11,6 +13,8 @@ import {
   localRoleMap,
   openBrowserDevice,
 } from '@/lib/device';
+import { permissionMapFor } from '@chorify/core/permissions';
+import * as schema from '@chorify/local-db/schema';
 import i18n from '@/i18n';
 
 type DraftPerson = { name: string; roleKey: string };
@@ -35,6 +39,7 @@ const ROLE_OPTIONS = [
  */
 export default function OnboardingPage() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
   const [householdName, setHouseholdName] = useState('');
@@ -59,6 +64,11 @@ export default function OnboardingPage() {
     try {
       const seed = await createLocalHousehold({ householdName, ownerName });
       const device = await openBrowserDevice();
+      let deviceSession: {
+        household: { id: string; name: string; code: string };
+        activePerson: { id: string; name: string };
+        permissionMap: Record<string, boolean>;
+      } | null = null;
       if (device.db !== null) {
         const roleMap = await localRoleMap(device.db, seed.householdId);
         for (const person of people) {
@@ -69,7 +79,22 @@ export default function OnboardingPage() {
             roleId: roleMap[person.roleKey] ?? null,
           });
         }
+        // Resolve the owner's permissionMap from the cloned owner role.
+        const roleRows = await device.db.select().from(schema.roles);
+        const peopleRows = await device.db.select().from(schema.people);
+        const owner = peopleRows.find((p) => p.id === seed.ownerPersonId);
+        const ownerRole = owner ? roleRows.find((r) => r.id === owner.roleId) ?? null : null;
+        deviceSession = {
+          household: { id: seed.householdId, name: householdName.trim(), code: seed.code },
+          activePerson: { id: seed.ownerPersonId, name: ownerName.trim() },
+          permissionMap: permissionMapFor({
+            role: ownerRole
+              ? { isOwnerRole: ownerRole.isOwnerRole, permissions: ownerRole.permissions }
+              : null,
+          }),
+        };
       }
+      if (deviceSession) dispatch(setDeviceSession(deviceSession));
       router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : t('common.loading'));

@@ -3,12 +3,29 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useEffect, useState, type ReactNode } from 'react';
 import { I18nextProvider } from 'react-i18next';
-import { Provider } from 'react-redux';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import i18n from '@/i18n';
 import { ToastProvider } from '@/components/ui';
 import { setQueryClientForApi } from '@/lib/api';
+import { rehydrateDeviceSession } from '@/store';
 import { persistor, store } from '@/store';
+import type { AppDispatch, RootState } from '@/store';
+
+/** Device-mode sessions re-resolve their permissionMap from live role rows on boot. */
+function DeviceSessionRehydrator() {
+  const dispatch = useDispatch<AppDispatch>();
+  const mode = useSelector((state: RootState) => state.auth.mode);
+  const [settled, setSettled] = useState(false);
+
+  useEffect(() => {
+    if (mode !== 'device' || settled) return;
+    setSettled(true);
+    void dispatch(rehydrateDeviceSession());
+  }, [mode, settled, dispatch]);
+
+  return null;
+}
 
 function registerServiceWorker() {
   if (process.env.NODE_ENV !== 'production') return;
@@ -40,7 +57,10 @@ export function Providers({ children }: { children: ReactNode }) {
       <PersistGate loading={null} persistor={persistor}>
         <QueryClientProvider client={queryClient}>
           <I18nextProvider i18n={i18n}>
-            <ToastProvider>{children}</ToastProvider>
+            <ToastProvider>
+              <DeviceSessionRehydrator />
+              {children}
+            </ToastProvider>
           </I18nextProvider>
         </QueryClientProvider>
       </PersistGate>

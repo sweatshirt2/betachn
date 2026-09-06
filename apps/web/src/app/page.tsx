@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, Card, Chip, EmptyState, SectionWatermark, Skeleton } from '@/components/ui';
 import { useOccurrenceAct, useToday, type TitledOccurrence } from '@/features/chores';
 import { queryKeys, useApiQuery } from '@/lib/api';
-import type { RootState } from '@/store';
+import { hasSession, type RootState } from '@/store';
 
 type Person = { id: string; name: string };
 
@@ -22,12 +22,13 @@ function usePeopleMap() {
 
 export default function TodayPage() {
   const { t } = useTranslation();
-  const token = useSelector((state: RootState) => state.auth.token);
+  const auth = useSelector((state: RootState) => state.auth);
+  const token = auth.token;
   const today = useToday();
   const act = useOccurrenceAct();
   const names = usePeopleMap();
 
-  if (!token) {
+  if (!hasSession(auth)) {
     return (
       <EmptyState
         emoji="🏠"

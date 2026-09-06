@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, EmptyState, Skeleton } from '@/components/ui';
 import { queryKeys, useApiQuery } from '@/lib/api';
-import type { RootState } from '@/store';
+import { hasSession, type RootState } from '@/store';
 
 type Person = { id: string; name: string };
 type Occurrence = { id: string; title: string; dueDate: string; personIds: string[] };
@@ -20,8 +20,9 @@ function mondayOf(date: Date): Date {
 /** Fridge sheet preview (§5.6): zero-config defaults, print via browser chrome. */
 export default function PrintPage() {
   const { t } = useTranslation();
-  const token = useSelector((state: RootState) => state.auth.token);
-  const household = useSelector((state: RootState) => state.auth.household);
+  const auth = useSelector((state: RootState) => state.auth);
+  const token = auth.token;
+  const household = auth.household;
   const [weekOffset, setWeekOffset] = useState(0);
   const [memberFilter, setMemberFilter] = useState<string>('all');
   const [checkboxes, setCheckboxes] = useState(true);
@@ -43,7 +44,7 @@ export default function PrintPage() {
     options: { enabled: token !== null },
   });
 
-  if (!token) {
+  if (!hasSession(auth)) {
     return <EmptyState emoji="🖨️" title={t('print.signInToPrint')} hint={t('print.printHint')} />;
   }
   if (people.isPending || occurrences.isPending) {

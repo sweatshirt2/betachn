@@ -3,6 +3,7 @@ import {
   FACTORY_MATRICES,
   allPermKeys,
   customRoleBaseline,
+  permissionMapFor,
   type PermKey,
   resolvePermission,
 } from './permissions';
@@ -68,6 +69,43 @@ describe('role reset semantics (§6.14 / invariant CN §14)', () => {
     // Rename never touches permissions (CN §78):
     const renamed = { name: 'Big Kids', permissions: livePermissions };
     expect(renamed.permissions).toBe(livePermissions);
+  });
+});
+
+describe('permissionMapFor (full-map materialization)', () => {
+  it('resolves every catalog key with override > owner > role > false precedence', () => {
+    const person = {
+      permissionOverrides: { 'responsibilities.assign': false, 'resources.manage_supplies': true },
+      role: {
+        isOwnerRole: false,
+        permissions: { 'responsibilities.assign': true, 'responsibilities.view': true } as Partial<import('./permissions').PermissionMap>,
+      },
+    };
+    const map = permissionMapFor(person);
+    // override false beats a granting role
+    expect(map['responsibilities.assign']).toBe(false);
+    // role grant passes through
+    expect(map['responsibilities.view']).toBe(true);
+    // override true beats an empty role
+    expect(map['resources.manage_supplies']).toBe(true);
+    // nothing set anywhere → false (finances defaults closed for this role)
+    expect(map['finances.view']).toBe(false);
+    // map covers the whole catalog
+    expect(Object.keys(map).length).toBe(allPermKeys().length);
+  });
+
+  it('owner flag grants everything, explicit false override still wins', () => {
+    const ownerMap = permissionMapFor({
+      role: { isOwnerRole: true, permissions: {} },
+      permissionOverrides: { 'household.remove_people': false },
+    });
+    expect(ownerMap['responsibilities.complete']).toBe(true);
+    expect(ownerMap['household.remove_people']).toBe(false);
+  });
+
+  it('roleless person with no overrides is all false', () => {
+    const map = permissionMapFor({});
+    expect(Object.values(map).every((v) => v === false)).toBe(true);
   });
 });
 
