@@ -658,7 +658,7 @@ Finance module schema + flows (income/expense/account/bill/budget/goal, assigned
 
 ## 16. Implementation Status & Hand-off (live ledger — update at every green checkpoint)
 
-**Last updated:** Step-11 checkpoint — backend COMPLETE. Tree clean at HEAD `cc40173`. §12 steps 3–11 ✅ COMPLETE (full API + worker). Suites: core 97/15 ✅ · local-db 16/4 ✅ · all packages typecheck clean + reseeded pristine. NEXT: steps 12b–19 screens → Amharic parity → §11 pass. DONE step 12b-shell (`0bcd264`, 371 lines single surface): Sheet/Toast+Undo/EmptyState/Skeleton/Field/Watermark primitives, bottom tabs + left rail + FAB-create + greeting/SyncStatus shell (chromeless on /login + /onboarding). DONE step 13-partial (`2c84605`): auth feature folder (endpoints registry, wire→slice mapper, login/logout/switch mutations preserving Bearer on switch) + /login screen (busy discipline, uniform-error display, RATE_LIMITED countdown). NEXT: onboarding stepper, then Today + Chores.
+**Last updated:** Step-11 checkpoint — backend COMPLETE. Tree clean at HEAD `cc40173`. §12 steps 3–11 ✅ COMPLETE (full API + worker). Suites: core 97/15 ✅ · local-db 16/4 ✅ · all packages typecheck clean + reseeded pristine. NEXT: steps 12b–19 screens → Amharic parity → §11 pass. DONE step 12b-shell (`0bcd264`, 371 lines single surface): Sheet/Toast+Undo/EmptyState/Skeleton/Field/Watermark primitives, bottom tabs + left rail + FAB-create + greeting/SyncStatus shell (chromeless on /login + /onboarding). DONE step 13-partial (`2c84605` login + `d09194c` onboarding + `65b9ac3` D83): auth feature folder + /login screen; offline-first onboarding (device household + owner-clone + people rows + pending_ops queue + device session). D83: client-safe package subpaths (core/permissions, core/roles-rules, local-db/schema|queue|capability|apply-migrations) — client bundles must never import the barrel (drags pg/argon2/better-sqlite3). OPEN: browser-live onboarding proof + starter-chore templates (arrive with Chores create) deferred to §11.5 walkthrough.
 
 ### 16.0 Commit trail of this session (oldest → newest)
 
@@ -719,6 +719,7 @@ Finance module schema + flows (income/expense/account/bill/budget/goal, assigned
 | D77 | CSS vars are truth: `styles/tokens.css` owns every raw value; Tailwind `@theme inline` only maps `var(--chorify-*)`; no hex/arbitrary values in features/ui. |
 | D78 | Theme-first order: step 12a (web + theme scaffold) before steps 6–11 routes; theme preview uses static mocks, never the Bekele DB seed. |
 | D79 | Theme trio: `family` (warm light default, §5.2) · `ember` (warm dark) · `highland` (high-contrast light); device-localStorage switch, never in DB. |
+| D83 | Client-safe package subpaths for pure rules (core/permissions, core/roles-rules, local-db/schema|queue|capability|apply-migrations). Browser bundles import these ONLY — barrel imports drag pg/argon2/better-sqlite3 and break the client build. Server code keeps barrel imports. |
 | D80 | Route-layer errors: unexpected bugs → 500 `INTERNAL` (outside the frozen set by necessity); Google unconfigured → CONFLICT; google-login limiter keyed per-IP (`google-login` identifier). |
 | D81 | Resources list endpoints (supplies/shopping) require auth only — Today surfaces supplies to every member; only mutations need manage_* keys. |
 
