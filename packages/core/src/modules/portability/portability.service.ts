@@ -99,6 +99,32 @@ function tableFor(section: SectionName) {
 }
 
 /**
+ * TXT section name → drizzle relational-query key. The RQB is keyed by the
+ * camelCase schema export names, NOT the snake_case table/section names —
+ * querying by section name silently resolves to undefined and throws at
+ * runtime (caught by the step-10 live smoke, invisible to fake-based tests).
+ */
+const SECTION_RELATIONS: Record<SectionName, string> = {
+  households: 'households',
+  people: 'people',
+  users: 'users',
+  roles: 'roles',
+  routines: 'routines',
+  responsibilities: 'responsibilities',
+  subtasks: 'subtasks',
+  assignment_rules: 'assignmentRules',
+  occurrences: 'occurrences',
+  rooms: 'rooms',
+  assets: 'assets',
+  service_records: 'serviceRecords',
+  supplies: 'supplies',
+  shopping_items: 'shoppingItems',
+  activity_events: 'activityEvents',
+  notifications: 'notifications',
+  notification_prefs: 'notificationPrefs',
+};
+
+/**
  * §4.11 portability. Export = TXT snapshot minus identity material (stripped
  * by the txt kernel: password hashes, phones) plus lastExportAt stamp.
  * Import adopts ONLY fresh targets: rows beyond the registering trio block
@@ -118,12 +144,12 @@ export class PortabilityService {
     const sections: Partial<Record<SectionName, Row[]>> = {
       households: [householdRow as unknown as Row],
     };
-    const prefsRows = await exec.query.notification_prefs!.findMany({});
+    const prefsRows = await exec.query[SECTION_RELATIONS.notification_prefs]!.findMany({});
     sections.notification_prefs = prefsRows as unknown as Row[];
 
     for (const section of SCOPED_SECTIONS) {
       const table = tableFor(section);
-      const rows = await exec.query[section]!.findMany({
+      const rows = await exec.query[SECTION_RELATIONS[section]]!.findMany({
         where: eq(table.householdId, householdId),
       }) as unknown as Row[];
       sections[section] = rows;
@@ -218,7 +244,7 @@ export class PortabilityService {
 
     for (const section of ['roles', 'routines', 'responsibilities', 'occurrences', 'rooms', 'assets', 'supplies', 'shopping_items'] as const) {
       const table = tableFor(section) as { householdId: never };
-      const rows = await exec.query[section]!.findMany({
+      const rows = await exec.query[SECTION_RELATIONS[section]]!.findMany({
         where: eq(table.householdId, ctx.householdId),
         columns: { id: true },
       });
