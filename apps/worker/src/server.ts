@@ -4,7 +4,7 @@ import { desc } from 'drizzle-orm';
 import { db, jobsAudit, pool } from '@chorify/db';
 import { readWorkerEnv } from './env';
 import { requireAdminToken } from './adminAuth';
-import { jobRegistry } from './jobs';
+import { jobRegistry, registerJobs } from './jobs';
 
 const env = readWorkerEnv();
 
@@ -12,6 +12,7 @@ async function main(): Promise<void> {
   const boss = new PgBoss({ connectionString: env.DATABASE_URL });
   boss.on('error', (err) => console.error('pg-boss error:', err));
   await boss.start();
+  await registerJobs(boss);
 
   const app = express();
   app.use(express.json());
@@ -41,7 +42,7 @@ async function main(): Promise<void> {
       return;
     }
     try {
-      const result = await handler(db);
+      const result = await handler();
       await db.insert(jobsAudit).values({ name, result: result ?? {} });
       res.json({ data: result });
     } catch (err) {
