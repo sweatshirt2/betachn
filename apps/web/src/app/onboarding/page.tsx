@@ -82,7 +82,7 @@ export default function OnboardingPage() {
     <main className="mx-auto flex min-h-[70vh] w-full max-w-sm flex-col justify-center px-4">
       {step === 0 && (
         <Card>
-          <h1 className="font-display text-2xl">Language / ቋንቋ</h1>
+          <h1 className="font-display text-2xl">{t('onboarding.languageTitle')}</h1>
           <div className="mt-4 flex gap-2">
             {LOCALES.map((locale) => (
               <Button key={locale} tone="quiet" onClick={() => setLocale(locale)}>
@@ -95,13 +95,13 @@ export default function OnboardingPage() {
 
       {step === 1 && (
         <Card>
-          <h1 className="font-display text-2xl">Your household</h1>
-          <p className="text-muted mt-1 text-sm">You can change this later.</p>
+          <h1 className="font-display text-2xl">{t('onboarding.householdTitle')}</h1>
+          <p className="text-muted mt-1 text-sm">{t('onboarding.changeLater')}</p>
           <div className="mt-4 flex flex-col gap-3">
-            <Field label="Household name" value={householdName} onChange={(e) => setHouseholdName(e.target.value)} placeholder="Bekele Family" />
-            <Field label="Your name" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder="Hana" />
+            <Field label={t('onboarding.householdName')} value={householdName} onChange={(e) => setHouseholdName(e.target.value)} placeholder={t('onboarding.householdPlaceholder')} />
+            <Field label={t('onboarding.yourName')} value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder={t('onboarding.ownerPlaceholder')} />
             <Button disabled={householdName.trim().length === 0 || ownerName.trim().length === 0} onClick={() => setStep(2)}>
-              Continue
+              {t('onboarding.continue')}
             </Button>
           </div>
         </Card>
@@ -109,8 +109,8 @@ export default function OnboardingPage() {
 
       {step === 2 && (
         <Card>
-          <h1 className="font-display text-2xl">Add people</h1>
-          <p className="text-muted mt-1 text-sm">Anyone can be added later too.</p>
+          <h1 className="font-display text-2xl">{t('onboarding.addPeople')}</h1>
+          <p className="text-muted mt-1 text-sm">{t('onboarding.addPeopleHint')}</p>
           <div className="mt-4 flex flex-col gap-3">
             {people.map((person, index) => (
               <div key={index} className="flex gap-2">
@@ -123,7 +123,7 @@ export default function OnboardingPage() {
                       current.map((p, i) => (i === index ? { ...p, name: e.target.value } : p)),
                     )
                   }
-                  aria-label={`Person ${index + 1} name`}
+                  aria-label={t('onboarding.personNameAria', { index: index + 1 })}
                 />
                 <select
                   className="bg-surface text-ink border-line rounded-md border px-2 py-2 text-sm"
@@ -133,18 +133,18 @@ export default function OnboardingPage() {
                       current.map((p, i) => (i === index ? { ...p, roleKey: e.target.value } : p)),
                     )
                   }
-                  aria-label={`Person ${index + 1} role`}
+                  aria-label={t('onboarding.personRoleAria', { index: index + 1 })}
                 >
                   {ROLE_OPTIONS.map((key) => (
                     <option key={key} value={key}>
-                      {key.replace(/_/g, ' ')}
+                      {t(`onboarding.role${key.charAt(0).toUpperCase()}${key.slice(1).replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())}`)}
                     </option>
                   ))}
                 </select>
               </div>
             ))}
             <Button tone="quiet" onClick={() => setPeople((current) => [...current, { name: '', roleKey: 'child' }])}>
-              + Add another
+              {t('onboarding.addAnother')}
             </Button>
             {error && (
               <p className="text-clay-red text-sm" role="alert">
@@ -152,7 +152,7 @@ export default function OnboardingPage() {
               </p>
             )}
             <Button disabled={busy} onClick={finish}>
-              {busy ? 'Setting up…' : 'Start'}
+              {busy ? t('onboarding.settingUp') : t('onboarding.start')}
             </Button>
           </div>
         </Card>

@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Button, Card, EmptyState, Skeleton } from '@/components/ui';
 import {
   useMarkRead,
@@ -9,25 +11,36 @@ import {
   useSavePrefs,
 } from '@/features/notifications';
 
-function describe(type: string, params: Record<string, unknown>): string {
+const CATEGORY_KEYS = {
+  assignment: 'notify.catAssignment',
+  reminder: 'notify.catReminder',
+  completion: 'notify.catCompletion',
+  missed: 'notify.catMissed',
+  finance: 'notify.catFinance',
+  bill: 'notify.catBill',
+  backup: 'notify.catBackup',
+} as const;
+
+function describe(t: TFunction, type: string, params: Record<string, unknown>): string {
   const count = typeof params.count === 'number' ? params.count : null;
-  const title = typeof params.title === 'string' ? params.title : null;
-  const name = typeof params.householdName === 'string' ? params.householdName : null;
+  const title = typeof params.title === 'string' ? params.title : t('chores.title');
+  const name = typeof params.householdName === 'string' ? params.householdName : t('common.appName');
   switch (type) {
     case 'notify.reminder.digest':
-      return `${count ?? ''} due today — tap to open chores.`.trim();
+      return t('notify.reminderDigest', { count: count ?? 0 });
     case 'notify.completion.recorded':
-      return `${title ?? 'Chore'} completed.`;
+      return t('notify.completionRecorded', { title });
     case 'notify.missed.detected':
-      return `${title ?? 'Chore'} was missed.`;
+      return t('notify.missedDetected', { title });
     case 'notify.backup.nudge':
-      return `Back up ${name ?? 'your household'} — save a copy.`;
+      return t('notify.backupNudge', { name });
     default:
-      return title ?? type;
+      return title;
   }
 }
 
 export default function NotificationsPage() {
+  const { t } = useTranslation();
   const inbox = useNotifications();
   const markRead = useMarkRead();
   const readAll = useReadAll();
@@ -43,7 +56,7 @@ export default function NotificationsPage() {
   }
   if (inbox.isError) {
     return (
-      <EmptyState emoji="😕" title="Couldn't load notifications" hint="Check your connection and try again." action={<Button onClick={() => inbox.refetch()}>Retry</Button>} />
+      <EmptyState emoji="😕" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => inbox.refetch()}>{t('common.retry')}</Button>} />
     );
   }
 
@@ -52,10 +65,10 @@ export default function NotificationsPage() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl">Notifications</h1>
+        <h1 className="font-display text-2xl">{t('notify.title')}</h1>
         {inbox.data.notifications.some((n) => n.readAt === null) && (
           <Button tone="quiet" disabled={readAll.isPending} onClick={() => readAll.mutate({})}>
-            Read all
+            {t('notify.readAll')}
           </Button>
         )}
       </div>
@@ -68,30 +81,30 @@ export default function NotificationsPage() {
                 if (n.readAt === null) markRead.mutate({ id: n.id });
               }}
             >
-              <p className="text-sm font-semibold">{describe(n.type, n.paramsJson)}</p>
-              <p className="text-muted text-xs">{n.category}</p>
+              <p className="text-sm font-semibold">{describe(t, n.type, n.paramsJson)}</p>
+              <p className="text-muted text-xs">{t(CATEGORY_KEYS[n.category as keyof typeof CATEGORY_KEYS] ?? 'notify.title')}</p>
             </button>
           </Card>
         ))}
         {inbox.data.notifications.length === 0 && (
-          <EmptyState emoji="🔔" title="All caught up" hint="Reminders and updates land here." />
+          <EmptyState emoji="🔔" title={t('notify.caughtUp')} hint={t('notify.caughtUpHint')} />
         )}
       </div>
       {Object.keys(categories).length > 0 && (
-        <section className="mt-5" aria-label="Preferences">
-          <h2 className="font-display text-lg">What to receive</h2>
+        <section className="mt-5" aria-label={t('notify.prefsAria')}>
+          <h2 className="font-display text-lg">{t('notify.whatToReceive')}</h2>
           <div className="mt-2 flex flex-col gap-2">
             {Object.entries(categories).map(([category, on]) => (
               <Card key={category} className="flex items-center gap-3 py-2">
-                <p className="flex-1 text-sm font-semibold capitalize">{category}</p>
+                <p className="flex-1 text-sm font-semibold">{t(CATEGORY_KEYS[category as keyof typeof CATEGORY_KEYS] ?? 'notify.title')}</p>
                 <button
                   role="switch"
                   aria-checked={on}
-                  aria-label={`${category} notifications`}
+                  aria-label={t('notify.categoryAria', { category: t(CATEGORY_KEYS[category as keyof typeof CATEGORY_KEYS] ?? 'notify.title') })}
                   onClick={() => savePrefs.mutate({ categories: { ...categories, [category]: !on } })}
                   className={`rounded-sm px-3 py-1 text-sm font-bold ${on ? 'bg-olive text-terracotta-ink' : 'bg-cream text-muted border-line border'}`}
                 >
-                  {on ? 'On' : 'Off'}
+                  {on ? t('notify.on') : t('notify.off')}
                 </button>
               </Card>
             ))}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, EmptyState, Skeleton } from '@/components/ui';
 import { queryKeys, useApiQuery } from '@/lib/api';
 import type { RootState } from '@/store';
@@ -18,6 +19,7 @@ function mondayOf(date: Date): Date {
 
 /** Fridge sheet preview (§5.6): zero-config defaults, print via browser chrome. */
 export default function PrintPage() {
+  const { t } = useTranslation();
   const token = useSelector((state: RootState) => state.auth.token);
   const household = useSelector((state: RootState) => state.auth.household);
   const [weekOffset, setWeekOffset] = useState(0);
@@ -42,7 +44,7 @@ export default function PrintPage() {
   });
 
   if (!token) {
-    return <EmptyState emoji="🖨️" title="Sign in to print" hint="Weekly sheets print from your household." />;
+    return <EmptyState emoji="🖨️" title={t('print.signInToPrint')} hint={t('print.printHint')} />;
   }
   if (people.isPending || occurrences.isPending) {
     return (
@@ -52,7 +54,7 @@ export default function PrintPage() {
     );
   }
   if (people.isError || occurrences.isError) {
-    return <EmptyState emoji="😕" title="Couldn't load the sheet" hint="Check your connection and try again." action={<Button onClick={() => { people.refetch(); occurrences.refetch(); }}>Retry</Button>} />;
+    return <EmptyState emoji="😕" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => { people.refetch(); occurrences.refetch(); }}>{t('common.retry')}</Button>} />;
   }
 
   const names = new Map(people.data.people.map((p) => [p.id, p.name] as const));
@@ -63,25 +65,25 @@ export default function PrintPage() {
   return (
     <div>
       <div className="flex items-center justify-between" data-no-print>
-        <h1 className="font-display text-2xl">Print week</h1>
-        <Button onClick={() => window.print()}>Print</Button>
+        <h1 className="font-display text-2xl">{t('print.title')}</h1>
+        <Button onClick={() => window.print()}>{t('print.printBtn')}</Button>
       </div>
       <details className="mt-2" data-no-print>
-        <summary className="text-terracotta text-sm font-semibold">Customize</summary>
+        <summary className="text-terracotta text-sm font-semibold">{t('print.customize')}</summary>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <Button tone="quiet" onClick={() => setWeekOffset((w) => w - 1)}>
-            ← Prev week
+            {t('print.prevWeek')}
           </Button>
           <Button tone="quiet" onClick={() => setWeekOffset((w) => w + 1)}>
-            Next week →
+            {t('print.nextWeek')}
           </Button>
           <select
             className="bg-surface text-ink border-line rounded-md border px-2 py-2 text-sm"
             value={memberFilter}
             onChange={(e) => setMemberFilter(e.target.value)}
-            aria-label="Members"
+            aria-label={t('print.membersAria')}
           >
-            <option value="all">Everyone</option>
+            <option value="all">{t('chores.everyone')}</option>
             {people.data.people.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -90,7 +92,7 @@ export default function PrintPage() {
           </select>
           <label className="flex items-center gap-1 text-sm">
             <input type="checkbox" checked={checkboxes} onChange={(e) => setCheckboxes(e.target.checked)} />
-            Checkboxes
+            {t('print.checkboxes')}
           </label>
         </div>
       </details>
@@ -116,7 +118,7 @@ export default function PrintPage() {
             ))}
           </tbody>
         </table>
-        {rows.length === 0 && <p className="text-muted py-4 text-center text-sm">Nothing scheduled this week.</p>}
+        {rows.length === 0 && <p className="text-muted py-4 text-center text-sm">{t('print.nothingScheduled')}</p>}
       </Card>
     </div>
   );

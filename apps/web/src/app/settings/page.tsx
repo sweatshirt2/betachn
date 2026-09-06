@@ -52,9 +52,9 @@ export default function SettingsPage() {
       a.download = `My-Household-${new Date().toISOString().slice(0, 10)}.txt`;
       a.click();
       URL.revokeObjectURL(url);
-      toast('Household copy saved.');
+      toast(t('settings.exportSaved'));
     } catch {
-      toast('Export failed — try again.');
+      toast(t('settings.exportFailed'));
     } finally {
       setBusy(false);
     }
@@ -65,9 +65,9 @@ export default function SettingsPage() {
     try {
       const text = await file.text();
       await api.post('/import', text, { headers: { 'content-type': 'text/plain' } });
-      toast('Household copy opened.');
+      toast(t('settings.importOpened'));
     } catch {
-      toast('Import blocked — nothing was changed.');
+      toast(t('settings.importBlocked'));
     } finally {
       setBusy(false);
     }
@@ -75,10 +75,10 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl">Settings</h1>
+      <h1 className="font-display text-2xl">{t('settings.title')}</h1>
 
-      <section aria-label="Language" className="mt-4">
-        <h2 className="font-display text-lg">Language / ቋንቋ</h2>
+      <section aria-label={t('settings.language')} className="mt-4">
+        <h2 className="font-display text-lg">{t('settings.language')} / ቋንቋ</h2>
         <div className="mt-2 flex gap-2">
           {LOCALES.map((locale) => (
             <Button
@@ -99,9 +99,9 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <section aria-label="Theme" className="mt-4">
-        <h2 className="font-display text-lg">Theme</h2>
-        <div className="mt-2 flex gap-2" role="group" aria-label="Theme">
+      <section aria-label={t('settings.theme')} className="mt-4">
+        <h2 className="font-display text-lg">{t('settings.theme')}</h2>
+        <div className="mt-2 flex gap-2" role="group" aria-label={t('settings.theme')}>
           {THEME_IDS.map((id) => (
             <Button key={id} tone={theme === id ? 'primary' : 'quiet'} onClick={() => setTheme(id)}>
               {THEME_LABELS[id]}
@@ -110,35 +110,35 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <section aria-label="Calendar" className="mt-4">
-        <h2 className="font-display text-lg">Calendar</h2>
+      <section aria-label={t('settings.calendar')} className="mt-4">
+        <h2 className="font-display text-lg">{t('settings.calendar')}</h2>
         <div className="mt-2 flex gap-2">
           {(['gregorian', 'ethiopian', 'both'] as CalendarPref[]).map((pref) => (
             <Button key={pref} tone={calendar === pref ? 'primary' : 'quiet'} onClick={() => pickCalendar(pref)}>
-              {pref === 'gregorian' ? 'Gregorian' : pref === 'ethiopian' ? 'Ethiopian' : 'Both'}
+              {pref === 'gregorian' ? t('settings.gregorian') : pref === 'ethiopian' ? t('settings.ethiopian') : t('settings.both')}
             </Button>
           ))}
         </div>
       </section>
 
       {household && (
-        <section aria-label="Household" className="mt-4">
-          <h2 className="font-display text-lg">Household</h2>
+        <section aria-label={t('settings.household')} className="mt-4">
+          <h2 className="font-display text-lg">{t('settings.household')}</h2>
           <Card className="mt-2">
             <p className="text-sm font-semibold">{household.name}</p>
-            <p className="text-muted text-xs">Code {household.code} — share it to log in on another profile.</p>
+            <p className="text-muted text-xs">{t('settings.codeShare', { code: household.code })}</p>
           </Card>
         </section>
       )}
 
-      <section aria-label="Backup" className="mt-4">
-        <h2 className="font-display text-lg">Backup</h2>
+      <section aria-label={t('settings.backup')} className="mt-4">
+        <h2 className="font-display text-lg">{t('settings.backup')}</h2>
         <Card className="mt-2 flex flex-col gap-2">
           <Button tone="quiet" disabled={busy} onClick={exportHousehold}>
-            Save household copy
+            {t('settings.saveCopy')}
           </Button>
           <label className="bg-surface text-ink border-line cursor-pointer rounded-md border px-4 py-2 text-center text-sm font-semibold">
-            Open household copy
+            {t('settings.openCopy')}
             <input
               type="file"
               accept=".txt"
@@ -151,13 +151,13 @@ export default function SettingsPage() {
               }}
             />
           </label>
-          <p className="text-muted text-xs">{t('common.appName')} exports never include passwords.</p>
+          <p className="text-muted text-xs">{t('settings.noPasswords')}</p>
         </Card>
       </section>
 
       <div className="mt-6">
         <Button tone="quiet" disabled={logout.isPending} onClick={() => logout.mutate({})}>
-          Sign out
+          {t('settings.signOut')}
         </Button>
       </div>
     </div>

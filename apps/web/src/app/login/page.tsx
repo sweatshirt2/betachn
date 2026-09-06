@@ -2,11 +2,13 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/lib/api';
 import { Button, Card, Field } from '@/components/ui';
 import { useLogin } from '@/features/auth';
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const login = useLogin();
   const [code, setCode] = useState('');
   const [username, setUsername] = useState('');
@@ -31,14 +33,14 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto flex min-h-[70vh] w-full max-w-sm flex-col justify-center px-4">
-      <h1 className="font-display text-center text-3xl">Welcome back</h1>
-      <p className="text-muted mt-1 text-center text-sm">Sign in to your household.</p>
+      <h1 className="font-display text-center text-3xl">{t('auth.welcomeBack')}</h1>
+      <p className="text-muted mt-1 text-center text-sm">{t('auth.signInSubtitle')}</p>
       <Card className="mt-6">
         <form onSubmit={onSubmit} className="flex flex-col gap-3">
-          <Field label="Household code" value={code} onChange={(e) => setCode(e.target.value)} autoComplete="off" placeholder="BEKELE" />
-          <Field label="Username" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
+          <Field label={t('auth.householdCode')} value={code} onChange={(e) => setCode(e.target.value)} autoComplete="off" placeholder="BEKELE" />
+          <Field label={t('auth.username')} value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
           <Field
-            label="Password"
+            label={t('auth.password')}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -51,16 +53,19 @@ export default function LoginPage() {
           )}
           {retryAfter !== null && (
             <p className="text-mustard text-sm" role="alert">
-              Too many attempts — try again in {retryAfter}s.
+              {t('auth.rateLimited', { seconds: retryAfter })}
             </p>
           )}
           <Button type="submit" disabled={login.isPending}>
-            {login.isPending ? 'Signing in…' : 'Sign in'}
+            {login.isPending ? t('auth.signingIn') : t('auth.signIn')}
           </Button>
         </form>
       </Card>
       <p className="text-muted mt-4 text-center text-sm">
-        New here? <Link href="/onboarding" className="text-terracotta font-semibold">Set up your household</Link>
+        {t('auth.newHere')}{' '}
+        <Link href="/onboarding" className="text-terracotta font-semibold">
+          {t('auth.setupHousehold')}
+        </Link>
       </p>
     </main>
   );
