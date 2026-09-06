@@ -8,7 +8,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./permissions": "./src/permissions.ts",
-    "./roles-rules": "./src/modules/roles/roles.rules.ts"
+    "./roles-rules": "./src/modules/roles/roles.rules.ts",
+    "./schedule": "./src/schedule.ts",
+    "./today": "./src/modules/occurrences/today.aggregate.ts"
   },
   "scripts": {
     "test": "vitest run",

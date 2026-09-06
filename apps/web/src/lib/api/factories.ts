@@ -25,7 +25,11 @@ type QueryConfig<TData> = {
   pathParams?: Record<string, string>;
   queryParams?: Record<string, string>;
   key: readonly unknown[];
-  options?: Omit<UseQueryOptions<TData, ApiError>, 'queryKey' | 'queryFn'>;
+  /**
+   * queryFn may be overridden for device-mode reads (Phase A2) — server
+   * households always go through the axios path.
+   */
+  options?: Omit<UseQueryOptions<TData, ApiError>, 'queryKey'>;
 };
 
 /** Generic GET wrapper — feature hooks compose it with registry entries. */

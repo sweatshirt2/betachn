@@ -89,7 +89,7 @@ describe('aggregateToday (§4.14 /today shape)', () => {
           { id: 's2', name: 'Rice', state: 'available' },
           { id: 's3', name: 'Coffee', state: 'out' },
         ],
-        shoppingItems: Array.from({ length: 22 }, (_, i) => ({ id: `i${i}`, purchasedAt: null })),
+        shoppingItems: Array.from({ length: 22 }, (_, i) => ({ id: `i${i}`, name: `Item ${i}`, purchasedAt: null })),
       }),
     );
     expect(out.lowSupplies.map((s) => s.id)).toEqual(['s1', 's3']);

@@ -22,6 +22,7 @@ export interface TodaySupplyInput {
 
 export interface TodayShoppingInput {
   id: string;
+  name: string;
   /** ISO string (device mirrors) or Date (pg rows) — only null-ness is inspected. */
   purchasedAt: string | Date | null;
 }
