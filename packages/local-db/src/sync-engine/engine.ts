@@ -65,9 +65,12 @@ export class SyncEngine {
     let pushed = 0;
     let rejected = 0;
 
-    // Collision window: entities this device held pending AT FLUSH START.
-    // The push phase drains the queue, so capture the set beforehand —
-    // a pulled change touching any of these means our write lost the race.
+    // D90 collision windows, UNIONED at pull time:
+    //  - pushedSeqs: feed seqs this device ALREADY pushed (cross-flush losses
+    //    — someone landing above our seq means our write lost).
+    //  - prePushPending: entities pending AT FLUSH START (same-flush losses
+    //    against servers that don't echo seqs — the no-seq fallback path).
+    const pushedSeqs = await this.rememberedPushedSeqs();
     const prePushPending = new Set(
       (await this.db.select().from(pendingOps)).map((op) => op.entityId),
     );
@@ -93,7 +96,16 @@ export class SyncEngine {
         if (outcome.status === 'rejected') {
           rejected++;
           const source = batch.find((b) => b.uuid === outcome.uuid);
-      if (source) await this.recordRejected(source);
+          if (source) await this.recordRejected(source);
+        }
+        if (outcome.status === 'accepted' && outcome.seq !== undefined) {
+          // Remember our highest pushed seq per entity (D90) — the window
+          // future pulls compare against for loss detection.
+          const source = batch.find((b) => b.uuid === outcome.uuid);
+          if (source) {
+            const prev = pushedSeqs.get(source.entityId) ?? 0;
+            pushedSeqs.set(source.entityId, Math.max(prev, outcome.seq));
+          }
         }
         // accepted AND duplicate clear the queue — duplicates prove server receipt.
         acked.push(outcome.uuid);
@@ -101,6 +113,7 @@ export class SyncEngine {
       await this.queue.removeAcked(acked);
       pushed += acked.filter((u) => outcomes.find((o) => o.uuid === u)?.status === 'accepted').length;
     }
+    await this.rememberPushedSeqs(pushedSeqs);
 
     // PULL phase — page until exhausted.
     const cursorRow = await this.db.select().from(deviceSyncState).limit(1);
@@ -112,7 +125,12 @@ export class SyncEngine {
     for (;;) {
       const page = await this.transport.pull(code, cursor, token, PULL_PAGE);
 
-      const conflicts = findOverwritten(mePersonId, prePushPending, page.changes);
+      // D90 loss detection: another actor's change ABOVE our pushed seq on
+      // an entity we already pushed = our write lost (server arrival order).
+      // Pre-push pending entries without a remembered seq fall back to
+      // any-overlap (same-flush losses).
+      const window = new Set([...prePushPending, ...pushedSeqs.keys()]);
+      const conflicts = findOverwritten(mePersonId, window, page.changes, pushedSeqs);
       for (const conflict of conflicts) {
         if (!mePersonId || !this.identity.householdId()) break;
         await recordOverwrittenNotification(this.db, {
@@ -128,6 +146,9 @@ export class SyncEngine {
       for (const change of page.changes) {
         const table = ENTITY_TABLES[change.entity];
         if (!table) continue; // unknown entity from a NEWER app version — skip leniently
+        // Our own echoed change (or a re-push) clears the loss window for
+        // that entity — the server confirmed it as the standing value.
+        if (change.actorPersonId === mePersonId) pushedSeqs.delete(change.entityId);
         try {
           await applyChange(this.db, table, change);
           applied++;
@@ -142,6 +163,7 @@ export class SyncEngine {
       if (!page.hasMore) break;
     }
 
+    await this.rememberPushedSeqs(pushedSeqs);
     await this.writeCursor(cursor);
     return { pushed, rejected, applied, skipped };
   }
@@ -168,6 +190,32 @@ export class SyncEngine {
     }
     await this.writeCursor(snapshot.cursor, true);
     return snapshot.cursor;
+  }
+
+  /** D90: loss-window persistence — device_sync_state.pushed_seqs (JSON). */
+  private async rememberedPushedSeqs(): Promise<Map<string, number>> {
+    const rows = await this.db.select().from(deviceSyncState).limit(1);
+    const raw = rows[0]?.pushedSeqs as Record<string, number> | null | undefined;
+    return new Map(Object.entries(raw ?? {}));
+  }
+
+  private async rememberPushedSeqs(seqs: Map<string, number>): Promise<void> {
+    const rows = await this.db.select().from(deviceSyncState).limit(1);
+    const value = Object.fromEntries(seqs);
+    if (rows.length === 0) {
+      if (Object.keys(value).length === 0) return;
+      await this.db.insert(deviceSyncState).values({
+        id: 'local',
+        cursor: '0',
+        pushedSeqs: value,
+        lastSuccessfulSyncAt: new Date().toISOString(),
+      });
+      return;
+    }
+    await this.db
+      .update(deviceSyncState)
+      .set({ pushedSeqs: value })
+      .where(eq(deviceSyncState.id, 'local'));
   }
 
   private async recordRejected(op: {

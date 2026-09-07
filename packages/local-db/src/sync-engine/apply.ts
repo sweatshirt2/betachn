@@ -81,17 +81,25 @@ export interface ConflictReport {
 }
 
 /**
- * Detects collisions BEFORE applying: an incoming change from someone else
- * that touches an entity this device still holds in pending_ops means our
- * local write lost the race (§6.28). Self-conflicts stay silent.
+ * Detects collisions BEFORE applying (§6.28 / D90): an incoming change from
+ * someone else on an entity we already pushed is a LOSS only when it arrived
+ * ABOVE our seq (server arrival order IS precedence — the later pusher is the
+ * winner and stays silent). Entries without a remembered seq (pre-push
+ * pending at flush start, or an older server) fall back to any-overlap.
  */
 export function findOverwritten(
   mePersonId: string | null,
   pendingEntityIds: Set<string>,
   changes: PullChangeWire[],
+  pushedSeqs?: Map<string, number>,
 ): ConflictReport['overwritten'] {
   return changes
-    .filter((c) => c.actorPersonId !== mePersonId && pendingEntityIds.has(c.entityId))
+    .filter((c) => {
+      if (c.actorPersonId === mePersonId) return false;
+      if (!pendingEntityIds.has(c.entityId)) return false;
+      const mySeq = pushedSeqs?.get(c.entityId);
+      return mySeq === undefined || c.seq > mySeq;
+    })
     .map((c) => ({ entity: c.entity, entityId: c.entityId, actorPersonId: c.actorPersonId }));
 }
 

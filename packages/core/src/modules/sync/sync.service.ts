@@ -4,6 +4,7 @@ import type { ChangeOp, SyncDomain, AudienceType } from '@chorify/db';
 import { AppError } from '../../errors';
 import type { Executor, UnitOfWork } from '../../db';
 import { DOMAIN_VIEW_KEY, matchesViewer, type ViewerIdentity } from './sync.rules';
+import { applyToServerTables } from './sync.tables';
 
 /** One queued device mutation arriving at POST /sync/push (§4.12). */
 export interface PushOp {
@@ -76,6 +77,15 @@ export class SyncService {
           results.push({ uuid: op.uuid, status: 'duplicate' });
           continue;
         }
+        // D91 write-through: apply to the authoritative tables in THIS tx so
+        // jobs/bootstrap see device writes; a poison row rejects the op
+        // (device drops + notifies) instead of wedging the batch.
+        try {
+          await applyToServerTables(tx, op);
+        } catch {
+          results.push({ uuid: op.uuid, status: 'rejected', reason: 'FORBIDDEN_DOMAIN' });
+          continue;
+        }
         const seq = await this.append(tx, {
           householdId: viewer.householdId,
           actorPersonId: viewer.personId,
@@ -135,7 +145,10 @@ export class SyncService {
     };
   }
 
-  /** Highest allocated seq for a household — fresh-cursor bootstrap anchor. */
+  /** Highest allocated seq for a household — fresh-cursor bootstrap anchor.
+   *  (D90: push outcomes carry their assigned seq so devices can detect
+   *  cross-flush conflicts — someone else landing on an entity this device
+   *  already pushed.) */
   async headSeq(householdId: string): Promise<number> {
     const rows = await latestSeqRow(this.uow.exec, householdId);
     return rows.length > 0 ? Number(rows[0]!.seq) : 0;

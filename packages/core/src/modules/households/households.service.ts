@@ -63,6 +63,29 @@ export class HouseholdsService {
     return row ? householdRowSchema.parse(row) : null;
   }
 
+  /**
+   * D62/D72 claim: register an offline device's code server-side so its
+   * later /import adoption lands in THIS row. Blocklist still applies (D52);
+   * a blocked code is indistinguishable from not-found (no enumeration).
+   */
+  async claimByCode(input: CreateHouseholdInput & { code: string }): Promise<HouseholdRecord> {
+    const code = normalizeHouseholdCode(input.code);
+    if (!isPlausible(code) || (await this.blocklist.isBlocked(code.toLowerCase()))) {
+      throw new AppError('VALIDATION_ERROR', 'Household code is not valid');
+    }
+    return this.uow.transact(async (tx) => {
+      const [row] = await tx.insert(households).values({
+        name: input.name,
+        code,
+        currency: input.currency,
+        timezone: input.timezone,
+      }).returning();
+      const created = householdRowSchema.parse(row);
+      await tx.insert(roles).values(builtinRoleSeedRows(created.id));
+      return created;
+    });
+  }
+
   async get(householdId: string): Promise<HouseholdRecord> {
     const row = await this.uow.exec.query.households!.findFirst({
       where: eq(households.id, householdId),

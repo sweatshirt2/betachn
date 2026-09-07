@@ -24,6 +24,8 @@ export const deviceSyncState = sqliteTable('device_sync_state', {
   cursor: text('cursor').notNull().default('0'),
   lastSuccessfulSyncAt: text('last_successful_sync_at'),
   bootstrapAt: text('bootstrap_at'),
+  /** D90: highest feed seq we pushed, per entityId — cross-flush loss window. */
+  pushedSeqs: text('pushed_seqs', { mode: 'json' }).$type<Record<string, number>>(),
 });
 
 export type PendingOp = typeof pendingOps.$inferSelect;

@@ -82,7 +82,18 @@ export class AuthService {
     const lowered = normalizeUsername(input.username);
     if (!lowered) throw new AppError('VALIDATION_ERROR', 'Invalid username');
 
-    const household = await this.requireHouseholdByCode(input.code);
+    // D72 claim semantics: a phone-mode registration for a code the server
+    // has never seen CLAIMS it — the offline device's household row is
+    // created here so its later /import adoption lands in THIS row (§4.12).
+    // Codes already known (pre-claimed offline creation sync) pass through.
+    const household =
+      (await this.householdsService.findByCode(input.code)) ??
+      (await this.householdsService.claimByCode({
+        name: input.code, // placeholder until adoption adopts the real name
+        code: input.code,
+        currency: 'ETB',
+        timezone: 'Africa/Addis_Ababa',
+      }));
     await this.assertUsernameFree(this.uow.exec, household.id, lowered);
 
     const passwordHash = await this.hasher.hash(input.password);

@@ -25,6 +25,8 @@ export interface PushOutcomeWire {
   uuid: string;
   status: 'accepted' | 'duplicate' | 'rejected';
   reason?: 'FORBIDDEN_DOMAIN';
+  /** Feed seq assigned to an accepted op — powers cross-flush loss detection. */
+  seq?: number;
 }
 
 export interface BootstrapSnapshot {
