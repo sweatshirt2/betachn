@@ -8,9 +8,15 @@
   "exports": {
     ".": "./src/index.ts",
     "./permissions": "./src/permissions.ts",
+    "./errors": "./src/errors.ts",
     "./roles-rules": "./src/modules/roles/roles.rules.ts",
+    "./activity": "./src/activity.ts",
+    "./notify": "./src/notify.ts",
     "./schedule": "./src/schedule.ts",
-    "./today": "./src/modules/occurrences/today.aggregate.ts"
+    "./today": "./src/modules/occurrences/today.aggregate.ts",
+    "./occurrence-rules": "./src/modules/occurrences/occurrences.rules.ts",
+    "./resources-rules": "./src/modules/resources/resources.rules.ts",
+    "./auth-rules": "./src/modules/auth/auth.rules.ts"
   },
   "scripts": {
     "test": "vitest run",

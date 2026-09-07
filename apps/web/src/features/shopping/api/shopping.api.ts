@@ -1,8 +1,11 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { useApiMutation, useApiQuery } from '@/lib/api';
+import { useSelector } from 'react-redux';
+import { queryKeys, useApiMutation, useApiQuery, useDeviceMutation } from '@/lib/api';
 import { useToast } from '@/components/ui';
+import { deviceCreateShoppingItem, devicePurchaseItem } from '@/lib/device/writes';
+import type { RootState } from '@/store';
 import { shoppingEndpoints } from '../shopping.endpoints';
 import type { ShoppingItemPayload } from '../shopping.types';
 
@@ -16,28 +19,48 @@ export function useShoppingItems() {
 export function useCreateShoppingItem() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  return useApiMutation<{ item: ShoppingItemPayload }, { name: string }>({
+  const mode = useSelector((state: RootState) => state.auth.mode);
+
+  const onSuccess = ({ item }: { item: ShoppingItemPayload }) => {
+    void queryClient.invalidateQueries({ queryKey: ['shopping-items'] });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.today() });
+    toast(`${item.name} added to shopping.`);
+  };
+
+  const server = useApiMutation<{ item: ShoppingItemPayload }, { name: string }>({
     endpoint: shoppingEndpoints.createItem,
-    options: {
-      onSuccess: ({ item }) => {
-        void queryClient.invalidateQueries({ queryKey: ['shopping-items'] });
-        toast(`${item.name} added to shopping.`);
-      },
-    },
+    options: { onSuccess },
   });
+  const device = useDeviceMutation<{ item: ShoppingItemPayload }, { name: string }>({
+    write: ({ name }, identity) =>
+      deviceCreateShoppingItem({ ...identity, name }).then((item) => ({ item })),
+    options: { onSuccess },
+  });
+
+  return mode === 'device' ? device : server;
 }
 
 export function usePurchaseItem() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  return useApiMutation<{ item: ShoppingItemPayload }, { id: string }>({
+  const mode = useSelector((state: RootState) => state.auth.mode);
+
+  const onSuccess = ({ item }: { item: ShoppingItemPayload }) => {
+    void queryClient.invalidateQueries({ queryKey: ['shopping-items'] });
+    void queryClient.invalidateQueries({ queryKey: ['supplies'] });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.today() });
+    toast(`Bought ${item.name} — supply refilled.`);
+  };
+
+  const server = useApiMutation<{ item: ShoppingItemPayload }, { id: string }>({
     endpoint: shoppingEndpoints.purchaseItem,
-    options: {
-      onSuccess: ({ item }) => {
-        void queryClient.invalidateQueries({ queryKey: ['shopping-items'] });
-        void queryClient.invalidateQueries({ queryKey: ['supplies'] });
-        toast(`Bought ${item.name} — supply refilled.`);
-      },
-    },
+    options: { onSuccess },
   });
+  const device = useDeviceMutation<{ item: ShoppingItemPayload }, { id: string }>({
+    write: ({ id }, identity) =>
+      devicePurchaseItem({ ...identity, itemId: id }).then((item) => ({ item })),
+    options: { onSuccess },
+  });
+
+  return mode === 'device' ? device : server;
 }

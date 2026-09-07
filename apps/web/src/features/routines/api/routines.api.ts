@@ -1,8 +1,11 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { useApiMutation, useApiQuery } from '@/lib/api';
+import { useSelector } from 'react-redux';
+import { useApiMutation, useApiQuery, useDeviceMutation } from '@/lib/api';
 import { useToast } from '@/components/ui';
+import { deviceCreateRoutine, deviceDeleteRoutine } from '@/lib/device/writes';
+import type { RootState } from '@/store';
 import { routinesEndpoints } from '../routines.endpoints';
 import type { RoutinePayload } from '../routines.types';
 
@@ -16,21 +19,42 @@ export function useRoutines() {
 export function useCreateRoutine() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  return useApiMutation<{ routine: RoutinePayload }, { name: string }>({
+  const mode = useSelector((state: RootState) => state.auth.mode);
+
+  const onSuccess = ({ routine }: { routine: RoutinePayload }) => {
+    void queryClient.invalidateQueries({ queryKey: ['routines'] });
+    toast(`${routine.name} added.`);
+  };
+
+  const server = useApiMutation<{ routine: RoutinePayload }, { name: string }>({
     endpoint: routinesEndpoints.createRoutine,
-    options: {
-      onSuccess: ({ routine }) => {
-        void queryClient.invalidateQueries({ queryKey: ['routines'] });
-        toast(`${routine.name} added.`);
-      },
-    },
+    options: { onSuccess },
   });
+  const device = useDeviceMutation<{ routine: RoutinePayload }, { name: string }>({
+    write: ({ name }, identity) =>
+      deviceCreateRoutine({ ...identity, name }).then((routine) => ({ routine })),
+    options: { onSuccess },
+  });
+
+  return mode === 'device' ? device : server;
 }
 
 export function useDeleteRoutine() {
   const queryClient = useQueryClient();
-  return useApiMutation<{ ok: boolean }, { id: string }>({
+  const mode = useSelector((state: RootState) => state.auth.mode);
+
+  const onSuccess = () => {
+    void queryClient.invalidateQueries({ queryKey: ['routines'] });
+  };
+
+  const server = useApiMutation<{ ok: boolean }, { id: string }>({
     endpoint: routinesEndpoints.deleteRoutine,
-    options: { onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['routines'] }) },
+    options: { onSuccess },
   });
+  const device = useDeviceMutation<{ ok: boolean }, { id: string }>({
+    write: ({ id }, identity) => deviceDeleteRoutine({ ...identity, routineId: id }),
+    options: { onSuccess },
+  });
+
+  return mode === 'device' ? device : server;
 }

@@ -3,3 +3,4 @@ export type { ApiErrorBody } from './client';
 export { queryKeys } from './queryKeys';
 export { useApiMutation, useApiQuery } from './factories';
 export type { Endpoint } from './factories';
+export { useDeviceMutation, toApiError, selectDeviceIdentity } from './deviceMutations';
