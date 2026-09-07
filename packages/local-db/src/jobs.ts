@@ -11,6 +11,9 @@
  * dedupe on a per-person per-day marker row in notifications.
  */
 import { and, eq, lt } from 'drizzle-orm';
+// Client-safe subpath (D83): the pure §6.8 primitive lives in core — one
+// implementation shared with the server, never a per-package copy.
+import { isoTodayInTz } from '@chorify/core/schedule';
 import type { DeviceDatabase } from './client';
 import {
   activityEvents,
@@ -27,19 +30,8 @@ export interface DeviceJobsResult {
   digests: number;
 }
 
-/** ISO today in the household timezone (§6.8) — offset computed via Intl. */
-export function isoTodayInTz(timezone: string, now: Date = new Date()): string {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).format(now);
-  return parts; // en-CA yields YYYY-MM-DD
-}
-
 function todayIso(timezone: string): string {
-  return isoTodayInTz(timezone);
+  return isoTodayInTz(timezone, new Date());
 }
 
 /**
