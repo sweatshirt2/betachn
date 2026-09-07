@@ -2,6 +2,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import {
   activityEvents,
   assignmentRules,
+  households,
   responsibilities,
   subtasks,
 } from '@chorify/db';
@@ -9,7 +10,7 @@ import { buildActivity, type ActivityType } from '../../activity';
 import { AppError } from '../../errors';
 import type { Clock } from '../../ports';
 import type { Executor, UnitOfWork } from '../../db';
-import type { SchedulePattern } from '../../schedule';
+import { isoTodayInTz, type SchedulePattern } from '../../schedule';
 import {
   expandRulesIntoWindow,
   regenerateForwardTx,
@@ -129,7 +130,7 @@ export class ResponsibilitiesService {
         tx,
         householdId,
         insertedRules.map(ruleToMaterializable),
-        isoToday(this.clock),
+        isoTodayInTz(await householdTimezone(tx, householdId), this.clock.now()),
       );
 
       await tx.insert(activityEvents).values({
@@ -185,7 +186,11 @@ export class ResponsibilitiesService {
 
       // Forward-only regeneration whenever the schedule changed (§6.1).
       if (rulesChanged || input.archived !== undefined) {
-        await regenerateForwardTx(tx, responsibilityId, isoToday(this.clock));
+        await regenerateForwardTx(
+          tx,
+          responsibilityId,
+          isoTodayInTz(await householdTimezone(tx, householdId), this.clock.now()),
+        );
       }
 
       const eventType: ActivityType =
@@ -252,6 +257,11 @@ export class ResponsibilitiesService {
   }
 }
 
-function isoToday(clock: Clock): string {
-  return clock.now().toISOString().slice(0, 10);
+/** §6.8: day boundaries compute in households.timezone. */
+async function householdTimezone(exec: Executor, householdId: string): Promise<string> {
+  const row = await exec.query.households!.findFirst({
+    where: eq(households.id, householdId),
+    columns: { timezone: true },
+  });
+  return String(row?.timezone ?? 'Africa/Addis_Ababa');
 }
