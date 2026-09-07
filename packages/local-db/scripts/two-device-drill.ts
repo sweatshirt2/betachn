@@ -29,9 +29,12 @@ import {
 } from '../src/schema';
 
 const BASE = process.env.SYNC_BASE_URL ?? 'http://localhost:3000';
-const CODE = 'DRILLZ';
+// Fresh 6-letter code per run — claimed households persist across drills.
+const CODE = 'D' + Array.from({ length: 5 }, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)]).join('');
 const USERNAME = 'drillhana';
 const PASSWORD = 'drill123';
+// phones are GLOBALLY unique (D55) — randomize per run like the code
+const PHONE = '+2519' + String(Math.floor(10000000 + Math.random() * 89999999));
 
 const devices: NodeDevice[] = [];
 const failures: string[] = [];
@@ -78,10 +81,15 @@ interface Session {
 
 function contextSession(payload: { token: string; context: Record<string, never> }): Session {
   const ctx = payload.context as unknown as {
-    household: Session['household'];
-    activePerson: Session['person'];
+    household: { id: string; code: string; name: string };
+    activePersonName: string;
+    session: { activePersonId: string };
   };
-  return { token: payload.token, household: ctx.household, person: ctx.activePerson };
+  return {
+    token: payload.token,
+    household: ctx.household,
+    person: { id: ctx.session.activePersonId, name: ctx.activePersonName },
+  };
 }
 
 async function openDevice(file: string): Promise<NodeDevice> {
@@ -104,7 +112,7 @@ async function engineFor(
   });
 }
 
-function queueOp(
+async function queueOp(
   device: NodeDevice,
   householdId: string,
   op: {
@@ -116,8 +124,10 @@ function queueOp(
     audienceType?: 'members' | 'all';
     audienceIds?: string[];
   },
-): void {
-  void device.db.insert(pendingOps).values({
+): Promise<void> {
+  // Awaited — drizzle's sync driver executes lazily; a fire-and-forget insert
+  // silently never runs and every downstream assertion empties out.
+  await device.db.insert(pendingOps).values({
     uuid: op.uuid,
     householdId,
     entity: op.entity,
@@ -156,20 +166,20 @@ async function main(): Promise<void> {
   //    joins via login + passwordless profile switch (§4.6), both bootstrap.
   const reg = await api<{ token: string; context: Record<string, never> }>(
     'POST', '/auth/register-online', null,
-    { mode: 'phone', code: CODE, username: USERNAME, password: PASSWORD, phone: '+251911000001' },
+    { mode: 'phone', code: CODE, username: USERNAME, password: PASSWORD, phone: PHONE },
   );
   const owner = contextSession(reg);
   console.log(`household ${owner.household.code} · owner ${owner.person.name}`);
 
-  const roles = await api<Array<{ id: string; builtinKey: string | null }>>(
+  const roles = await api<{ roles: Array<{ id: string; builtinKey: string | null }> }>(
     'GET', '/roles', owner.token,
-  );
+  ).then((r) => r.roles);
   const childRole = roles.find((r) => r.builtinKey === 'child');
   check('setup: child role preset exists', childRole !== undefined);
 
-  const child = await api<{ id: string }>('POST', '/people', owner.token, {
+  const child = await api<{ person: { id: string } }>('POST', '/people', owner.token, {
     name: 'Drill Child', roleId: childRole!.id,
-  });
+  }).then((r) => r.person);
 
   const login = contextSession(
     await api<{ token: string; context: Record<string, never> }>('POST', '/auth/login', null, {
@@ -196,29 +206,25 @@ async function main(): Promise<void> {
   console.log('\nS1 concurrent writes to one row (LWW)');
   const hhA = await localHousehold(deviceA);
   const hhB = await localHousehold(deviceB);
-  queueOp(deviceA, owner.household.id, {
+  await queueOp(deviceA, owner.household.id, {
     uuid: crypto.randomUUID(), entity: 'households', entityId: hhA.id,
     payload: { ...hhA, name: 'Alpha House' },
   });
-  queueOp(deviceB, owner.household.id, {
+  await queueOp(deviceB, owner.household.id, {
     uuid: crypto.randomUUID(), entity: 'households', entityId: hhB.id,
     payload: { ...hhB, name: 'Beta House' },
   });
   await engineA.flush();
   await engineB.flush();
+  // A's op drained its own flush — B's change arrives on THIS pull, which is
+  // exactly the cross-flush window the remembered seqs exist for (D90).
+  await engineA.flush();
 
   const afterA1 = await localHousehold(deviceA);
   check('S1: A converges to B (later arrival wins)', afterA1.name === 'Beta House', afterA1.name);
-  const lossesA = await unreadByType(deviceA, owner.person.id, 'sync.changeOverwritten');
-  check('S1: loser (A) holds a loss notification', lossesA.length === 1);
-  // A's op drained LAST flush — the loss arrives on THIS flush. Requires the
-  // engine to remember its own pushed seq (cross-flush collision window).
-  await engineA.flush();
   const lossesA2 = await unreadByType(deviceA, owner.person.id, 'sync.changeOverwritten');
-  check('S1: cross-flush loss still notified on A', lossesA2.length === 1,
+  check('S1: loser (A) holds a cross-flush loss notification', lossesA2.length === 1,
     `got ${lossesA2.length}`);
-  const afterA2 = await localHousehold(deviceA);
-  check('S1: A local row equals winner value', afterA2.name === 'Beta House', afterA2.name);
   await engineB.flush();
   const lossesB = await unreadByType(deviceB, child.id, 'sync.changeOverwritten');
   check('S1: winner (B) is NOT notified', lossesB.length === 0, `got ${lossesB.length}`);
@@ -229,16 +235,18 @@ async function main(): Promise<void> {
   console.log('\nS2 loss notification coalescing');
   const hh2 = await localHousehold(deviceA);
   const hh2b = await localHousehold(deviceB);
-  queueOp(deviceA, owner.household.id, {
+  await queueOp(deviceA, owner.household.id, {
     uuid: crypto.randomUUID(), entity: 'households', entityId: hh2.id,
     payload: { ...hh2, name: 'Gamma House' },
   });
-  queueOp(deviceB, owner.household.id, {
+  await queueOp(deviceB, owner.household.id, {
     uuid: crypto.randomUUID(), entity: 'households', entityId: hh2b.id,
     payload: { ...hh2b, name: 'Delta House' },
   });
-  await engineB.flush();
+  // A pushes first AGAIN → A loses again on the same entity (B arrives later).
   await engineA.flush();
+  await engineB.flush();
+  await engineA.flush(); // A's pull delivers the loss
   const coalesced = await unreadByType(deviceA, owner.person.id, 'sync.changeOverwritten');
   check('S2: still ONE unread loss row', coalesced.length === 1, `got ${coalesced.length}`);
   check('S2: count bumped to 2', Number(coalesced[0]?.params.count ?? 0) === 2,
@@ -249,7 +257,7 @@ async function main(): Promise<void> {
   // ── S3: domain re-auth on push + domain/audience filtering on pull.
   console.log('\nS3 permission domain + audience filtering');
   const supplyId = crypto.randomUUID();
-  queueOp(deviceB, owner.household.id, {
+  await queueOp(deviceB, owner.household.id, {
     uuid: crypto.randomUUID(), entity: 'supplies', entityId: supplyId,
     payload: { id: supplyId, householdId: owner.household.id, name: 'Soap', state: 'low', createdAt: new Date().toISOString() },
     domain: 'resources',
@@ -260,7 +268,7 @@ async function main(): Promise<void> {
   const rejected = await unreadByType(deviceB, child.id, 'sync.changeRejected');
   check('S3: rejected push notifies child (sync is not a bypass)', rejected.length === 1);
 
-  queueOp(deviceA, owner.household.id, {
+  await queueOp(deviceA, owner.household.id, {
     uuid: crypto.randomUUID(), entity: 'supplies', entityId: supplyId,
     payload: { id: supplyId, householdId: owner.household.id, name: 'Soap', state: 'low', createdAt: new Date().toISOString() },
     domain: 'resources',
@@ -285,7 +293,7 @@ async function main(): Promise<void> {
     payload: { id: child.id, householdId: owner.household.id, name: 'Drill Child', avatarEmoji: '🧒', permissionOverrides: {}, roleId: childRole!.id },
     audienceType: 'members' as const, audienceIds: [child.id],
   };
-  queueOp(deviceA, owner.household.id, p2EmojiOp);
+  await queueOp(deviceA, owner.household.id, p2EmojiOp);
   await engineA.flush();
   const pullB2 = await api<{ changes: Array<{ entityId: string }> }>(
     'GET', `/sync/pull?since=0`, login.token,
@@ -297,7 +305,7 @@ async function main(): Promise<void> {
     payload: { id: owner.person.id, householdId: owner.household.id, name: owner.person.name, avatarEmoji: '👑', permissionOverrides: {} },
     audienceType: 'members' as const, audienceIds: [owner.person.id],
   };
-  queueOp(deviceA, owner.household.id, p1Op);
+  await queueOp(deviceA, owner.household.id, p1Op);
   await engineA.flush();
   const pullB3 = await api<{ changes: Array<{ entityId: string }> }>(
     'GET', `/sync/pull?since=0`, login.token,
@@ -309,7 +317,7 @@ async function main(): Promise<void> {
   console.log('\nS4 401 resilience');
   const hh4 = await localHousehold(deviceA);
   const op401 = crypto.randomUUID();
-  queueOp(deviceA, owner.household.id, {
+  await queueOp(deviceA, owner.household.id, {
     uuid: op401, entity: 'households', entityId: hh4.id,
     payload: { ...hh4, name: 'Delta House' },
   });
@@ -343,7 +351,7 @@ async function main(): Promise<void> {
     .update(deviceSyncState)
     .set({ lastSuccessfulSyncAt: stale, cursor: '999999' })
     .where(eq(deviceSyncState.id, 'local'));
-  queueOp(deviceC, owner.household.id, {
+  await queueOp(deviceC, owner.household.id, {
     uuid: crypto.randomUUID(), entity: 'households', entityId: (await localHousehold(deviceC)).id,
     payload: { ...(await localHousehold(deviceC)), name: 'Delta House' },
   });

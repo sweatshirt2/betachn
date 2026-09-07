@@ -5,6 +5,7 @@ import { AppError } from '../../errors';
 import type { Executor, UnitOfWork } from '../../db';
 import { DOMAIN_VIEW_KEY, matchesViewer, type ViewerIdentity } from './sync.rules';
 import { applyToServerTables } from './sync.tables';
+import { buildBootstrapSnapshot } from './sync.snapshot';
 
 /** One queued device mutation arriving at POST /sync/push (§4.12). */
 export interface PushOp {
@@ -143,6 +144,15 @@ export class SyncService {
       cursor: page.length > 0 ? page.at(-1)!.seq : scannedThrough,
       hasMore,
     };
+  }
+
+  /** D92 bootstrap: full visible TABLE snapshot (rows, not feed history) —
+   *  with D91 write-through the tables are the converged state. */
+  async bootstrapSnapshot(
+    viewer: ViewerIdentity & { householdId: string },
+  ): Promise<{ sections: Record<string, Array<Record<string, unknown>>>; cursor: number }> {
+    const head = await this.headSeq(viewer.householdId);
+    return buildBootstrapSnapshot(this.uow.exec, viewer.householdId, viewer, head);
   }
 
   /** Highest allocated seq for a household — fresh-cursor bootstrap anchor.

@@ -86,25 +86,32 @@ export class AuthService {
     // has never seen CLAIMS it — the offline device's household row is
     // created here so its later /import adoption lands in THIS row (§4.12).
     // Codes already known (pre-claimed offline creation sync) pass through.
-    const household =
-      (await this.householdsService.findByCode(input.code)) ??
+    const existing = await this.householdsService.findByCode(input.code);
+    const claimed =
+      existing ??
       (await this.householdsService.claimByCode({
         name: input.code, // placeholder until adoption adopts the real name
         code: input.code,
         currency: 'ETB',
         timezone: 'Africa/Addis_Ababa',
       }));
-    await this.assertUsernameFree(this.uow.exec, household.id, lowered);
+    // Only a FRESH claim carries the scaffold owner-role for the placeholder.
+    const claimRoleId = 'claimRoleId' in claimed ? claimed.claimRoleId : null;
+    const householdId = claimed.id;
+    await this.assertUsernameFree(this.uow.exec, householdId, lowered);
 
     const passwordHash = await this.hasher.hash(input.password);
     return this.uow.transact(async (tx) => {
       // Placeholder person gives the pre-import session a seat; /import
-      // adoption repoints onto the imported owner and deletes it (S4.11).
+      // adoption repoints onto the imported owner and deletes it (§4.11).
+      // A claimed household attaches the claim owner-role so the session's
+      // permission map resolves (the import route requires view_people).
       const [placeholder] = await tx.insert(people).values({
-        householdId: household.id,
+        householdId,
         name: input.username,
         avatarEmoji: '👤',
         permissionOverrides: {},
+        ...(claimRoleId ? { roleId: claimRoleId } : {}),
       }).returning();
       const personId = String(placeholder!.id);
       const [user] = await tx.insert(users).values({
@@ -112,10 +119,10 @@ export class AuthService {
         passwordHash,
         phone: input.phone,
         personId,
-        householdId: household.id,
+        householdId,
       }).returning();
       const created = insertedUserRow.parse(user);
-      return this.mintSessionTx(tx, created.id, created.personId, household.id);
+      return this.mintSessionTx(tx, created.id, created.personId, householdId);
     });
   }
 

@@ -5,6 +5,7 @@ import { AppError } from '../../errors';
 import type { BlocklistChecker, RandomSource } from '../../ports';
 import type { UnitOfWork } from '../../db';
 import { builtinRoleSeedRows } from '../roles';
+import { ownerPermissionMap } from '../roles';
 import { generateUniqueHouseholdCode, normalizeHouseholdCode } from './households.rules';
 import type {
   CreateHouseholdInput,
@@ -67,8 +68,13 @@ export class HouseholdsService {
    * D62/D72 claim: register an offline device's code server-side so its
    * later /import adoption lands in THIS row. Blocklist still applies (D52);
    * a blocked code is indistinguishable from not-found (no enumeration).
+   *
+   * Seeds the 11 builtin presets PLUS one claim-scaffold owner-role
+   * (sentinel `__claim__` builtinKey) so the pre-import session has a
+   * working permission map AND a fully usable household. Adoption deletes
+   * ALL claim-time roles and imports the device's real set (§4.11).
    */
-  async claimByCode(input: CreateHouseholdInput & { code: string }): Promise<HouseholdRecord> {
+  async claimByCode(input: CreateHouseholdInput & { code: string }): Promise<HouseholdRecord & { claimRoleId: string }> {
     const code = normalizeHouseholdCode(input.code);
     if (!isPlausible(code) || (await this.blocklist.isBlocked(code.toLowerCase()))) {
       throw new AppError('VALIDATION_ERROR', 'Household code is not valid');
@@ -82,7 +88,16 @@ export class HouseholdsService {
       }).returning();
       const created = householdRowSchema.parse(row);
       await tx.insert(roles).values(builtinRoleSeedRows(created.id));
-      return created;
+      const [role] = await tx.insert(roles).values({
+        householdId: created.id,
+        builtinKey: CLAIM_ROLE_SENTINEL,
+        name: 'Owner',
+        isBuiltin: false,
+        isOwnerRole: true,
+        permissions: ownerPermissionMap(),
+        defaultPermissions: ownerPermissionMap(),
+      }).returning();
+      return { ...created, claimRoleId: String(role!.id) };
     });
   }
 
@@ -132,3 +147,6 @@ export class HouseholdsService {
 function isPlausible(code: string): boolean {
   return /^[A-Z]{6}$/.test(normalizeHouseholdCode(code));
 }
+
+/** Marks roles seeded by a registration claim — adoption deletes these. */
+export const CLAIM_ROLE_SENTINEL = '__claim__';

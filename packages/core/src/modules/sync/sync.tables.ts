@@ -70,12 +70,35 @@ export async function applyToServerTables(
     await exec.delete(table).where(eqId(table, op.entityId));
     return;
   }
-  const row = { ...(op.payload as Record<string, unknown>), id: op.entityId };
+  const row = coerceValues({
+    ...(op.payload as Record<string, unknown>),
+    id: op.entityId,
+  });
   await exec
     .insert(table)
     .values(row)
     .onConflictDoUpdate({ target: table.id, set: stripKeys(row, ['id']) });
 }
+
+/**
+ * Wire payloads are JSON: `*At` timestamps arrive as ISO strings (pg
+ * date-mode columns need Date) and sqlite booleans arrive as 0/1.
+ */
+function coerceValues(row: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(row)) {
+    if (typeof v === 'string' && k.endsWith('At')) {
+      out[k] = new Date(v);
+    } else if (BOOLEAN_KEYS.has(k) && typeof v === 'number') {
+      out[k] = v !== 0;
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
+const BOOLEAN_KEYS = new Set(['isOwnerRole', 'isBuiltin', 'active', 'done']);
 
 function eqId(table: AnyPgTable, id: string) {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access

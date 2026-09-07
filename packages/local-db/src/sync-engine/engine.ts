@@ -53,12 +53,23 @@ export class SyncEngine {
     }
     this.flushing = true;
     try {
+      // §4.12 staleness: a device offline past the 90-day retention window
+      // cannot trust incremental pulls — full bootstrap resync first.
+      if (await this.isStalePastRetention()) await this.bootstrap();
       const result = await this.flushInner(code, token);
       await this.markSynced();
       return result;
     } finally {
       this.flushing = false;
     }
+  }
+
+  /** >90-day staleness per §4.12/D65 retention (bootstrap is the repair path). */
+  private async isStalePastRetention(): Promise<boolean> {
+    const rows = await this.db.select().from(deviceSyncState).limit(1);
+    const last = rows[0]?.lastSuccessfulSyncAt;
+    if (!last) return false; // fresh device — bootstrap is explicit
+    return Date.now() - new Date(last).getTime() > 90 * 24 * 3600 * 1000;
   }
 
   private async flushInner(code: string, token: string): Promise<FlushResult> {
@@ -141,14 +152,15 @@ export class SyncEngine {
           actorPersonId: conflict.actorPersonId,
           occurredAt: new Date().toISOString(),
         });
+        // Fate resolved — a fresh loss on this entity starts a new window.
+        pushedSeqs.delete(conflict.entityId);
       }
 
       for (const change of page.changes) {
         const table = ENTITY_TABLES[change.entity];
         if (!table) continue; // unknown entity from a NEWER app version — skip leniently
-        // Our own echoed change (or a re-push) clears the loss window for
-        // that entity — the server confirmed it as the standing value.
-        if (change.actorPersonId === mePersonId) pushedSeqs.delete(change.entityId);
+        // Own echo: leave the loss window INTACT — a later foreign change
+        // above our seq is still our loss (D90).
         try {
           await applyChange(this.db, table, change);
           applied++;
@@ -168,7 +180,10 @@ export class SyncEngine {
     return { pushed, rejected, applied, skipped };
   }
 
-  /** §4.12 bootstrap: empty device or >90-day staleness ⇒ full resnapshot. */
+  /** §4.12 bootstrap: empty device or >90-day staleness ⇒ full resnapshot.
+   *  Server snapshot = TABLE rows per entity (D92 — with D91 write-through
+   *  the tables are the converged state); applied through the same resilient
+   *  applier as a pull. */
   async bootstrap(): Promise<number> {
     const code = this.identity.householdCode();
     const token = this.identity.token();
@@ -178,14 +193,18 @@ export class SyncEngine {
       const table = ENTITY_TABLES[entity];
       if (!table) continue;
       for (const row of rows) {
-        await applyChange(this.db, table, {
-          seq: snapshot.cursor,
-          actorPersonId: null,
-          entity,
-          entityId: String(row.id ?? ''),
-          op: 'create',
-          payload: row,
-        });
+        try {
+          await applyChange(this.db, table, {
+            seq: snapshot.cursor,
+            actorPersonId: null,
+            entity,
+            entityId: String(row.id ?? ''),
+            op: 'create',
+            payload: row,
+          });
+        } catch {
+          // Poison rows never wedge bootstrap; resync is the repair path.
+        }
       }
     }
     await this.writeCursor(snapshot.cursor, true);

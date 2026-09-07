@@ -211,6 +211,13 @@ export class PortabilityService {
     const { data } = parseHouseholdExport(rawText);
 
     return this.uow.transact(async (tx) => {
+      // Claim scaffold teardown (D72): the registering claim seeded ONE
+      // sentinel owner-role for the placeholder session. Detach people from
+      // it, delete it, THEN run the fresh-target scan — the target must look
+      // exactly as if nothing but the registering trio ever existed.
+      await tx.update(people).set({ roleId: null }).where(eq(people.householdId, ctx.householdId));
+      await tx.delete(roles).where(eq(roles.householdId, ctx.householdId));
+
       const counts = await this.freshTargetConflicts(tx, ctx);
       if (counts) throw new AppError('IMPORT_CONFLICT', 'This account already holds household data', counts);
 

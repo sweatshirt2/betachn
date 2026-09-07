@@ -29,9 +29,10 @@ export interface PushOutcomeWire {
   seq?: number;
 }
 
+/** Full visible snapshot — table rows per SYNC_ENTITIES section (D92). */
 export interface BootstrapSnapshot {
-  cursor: number;
   sections: Record<string, Array<Record<string, unknown>>>;
+  cursor: number;
 }
 
 /**

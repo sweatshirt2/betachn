@@ -1,4 +1,4 @@
-import { FACTORY_MATRICES, type BuiltinRoleKey, type PermissionMap } from '../../permissions';
+import { FACTORY_MATRICES, allPermKeys, type BuiltinRoleKey, type PermKey, type PermissionMap } from '../../permissions';
 
 export interface ResettableRole {
   builtinKey: string | null;
@@ -40,6 +40,15 @@ export const BUILTIN_ROLE_NAMES: Record<BuiltinRoleKey, string> = {
   supervised_child: 'Supervised Child',
   family_member: 'Family Member',
 };
+
+/**
+ * Every permission true — the owner-role matrix (CN §20–22: ownership is a
+ * permission role, not an identity). Used by registration claims (D72) and
+ * any owner-role clone.
+ */
+export function ownerPermissionMap(): PermissionMap {
+  return Object.fromEntries(allPermKeys().map((k) => [k, true])) as PermissionMap;
+}
 
 /** The 11 builtin preset rows seeded for every new household (§4.6/§4.7). */
 export function builtinRoleSeedRows(householdId: string): Array<{
