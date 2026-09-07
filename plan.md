@@ -658,7 +658,7 @@ Finance module schema + flows (income/expense/account/bill/budget/goal, assigned
 
 ## 16. Implementation Status & Hand-off (live ledger — update at every green checkpoint)
 
-**Last updated:** **B1.2 COMPLETE — two-device drill 21/21 green** (live against dev server): LWW convergence + cross-flush loss notifications (D90), coalescing, domain re-auth + domain/audience pull filtering (D61), 401 queue survival, bootstrap freshness (D91 write-through), 90-day staleness auto-bootstrap (D93). NEXT: B2 D62 conversion bridge → B3 D64 client jobs → §11.5 walkthrough. **Scope law (user, D87):** offline↔online sync only — device txt backup/restore UX deferred.
+**Last updated:** **B1.2 COMPLETE — two-device drill 21/21 green** (live against dev server): LWW convergence + cross-flush loss notifications (D90), coalescing, domain re-auth + domain/audience pull filtering (D61), 401 queue survival, bootstrap freshness (D91 write-through), 90-day staleness auto-bootstrap (D93). NEXT: B3 D64 client jobs → §11.5 walkthrough. **Scope law (user, D87):** offline↔online sync only — device txt backup/restore UX deferred. **B2 D62 conversion bridge DEFERRED intentionally (user, D94):** it is the txt-file-related work and rides the same deferral as D87 — revisit only when device backup/restore UX reopens.
 
 ### Session 2026-09-07 (later) — B1.2 two-device drill GREEN + drill-driven hardening
 - **Drill:** `packages/local-db/scripts/two-device-drill.ts` — two real SQLite devices + real HTTP sync endpoints; run via `pnpm --filter @chorify/local-db exec tsx scripts/two-device-drill.ts` with dev server up. Per-run code/phone (claimed households persist). 21 checks across S1–S6, ALL GREEN. Suites: core 110 ✅ · local-db 16 ✅ · all typechecks ✅.
@@ -716,7 +716,7 @@ Backend COMPLETE. Tree clean at HEAD `cc40173`. §12 steps 3–11 ✅ COMPLETE (
 2. ~~Step 12a web + theme scaffold~~ ✅ DONE (checkpoints 1–5, `5a333c4`…`f59d493`; OPFS adapter verified on wasm node build).
 3. ~~Steps 6–11 routes + worker~~ ✅ DONE (see §16.1 step rows; live-smoked per step).
 4. ~~Steps 12b–18 screens + Amharic parity + PWA~~ ✅ DONE (step-18a checkpoint).
-5. **Phase B (IN PROGRESS):** B1 sync proof — post-pull refresh ✅ `9be85f9`, two-device drill (LWW winner + coalesced loss notification, audience/domain filtering, 90-day bootstrap, 401-survives-queue) NEXT → B2 D62 conversion bridge (core `./txt` subpath + device serializer + Settings/banner entry + in-place session flip) → B3 D64 client jobs (device-mode missed-sweep + due-today digest on app open, pure-rule reuse) → B5 §11.5 human walkthrough.
+5. **Phase B (IN PROGRESS):** B1 sync proof — post-pull refresh ✅ `9be85f9`, two-device drill (LWW winner + coalesced loss notification, audience/domain filtering, 90-day bootstrap, 401-survives-queue) ✅ → ~~B2 D62 conversion bridge~~ **DEFERRED intentionally (D94 — txt-related, rides the D87 deferral)** → B3 D64 client jobs (device-mode missed-sweep + due-today digest on app open, pure-rule reuse) IN PROGRESS → B5 §11.5 human walkthrough.
 6. **Phase C:** full §11 re-run including device/sync/conversion checks; hardening (per-household tz day boundaries §6.8, pg-backed service test harness, CSP baseline, Amharic layout QA micro-75); ledger close → v1.
 
 ### 16.3 Session gotchas (learned the hard way — cumulative)
@@ -766,4 +766,5 @@ Backend COMPLETE. Tree clean at HEAD `cc40173`. §12 steps 3–11 ✅ COMPLETE (
 | D91 | Push write-through: accepted ops apply to pg tables in the push tx (ISO→Date, 0/1→bool coercion); poison rows reject the op — server jobs + bootstrap see device writes. |
 | D92 | Bootstrap = FK-safe TABLE snapshot per viewer domain (rows, not feed replay); notifications/prefs recipient-scoped; child tables via parent-id inArray. |
 | D93 | Engine.flush() auto-bootstraps when lastSuccessfulSyncAt > 90d — §4.12 retention enforced device-side. |
+| D94 | B2 (D62 conversion bridge) is DEFERRED intentionally: it is the txt-file-related work and rides the same deferral as the D87 scope law (device txt backup/restore UX). Phase B proceeds B1 → B3 (D64 client jobs) → §11.5; B2 is revisited only when device backup/restore UX reopens. |
 
