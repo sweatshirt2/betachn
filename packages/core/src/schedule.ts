@@ -1,7 +1,7 @@
 /**
  * Pure scheduling engine (plan §4.8). Day-granular: dates are 'YYYY-MM-DD'
  * strings; all arithmetic in UTC so no timezone drifts into comparisons.
- * Day boundaries vs households.timezone are the caller's concern.
+ * Day boundaries vs households.timezone are computed by isoTodayInTz (§6.8).
  */
 export type SchedulePattern =
   | 'once'
@@ -156,4 +156,21 @@ export function expandRule(
     if (matches) hits.push({ date: iso, personIds: resolveAssignees(rule, iso) });
   }
   return hits;
+}
+
+/**
+ * §6.8 day boundary: the ISO calendar day (YYYY-MM-DD) it is RIGHT NOW in
+ * `timezone`, computed via Intl from the instant `now`. Pure — services pass
+ * their clock's instant; device jobs pass new Date(). Used by occurrence
+ * generation windows, the missed sweep, regeneration cutoffs and the digest,
+ * so a household in Addis Ababa never flips a day on a UTC server clock.
+ */
+export function isoTodayInTz(timezone: string, now: Date): string {
+  // en-CA formats as YYYY-MM-DD — one stable parse-free shape.
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
 }

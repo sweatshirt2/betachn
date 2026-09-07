@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addDays, diffDays, expandRule, type ExpandableRule } from './schedule';
+import { addDays, diffDays, expandRule, isoTodayInTz, type ExpandableRule } from './schedule';
 
 const rule = (over: Partial<ExpandableRule>): ExpandableRule => ({
   pattern: 'daily',
@@ -97,5 +97,21 @@ describe('schedule date helpers', () => {
     expect(addDays('2025-12-31', 1)).toBe('2026-01-01');
     expect(diffDays('2025-01-01', '2024-12-31')).toBe(-1);
     expect(addDays('2024-02-28', 1)).toBe('2024-02-29'); // leap year
+  });
+});
+
+describe('isoTodayInTz — §6.8 day boundaries', () => {
+  it('rolls the day at local midnight, not UTC midnight', () => {
+    // 2026-09-07T01:30+03:00 = 2026-09-06T22:30Z — Addis is already Tuesday.
+    const instant = new Date('2026-09-06T22:30:00Z');
+    expect(isoTodayInTz('Africa/Addis_Ababa', instant)).toBe('2026-09-07');
+    expect(isoTodayInTz('UTC', instant)).toBe('2026-09-06');
+  });
+
+  it('matches the pure generator window: same instant, opposite side of the line', () => {
+    // 2026-09-07T20:00-07:00 = 2026-09-08T03:00Z — UTC flipped, Los Angeles not.
+    const instant = new Date('2026-09-08T03:00:00Z');
+    expect(isoTodayInTz('America/Los_Angeles', instant)).toBe('2026-09-07');
+    expect(isoTodayInTz('UTC', instant)).toBe('2026-09-08');
   });
 });
