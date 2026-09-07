@@ -14,16 +14,15 @@ import {
   OccurrencesService,
   ResponsibilitiesService,
   SocialService,
+  isoTodayInTz,
   ownerHolderPersonIds,
 } from '@chorify/core';
 
 /**
  * Force-runnable job handlers (§4.9) + pg-boss wiring. Handlers run through
  * the SAME core services as the routes — the worker adds fan-out, digest
- * composition and retention pruning only.
- *
- * Day-boundary limitation: services compute "today" on the system clock
- * (UTC); per-household-timezone injection is deferred hardening (ledger).
+ * composition and retention pruning only. Day boundaries compute in each
+ * household's timezone (§6.8) via core isoTodayInTz.
  */
 
 const uow = pgUnitOfWork(db);
@@ -31,10 +30,6 @@ const householdsService = new HouseholdsService(uow, nodeRandomSource, pgBlockli
 const occurrencesService = new OccurrencesService(uow, systemClock);
 const responsibilitiesService = new ResponsibilitiesService(uow, systemClock);
 const socialService = new SocialService(uow, systemClock);
-
-function todayIso(): string {
-  return systemClock.now().toISOString().slice(0, 10);
-}
 
 async function generateOccurrences(): Promise<Record<string, unknown>> {
   const ids = await householdsService.listIds();
@@ -52,10 +47,13 @@ async function sweepMissed(): Promise<Record<string, unknown>> {
 
 /** ONE digest notification per person per day (§4.10/D11). */
 async function dueTodayReminders(): Promise<Record<string, unknown>> {
-  const today = todayIso();
+  const now = systemClock.now();
   const ids = await householdsService.listIds();
   let digests = 0;
   for (const householdId of ids) {
+    // §6.8: "due today" is the household's local day, not the server's UTC day.
+    const household = await householdsService.get(householdId);
+    const today = isoTodayInTz(household.timezone, now);
     const [dueToday, responsibilities] = await Promise.all([
       occurrencesService.listRange(householdId, { from: today, to: today, status: 'pending' }),
       responsibilitiesService.list(householdId),
