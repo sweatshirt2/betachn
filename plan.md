@@ -561,7 +561,7 @@ Auth-iteration removals (Turns 13+): printed recovery/backup codes (Google + ver
 2. packages/db — pg schema per §4.5 (+indexes §9), drizzle-kit generate+migrate, seed.ts per §7. ✅ DONE (migrations 0000+0001 applied; fixture verified)
 3. packages/core — zod contracts, permissions, schedule, calendar, txt, notify, activity builders, service modules over the dialect-neutral executor. ✅ COMPLETE this session (all 12 domains; kernels + services + 97 tests). Detail → §16.
 4. **packages/local-db** ◐ ~85% — mirrors+migration track+queue+capability ladder+passcode hooks DONE with live better-sqlite3 smoke; browser OPFS MigrationClient adapter + worker wiring remain for the web-foundation step. Detail → §16.
-5. **Sync engine** ◐ STARTED — transport port landed; REMAINING: LWW applier + coalesced conflict notifications, flusher triggers, engine smoke (this session).
+5. **Sync engine** ✅ DONE — LWW applier + coalesced conflict notifications + FlushScheduler (`615c4d6`, 16 local-db tests green), web wiring (`8b729b0`), post-pull cache refresh (`545b42d`). REMAINING: live two-device drill (§11.7 device half, Phase B1.2).
 
 6. Auth services + middleware (session→activePerson, requirePermission, view-as gate, Postgres rate limiter) + routes: /auth/register-online (google|phone) · /auth/login {code,username,password} · /auth/google · /auth/link-google · /auth/logout · /me · /profiles · /profiles/switch.
 7. People/roles routes (reset, LAST_OWNER, R2 contact enforcement on owner-targeted creation/promotion).
@@ -658,7 +658,17 @@ Finance module schema + flows (income/expense/account/bill/budget/goal, assigned
 
 ## 16. Implementation Status & Hand-off (live ledger — update at every green checkpoint)
 
-**Last updated:** Step-18a checkpoint — Amharic parity COMPLETE across all product screens; §11.1–11.4 + §11.7-server verified green. NEXT: interactive browser walkthrough (§11.5) + two-device sync drill (§11.7).
+**Last updated:** Phase B opened (session 2026-09-07) — device arc A1–A5 recorded below; B1.1 post-pull cache refresh landed (`545b42d`). NEXT: B1.2 two-device drill → B2 D62 conversion → B3 D64 client jobs → §11.5 walkthrough. **Scope law (user, D87):** offline↔online sync only — device txt backup/restore UX deferred.
+
+### Session 2026-09-07 — device-mode web arc (A1–A5) + Phase B opened
+- **A1** `37d30c1`: RTK auth slice gains `mode: 'server' | 'device'` — both session modes share the identity fields so shell UI renders identically; `mode` discriminates the data path. Rehydrate thunk restores device sessions after reload; `3f9bb43` fixes it to resume the PERSISTED active person (never silently swap profiles).
+- **A2** `00386f9`: device-mode Today reads via the shared pure aggregate (`@chorify/core/today`) — device mirror rows satisfy its input contracts without casts (D67: reuse pure rules, not pg-bound services).
+- **A3** `dc1879d`: device-mode mutations for every feature flow — `lib/device/writes.ts` applies locally then queues `pending_ops`; `useDeviceMutation` twin mirrors `useApiMutation`'s signature so screens stay mode-agnostic.
+- **A5** `8b729b0`: sync engine wired into the app — `lib/sync/syncClient.ts` singleton (engine built lazily against the memoized device DB; identity read live from the RTK store) + FlushScheduler with DOM timers (write-ack/online/focus/visibility/30s tick) + status bus → SyncStatus chip. Engine flushes ONLY when token + household code both exist; offline-only households never hit the network. 401/403 during push leaves `pending_ops` intact (ack-clears on success only).
+- **A4** `e586bfb`: device-mode reads for every surface — `lib/device/reads.ts` (today, occurrences range, chore detail, activity feed, notifications inbox, prefs) with shapes twin to the /api/v1 routes.
+- `55aede9`: instant passwordless profile switching for device households (every device person is passwordless per D49; D38 cache-clear on switch).
+- **Phase B opened (user directive):** scope = offline↔online sync ONLY (D87 defers device txt backup/restore UX); D62 conversion builds NOW riding the internal txt pipeline, invisible to users (D88); execution order = prove sync first.
+- **B1.1** `545b42d`: post-pull TanStack invalidation — a flush that applied/rejected pulled changes calls `invalidateApiCache()` (NOT the D38 wholesale clear; identity untouched); push-only flushes skip the refetch churn. Closes the A5 loose end where remote edits stayed invisible until remount.
 
 ### Session 2026-09-06 — Amharic parity + verification pass
 - **Step 18a DONE** (4 commits): `fd59005` dict contract expansion + chores screens (fixed tab-callback `t` shadowing; finished `chores/[id]`+`/new` lost to a mid-run script crash) · `503b545` ops screens (shopping/supplies/routines/home/more) · `0c8e5ea` household/roles/ProfileSwitcher/Sheet/PersonSheet + feature-layer toasts · `d230a41` social/print/settings/onboarding. Typed `Dict` grew to 232 keys with EN/AM parity type-forced; runtime audit proves all 164 literal `t()` keys resolve, dynamic `nav.*` prefixes valid. `theme-preview` deliberately left hardcoded (dev-only mock, not a §5.4 route — user decision).
@@ -692,9 +702,11 @@ Backend COMPLETE. Tree clean at HEAD `cc40173`. §12 steps 3–11 ✅ COMPLETE (
 ### 16.2 What's left, in execution order
 
 1. ~~Finish sync engine client~~ ✅ DONE (`615c4d6`).
-2. **Step 12a (IN PROGRESS — theme-first):** web + theme scaffold before routes (D78): Next.js 15 shell + Tailwind v4 CSS-first + `styles/tokens.css` trio (D79) + Providers/`useTheme`/`/theme-preview` (static mocks, NOT the Bekele DB seed) + OPFS MigrationClient adapter. Theme mocks stay DB-free so visual iteration never blocks on Postgres.
-3. Steps 6–11 (after 12a): route handlers consuming the services as-is (auth middleware: Bearer resolve → UnitOfWork assembly; rate limiter on auth_attempts; view-as gate), worker job handlers (materializeHousehold/sweepMissed/digest/backup-nudge + household_changes pruning ≥90d).
-4. Steps 12b–19 web foundation → screens → Amharic parity → full §11 pass.
+2. ~~Step 12a web + theme scaffold~~ ✅ DONE (checkpoints 1–5, `5a333c4`…`f59d493`; OPFS adapter verified on wasm node build).
+3. ~~Steps 6–11 routes + worker~~ ✅ DONE (see §16.1 step rows; live-smoked per step).
+4. ~~Steps 12b–18 screens + Amharic parity + PWA~~ ✅ DONE (step-18a checkpoint).
+5. **Phase B (IN PROGRESS):** B1 sync proof — post-pull refresh ✅ `545b42d`, two-device drill (LWW winner + coalesced loss notification, audience/domain filtering, 90-day bootstrap, 401-survives-queue) NEXT → B2 D62 conversion bridge (core `./txt` subpath + device serializer + Settings/banner entry + in-place session flip) → B3 D64 client jobs (device-mode missed-sweep + due-today digest on app open, pure-rule reuse) → B5 §11.5 human walkthrough.
+6. **Phase C:** full §11 re-run including device/sync/conversion checks; hardening (per-household tz day boundaries §6.8, pg-backed service test harness, CSP baseline, Amharic layout QA micro-75); ledger close → v1.
 
 ### 16.3 Session gotchas (learned the hard way — cumulative)
 
@@ -736,4 +748,7 @@ Backend COMPLETE. Tree clean at HEAD `cc40173`. §12 steps 3–11 ✅ COMPLETE (
 | D83 | Client-safe package subpaths for pure rules (core/permissions, core/roles-rules, local-db/schema|queue|capability|apply-migrations). Browser bundles import these ONLY — barrel imports drag pg/argon2/better-sqlite3 and break the client build. Server code keeps barrel imports. |
 | D80 | Route-layer errors: unexpected bugs → 500 `INTERNAL` (outside the frozen set by necessity); Google unconfigured → CONFLICT; google-login limiter keyed per-IP (`google-login` identifier). |
 | D81 | Resources list endpoints (supplies/shopping) require auth only — Today surfaces supplies to every member; only mutations need manage_* keys. |
+| D87 | Phase B scope law: offline↔online sync only — device txt backup/sync/restore UX deferred (server export/import + backup-nudge job for synced households remain as-is). |
+| D88 | D62 conversion builds in Phase B riding the existing txt pipeline INTERNALLY — device DB serializes through the v1 txt format into POST /import; the user never sees a file. Failure touches zero local rows (CN XIX-8). |
+| D89 | Phase B order: prove sync first (post-pull refresh + two-device drill), then conversion, then D64 client jobs; §11.5 walkthrough last so it covers the finished sync story. |
 
