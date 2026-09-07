@@ -12,8 +12,23 @@ export type BrowserDevice =
  * sqlite-proxy drizzle handle (migrations already applied at worker
  * bootstrap); anything else reports its capability so the UI can show the
  * online-required / memory-mode hint instead of failing obscurely.
+ *
+ * The open is MEMOIZED — one worker per page lifetime, shared by reads,
+ * writes and the sync engine's flush loop (a per-call worker would leak).
  */
+let openPromise: Promise<BrowserDevice> | null = null;
+
 export async function openBrowserDevice(): Promise<BrowserDevice> {
+  if (openPromise === null) {
+    openPromise = openOnce().catch((err) => {
+      openPromise = null; // allow a retry after a transient failure
+      throw err;
+    });
+  }
+  return openPromise;
+}
+
+async function openOnce(): Promise<BrowserDevice> {
   const capability: DeviceCapability = detectBrowserCapability();
   if (capability !== 'opfs') return { capability, db: null };
 

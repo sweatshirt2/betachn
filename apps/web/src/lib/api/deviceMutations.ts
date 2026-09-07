@@ -3,6 +3,7 @@
 import { useMutation, type UseMutationOptions } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { store, type RootState } from '@/store';
+import { scheduleSyncFlush } from '@/lib/sync/syncClient';
 import { ApiError } from './client';
 
 /** Device-mode identity at call time — RTK slice is the single source. */
@@ -53,7 +54,10 @@ export function useDeviceMutation<TData, TVariables = unknown>(config: DeviceMut
     mutationFn: async (variables) => {
       if (mode !== 'device') throw new Error('Device mutation used outside device mode');
       try {
-        return await config.write(variables, selectDeviceIdentity(store.getState()));
+        const data = await config.write(variables, selectDeviceIdentity(store.getState()));
+        // Write-ack flush trigger (§4.12): push ASAP, never block the caller.
+        scheduleSyncFlush();
+        return data;
       } catch (err) {
         throw toApiError(err);
       }

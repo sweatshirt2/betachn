@@ -10,7 +10,8 @@
     "./schema": "./src/schema/index.ts",
     "./queue": "./src/queue.ts",
     "./capability": "./src/capability.ts",
-    "./apply-migrations": "./src/apply-migrations.ts"
+    "./apply-migrations": "./src/apply-migrations.ts",
+    "./sync-client": "./src/sync-engine/index.ts"
   },
   "scripts": {
     "test": "vitest run",

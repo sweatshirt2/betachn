@@ -260,6 +260,16 @@ export type Dict = {
     roleSupervisedChild: string;
     roleFamilyMember: string;
   };
+  sync: {
+    syncing: string;
+    savedLocal: string;
+    offlineSaved: string;
+    pending: string;
+    staleWarn: string;
+    staleStrong: string;
+    staleResync: string;
+    signUpNudge: string;
+  };
 };
 
 export const en: Dict = {
@@ -521,6 +531,16 @@ export const en: Dict = {
     roleSupervisedChild: 'Supervised child',
     roleFamilyMember: 'Family member',
   },
+  sync: {
+    syncing: '↻ Syncing…',
+    savedLocal: '✓ Saved on this device',
+    offlineSaved: 'You are offline. Your changes are saved and will sync when you\u2019re back online.',
+    pending: '{{count}} changes waiting to sync',
+    staleWarn: 'It\u2019s been a while since this device synced. Reconnect when you can.',
+    staleStrong: 'This device hasn\u2019t synced in a long time. Connect to keep the family in step.',
+    staleResync: 'This device is out of date. Reconnect to bring everything back up to date.',
+    signUpNudge: 'Create a free account so the whole family can share this household.',
+  },
 };
 
 export const am: Dict = {
@@ -779,6 +799,16 @@ export const am: Dict = {
     roleChild: 'ልጅ',
     roleSupervisedChild: 'ቁጥጥር የሚደረግበት ልጅ',
     roleFamilyMember: 'የቤተሰብ አባል',
+  },
+  sync: {
+    syncing: '↻ እንደገና በማመሳሰል ላይ…',
+    savedLocal: '✓ በመሣሪያዎ ላይ ተቀምጧል',
+    offlineSaved: 'ከመስመር ውጭ ነዎት። ለውጦችዎ ተቀምጠዋል፣ መስመር ላይ ሲመለሱ ይመሳሰላሉ።',
+    pending: '{{count}} ለውጦች ለማመሳሰል በመጠበቅ ላይ',
+    staleWarn: 'ይህ መሣሪያ ለዘመን አልተመሳሰለም። መስመር ላይ ሲገቡ ያመሳስሉ።',
+    staleStrong: 'ይህ መሣሪያ ለረዥም ጊዜ አልተመሳሰለም። ቤተሰቡ አብሮ እንዲኖር መስመር ላይ ይግቡ።',
+    staleResync: 'ይህ መሣሪያ በጣም ወጅቷል። ሁሉንም እንደገና ለማመሳሰል መስመር ላይ ይግቡ።',
+    signUpNudge: 'ሙሉ ቤተሰብ ይህን ቤተሰብ እንዲጋራ ነጻ መለያ ይፍጠሩ።',
   },
 };
 

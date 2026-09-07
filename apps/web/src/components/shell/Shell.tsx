@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button, Sheet } from '@/components/ui';
 import { clearApiCache, queryKeys, useApiQuery } from '@/lib/api';
+import { useSyncBoot, useSyncStatus } from '@/lib/sync/syncClient';
 import { exitViewAs, type RootState } from '@/store';
 import { ProfileSwitcher } from './ProfileSwitcher';
 
@@ -40,13 +41,16 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const dispatch = useDispatch();
   const [createOpen, setCreateOpen] = useState(false);
   const [profilesOpen, setProfilesOpen] = useState(false);
+  const mode = useSelector((state: RootState) => state.auth.mode);
+  const hasToken = useSelector((state: RootState) => state.auth.token !== null);
   const activePerson = useSelector((state: RootState) => state.auth.activePerson);
-  const token = useSelector((state: RootState) => state.auth.token);
   const viewAsPersonId = useSelector((state: RootState) => state.auth.viewAsPersonId);
+  useSyncBoot();
+  const sync = useSyncStatus();
   const people = useApiQuery<{ people: Array<{ id: string; name: string }> }>({
     endpoint: { method: 'get', path: '/profiles' },
     key: queryKeys.profiles(),
-    options: { enabled: token !== null },
+    options: { enabled: hasToken },
   });
   const viewedName = people.data?.people.find((p) => p.id === viewAsPersonId)?.name;
 
@@ -78,10 +82,19 @@ export function Shell({ children }: { children: React.ReactNode }) {
             {t(greetingKey())}, {activePerson?.name ?? t('nav.family')}
           </p>
           <div className="flex items-center gap-2">
-            {token && (
+            {mode === 'server' && hasToken && (
               <span className="border-line bg-surface rounded-sm border px-2 py-0.5 text-xs" role="status">
                 {t('nav.upToDate')}
               </span>
+            )}
+            {mode === 'device' && (
+              <SyncChip
+                pendingCount={sync.pendingCount}
+                level={sync.banner.level}
+                syncingLabel={t('sync.syncing')}
+                freshLabel={t('sync.savedLocal')}
+                pendingLabel={t('sync.pending', { count: sync.pendingCount })}
+              />
             )}
             {activePerson && (
               <button
@@ -107,6 +120,22 @@ export function Shell({ children }: { children: React.ReactNode }) {
             >
               {t('nav.exit')}
             </button>
+          </div>
+        )}
+
+        {mode === 'device' && sync.banner.level !== 'fresh' && (
+          <div
+            className={`text-ink mx-4 mt-2 flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm font-semibold ${
+              sync.banner.level === 'warn' ? 'bg-mustard' : 'bg-clay-red text-cream'
+            }`}
+            role="status"
+          >
+            <span>
+              {sync.banner.level === 'warn' && t('sync.staleWarn')}
+              {sync.banner.level === 'strong' && t('sync.staleStrong')}
+              {sync.banner.level === 'resync' && t('sync.staleResync')}
+            </span>
+            {!hasToken && <span className="hidden text-xs sm:inline">{t('sync.signUpNudge')}</span>}
           </div>
         )}
 
@@ -163,6 +192,25 @@ function greetingKey(): 'nav.morning' | 'nav.afternoon' | 'nav.evening' {
   if (hour < 12) return 'nav.morning';
   if (hour < 18) return 'nav.afternoon';
   return 'nav.evening';
+}
+
+/** Device-mode sync chip (§4.12): syncing pulse, saved-local check, pending count. */
+function SyncChip(props: {
+  pendingCount: number;
+  level: string;
+  syncingLabel: string;
+  freshLabel: string;
+  pendingLabel: string;
+}) {
+  const label =
+    props.level === 'resync' || props.pendingCount === 0
+      ? props.freshLabel
+      : props.pendingLabel;
+  return (
+    <span className="border-line bg-surface rounded-sm border px-2 py-0.5 text-xs" role="status">
+      {label}
+    </span>
+  );
 }
 
 function Tab({ href, label, icon, active }: { href: string; label: string; icon: string; active: boolean }) {
