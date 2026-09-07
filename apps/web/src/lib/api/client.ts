@@ -37,6 +37,16 @@ export function clearApiCache(): void {
   queryClientRef?.clear();
 }
 
+/**
+ * Refresh after a sync pull applied remote changes (Phase B1): invalidate
+ * every server-data cache so other devices' edits surface without a remount.
+ * Deliberately NOT the D38 wholesale clear — identity is untouched; active
+ * queries refetch and inactive ones re-resolve from the device DB on mount.
+ */
+export function invalidateApiCache(): void {
+  void queryClientRef?.invalidateQueries();
+}
+
 let viewAsOverride: string | null = null;
 /**
  * View-as target — normally mirrored from the RTK slice (enterViewAs);

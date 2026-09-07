@@ -11,6 +11,7 @@ import {
   type FlushResult,
 } from '@chorify/local-db/sync-client';
 import { openBrowserDevice } from '@/lib/device/openDevice';
+import { invalidateApiCache } from '@/lib/api/client';
 import { store, type RootState } from '@/store';
 import { useSyncStatus, statusChanged, type SyncStatusState } from './syncStatus';
 
@@ -110,6 +111,16 @@ function getEngine(): Promise<SyncEngine | null> {
 }
 
 /**
+ * Post-flush UI refresh (Phase B1): a pull that applied remote changes must
+ * invalidate TanStack caches or other devices' edits stay invisible until a
+ * remount. Push-only flushes touch nothing remote — skip the refetch churn.
+ */
+function refreshAfterFlush(result: FlushResult | undefined): void {
+  if (result === undefined) return;
+  if (result.applied > 0 || result.rejected > 0) invalidateApiCache();
+}
+
+/**
  * Schedule a flush after a device mutation lands (write-ack trigger, §4.12).
  * Fire-and-forget by design — mutations never block on the network.
  */
@@ -123,6 +134,7 @@ export function scheduleSyncFlush(): void {
       }
       return engine.flush().catch(() => undefined);
     })
+    .then(refreshAfterFlush)
     .finally(() => statusChanged());
 }
 
@@ -132,6 +144,7 @@ export async function flushNow(): Promise<FlushResult | null> {
   const engine = await getEngine();
   if (engine === null) return null;
   const result = await engine.flush().catch(() => null);
+  refreshAfterFlush(result ?? undefined);
   statusChanged();
   return result;
 }
