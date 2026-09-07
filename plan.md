@@ -658,7 +658,18 @@ Finance module schema + flows (income/expense/account/bill/budget/goal, assigned
 
 ## 16. Implementation Status & Hand-off (live ledger — update at every green checkpoint)
 
-**Last updated:** B1.2 drill-driven fixes landed (D90 seq-window loss detection · D91 push write-through · D72 claim-on-register). Commit-history note: all hashes below were remapped after a message-only history rewrite (no agent mentions in commit messages); every hash reference re-verified against the rewritten history. NEXT: run the two-device drill → B2 D62 conversion → B3 D64 client jobs → §11.5 walkthrough. **Scope law (user, D87):** offline↔online sync only — device txt backup/restore UX deferred.
+**Last updated:** **B1.2 COMPLETE — two-device drill 21/21 green** (live against dev server): LWW convergence + cross-flush loss notifications (D90), coalescing, domain re-auth + domain/audience pull filtering (D61), 401 queue survival, bootstrap freshness (D91 write-through), 90-day staleness auto-bootstrap (D93). NEXT: B2 D62 conversion bridge → B3 D64 client jobs → §11.5 walkthrough. **Scope law (user, D87):** offline↔online sync only — device txt backup/restore UX deferred.
+
+### Session 2026-09-07 (later) — B1.2 two-device drill GREEN + drill-driven hardening
+- **Drill:** `packages/local-db/scripts/two-device-drill.ts` — two real SQLite devices + real HTTP sync endpoints; run via `pnpm --filter @chorify/local-db exec tsx scripts/two-device-drill.ts` with dev server up. Per-run code/phone (claimed households persist). 21 checks across S1–S6, ALL GREEN. Suites: core 110 ✅ · local-db 16 ✅ · all typechecks ✅.
+- **Fixes the drill forced (all live-smoke-proven now):**
+  - **D90 refinement:** loss window = remembered pushed seqs (device_sync_state.pushed_seqs, migration 0001). Own echo does NOT clear the window; a foreign change ABOVE our seq notifies + clears. Pre-push pending set unions as the no-seq fallback. Old pre-push-polarity detection notified the WINNER and missed the LOSER — fixed and unit-tested.
+  - **D91 (write-through):** accepted push ops apply to authoritative pg tables in the push tx (`sync.tables.ts`; ISO→Date + 0/1→boolean coercion). Server jobs + bootstrap now see device writes.
+  - **D92 (bootstrap = TABLE snapshot):** `buildBootstrapSnapshot` reads FK-safe section order (households→roles→people→…) per viewer permission domain; notifications/prefs recipient-scoped; child tables via parent-id inArray. Route rewritten (was feed-replay — claim-seeded rows never had feed entries).
+  - **D93 (staleness auto-resync):** engine.flush() bootstraps first when lastSuccessfulSyncAt > 90d (§4.12 retention).
+  - **D72 completion:** registration CLAIMS unseen codes — claim seeds 11 builtins + `__claim__` sentinel owner-role (placeholder person attached → working pre-import session); adoption tears down the scaffold then runs the fresh-target scan.
+  - Bootstrap transport contract = `{sections, cursor}` (rows), NOT feed changes.
+- Drill gotchas logged: drizzle sync-driver inserts need await (fire-and-forget `void` never executes); response envelopes `{person}`/`{roles}` unwrap; globals phone uniqueness (D55) forces per-run data.
 
 ### Session 2026-09-07 — device-mode web arc (A1–A5) + Phase B opened
 - **A1** `6126f4e`: RTK auth slice gains `mode: 'server' | 'device'` — both session modes share the identity fields so shell UI renders identically; `mode` discriminates the data path. Rehydrate thunk restores device sessions after reload; `6e98205` fixes it to resume the PERSISTED active person (never silently swap profiles).
@@ -751,4 +762,8 @@ Backend COMPLETE. Tree clean at HEAD `cc40173`. §12 steps 3–11 ✅ COMPLETE (
 | D87 | Phase B scope law: offline↔online sync only — device txt backup/sync/restore UX deferred (server export/import + backup-nudge job for synced households remain as-is). |
 | D88 | D62 conversion builds in Phase B riding the existing txt pipeline INTERNALLY — device DB serializes through the v1 txt format into POST /import; the user never sees a file. Failure touches zero local rows (CN XIX-8). |
 | D89 | Phase B order: prove sync first (post-pull refresh + two-device drill), then conversion, then D64 client jobs; §11.5 walkthrough last so it covers the finished sync story. |
+| D90 | Cross-flush loss detection via remembered pushed seqs (device_sync_state.pushed_seqs); own echoes preserve the window; foreign-above change notifies then clears. Replaces pre-push-pending polarity (which flagged the winner). |
+| D91 | Push write-through: accepted ops apply to pg tables in the push tx (ISO→Date, 0/1→bool coercion); poison rows reject the op — server jobs + bootstrap see device writes. |
+| D92 | Bootstrap = FK-safe TABLE snapshot per viewer domain (rows, not feed replay); notifications/prefs recipient-scoped; child tables via parent-id inArray. |
+| D93 | Engine.flush() auto-bootstraps when lastSuccessfulSyncAt > 90d — §4.12 retention enforced device-side. |
 
