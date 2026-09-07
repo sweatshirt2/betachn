@@ -2,6 +2,7 @@ import { and, eq, gte, inArray, lt } from 'drizzle-orm';
 import {
   activityEvents,
   assignmentRules,
+  households,
   notifications,
   notificationPrefs,
   occurrences,
@@ -9,7 +10,7 @@ import {
 } from '@chorify/db';
 import type { OccurrenceSubtaskState } from '@chorify/db';
 import { buildActivity, type ActivityType } from '../../activity';
-import { addDays, expandRule, type ExpandableRule } from '../../schedule';
+import { addDays, expandRule, isoTodayInTz, type ExpandableRule } from '../../schedule';
 import { AppError } from '../../errors';
 import type { Clock } from '../../ports';
 import type { Executor, UnitOfWork } from '../../db';
@@ -96,7 +97,12 @@ export class OccurrencesService {
     householdId: string,
     rules: MaterializableRule[],
   ): Promise<number> {
-    return expandRulesIntoWindow(tx, householdId, rules, isoToday(this.clock));
+    return expandRulesIntoWindow(
+      tx,
+      householdId,
+      rules,
+      isoTodayInTz(await householdTimezone(tx, householdId), this.clock.now()),
+    );
   }
 
   /** Whole-household sweep — worker cron entry point. */
@@ -111,8 +117,15 @@ export class OccurrencesService {
    * stay immutable.
    */
   async regenerateForward(responsibilityId: string): Promise<void> {
-    return this.uow.transact((tx) =>
-      regenerateForwardTx(tx, responsibilityId, isoToday(this.clock)),
+    return this.uow.transact(async (tx) =>
+      regenerateForwardTx(
+        tx,
+        responsibilityId,
+        isoTodayInTz(
+          await householdTimezone(tx, await responsibilityHouseholdId(tx, responsibilityId)),
+          this.clock.now(),
+        ),
+      ),
     );
   }
 
@@ -183,8 +196,8 @@ export class OccurrencesService {
 
   /** Hourly sweeper (§4.9): pending ∧ dueDate < today(household tz) → missed. */
   async sweepMissed(householdId: string): Promise<number> {
-    const today = isoToday(this.clock);
     return this.uow.transact(async (tx) => {
+      const today = isoTodayInTz(await householdTimezone(tx, householdId), this.clock.now());
       const staleRows = await tx.query.occurrences!.findMany({
         where: and(
           eq(occurrences.householdId, householdId),
@@ -317,10 +330,6 @@ function toTransition(row: OccurrenceRecord) {
   };
 }
 
-function isoToday(clock: Clock): string {
-  return clock.now().toISOString().slice(0, 10);
-}
-
 /**
  * Shared expansion primitive: upserts rule hits into the horizon window.
  * One implementation, several callers — worker generator, responsibilities
@@ -346,6 +355,27 @@ export async function expandRulesIntoWindow(
   if (values.length === 0) return 0;
   const inserted = await tx.insert(occurrences).values(values).onConflictDoNothing().returning();
   return inserted.length;
+}
+
+/**
+ * §6.8: day boundaries compute in households.timezone. One tiny lookup per
+ * household-scoped call — household scale, always indexed by PK.
+ */
+async function householdTimezone(exec: Executor, householdId: string): Promise<string> {
+  const row = await exec.query.households!.findFirst({
+    where: eq(households.id, householdId),
+    columns: { timezone: true },
+  });
+  return String(row?.timezone ?? 'Africa/Addis_Ababa');
+}
+
+async function responsibilityHouseholdId(exec: Executor, responsibilityId: string): Promise<string> {
+  const row = await exec.query.responsibilities!.findFirst({
+    where: eq(responsibilities.id, responsibilityId),
+    columns: { householdId: true },
+  });
+  if (!row) throw new AppError('NOT_FOUND', 'Responsibility not found');
+  return String(row.householdId);
 }
 
 /**
