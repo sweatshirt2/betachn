@@ -1,0 +1,1 @@
+ALTER TABLE `device_sync_state` ADD `pushed_seqs` text;
