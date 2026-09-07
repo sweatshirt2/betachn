@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, Field, Sheet } from '@/components/ui';
 import { clearApiCache, useApiQuery } from '@/lib/api';
+import { deviceOccurrences } from '@/lib/device/reads';
 import { enterViewAs, type RootState } from '@/store';
 import {
   useDeletePerson,
@@ -43,10 +44,20 @@ export function PersonSheet({
   const [name, setName] = useState(person?.name ?? '');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
+  const mode = useSelector((state: RootState) => state.auth.mode);
   const stats = useApiQuery<{ occurrences: Occurrence[] }>({
     endpoint: { method: 'get', path: '/occurrences' },
     key: ['occurrences', 'stats', person?.id ?? ''] as const,
-    options: { enabled: person !== null },
+    options: {
+      enabled: person !== null,
+      queryFn:
+        mode === 'device'
+          ? () =>
+              deviceOccurrences().then(
+                (r) => ({ occurrences: r.occurrences }) as unknown as { occurrences: Occurrence[] },
+              )
+          : undefined,
+    },
   });
   const rows = (stats.data?.occurrences ?? []).filter((o) => o.personIds.includes(person?.id ?? ''));
   const finished = rows.filter((o) => o.status === 'completed' && o.completedByPersonId === person?.id).length;

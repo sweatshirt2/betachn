@@ -6,11 +6,9 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, Field } from '@/components/ui';
-import { useCreateResponsibility } from '@/features/chores';
-import { queryKeys, useApiQuery } from '@/lib/api';
-import type { RootState } from '@/store';
+import { useCreateResponsibility, usePeopleMap } from '@/features/chores';
+import { hasSession, type RootState } from '@/store';
 
-type Person = { id: string; name: string };
 type Pattern = 'once' | 'daily' | 'weekly' | 'monthly';
 
 function todayIso(): string {
@@ -21,17 +19,13 @@ function todayIso(): string {
 export default function NewChorePage() {
   const { t } = useTranslation();
   const router = useRouter();
-  const token = useSelector((state: RootState) => state.auth.token);
+  const auth = useSelector((state: RootState) => state.auth);
   const create = useCreateResponsibility();
   const [title, setTitle] = useState('');
   const [pattern, setPattern] = useState<Pattern>('daily');
   const [assignees, setAssignees] = useState<string[]>([]);
 
-  const people = useApiQuery<{ people: Person[] }>({
-    endpoint: { method: 'get', path: '/profiles' },
-    key: queryKeys.profiles(),
-    options: { enabled: token !== null },
-  });
+  const people = usePeopleMap();
 
   function toggleAssignee(id: string) {
     setAssignees((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
@@ -39,6 +33,7 @@ export default function NewChorePage() {
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (!hasSession(auth)) return;
     try {
       await create.mutateAsync({
         title: title.trim(),

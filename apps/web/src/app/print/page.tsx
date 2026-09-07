@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, EmptyState, Skeleton } from '@/components/ui';
 import { queryKeys, useApiQuery } from '@/lib/api';
+import { devicePeople, deviceOccurrences } from '@/lib/device/reads';
 import { hasSession, type RootState } from '@/store';
 
 type Person = { id: string; name: string };
@@ -35,13 +36,25 @@ export default function PrintPage() {
   const people = useApiQuery<{ people: Person[] }>({
     endpoint: { method: 'get', path: '/profiles' },
     key: queryKeys.profiles(),
-    options: { enabled: token !== null },
+    options: {
+      enabled: hasSession(auth),
+      queryFn:
+        auth.mode === 'device'
+          ? () => devicePeople().then((people) => ({ people })) as Promise<{ people: Person[] }>
+          : undefined,
+    },
   });
   const occurrences = useApiQuery<{ occurrences: Occurrence[] }>({
     endpoint: { method: 'get', path: '/occurrences' },
     queryParams: { from, to },
     key: ['occurrences', 'print', from, to] as const,
-    options: { enabled: token !== null },
+    options: {
+      enabled: hasSession(auth),
+      queryFn:
+        auth.mode === 'device'
+          ? () => deviceOccurrences({ from, to }) as Promise<{ occurrences: Occurrence[] }>
+          : undefined,
+    },
   });
 
   if (!hasSession(auth)) {

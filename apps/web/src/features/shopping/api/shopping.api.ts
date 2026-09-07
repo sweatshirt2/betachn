@@ -5,14 +5,22 @@ import { useSelector } from 'react-redux';
 import { queryKeys, useApiMutation, useApiQuery, useDeviceMutation } from '@/lib/api';
 import { useToast } from '@/components/ui';
 import { deviceCreateShoppingItem, devicePurchaseItem } from '@/lib/device/writes';
+import { deviceShoppingItems } from '@/lib/device/reads';
 import type { RootState } from '@/store';
 import { shoppingEndpoints } from '../shopping.endpoints';
 import type { ShoppingItemPayload } from '../shopping.types';
 
 export function useShoppingItems() {
+  const mode = useSelector((state: RootState) => state.auth.mode);
   return useApiQuery<{ items: ShoppingItemPayload[] }>({
     endpoint: shoppingEndpoints.items,
     key: ['shopping-items'] as const,
+    options: {
+      queryFn:
+        mode === 'device'
+          ? () => deviceShoppingItems() as Promise<{ items: ShoppingItemPayload[] }>
+          : undefined,
+    },
   });
 }
 

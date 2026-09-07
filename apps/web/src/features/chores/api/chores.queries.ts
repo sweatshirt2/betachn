@@ -2,15 +2,20 @@
 
 import { useSelector } from 'react-redux';
 import { queryKeys, useApiQuery } from '@/lib/api';
-import { deviceToday } from '@/lib/device/reads';
+import {
+  deviceToday,
+  deviceOccurrences,
+  deviceResponsibilityDetail,
+  devicePeople,
+} from '@/lib/device/reads';
 import type { RootState } from '@/store';
 import { choresEndpoints } from '../chores.endpoints';
 import type { ResponsibilityDetail, TodayPayload, TitledOccurrence } from '../chores.types';
 
 /**
- * Today reads branch on session mode (Phase A2): device households compute
- * locally via the shared core aggregate (D49/D64), synced households hit
- * GET /today as before.
+ * Reads branch on session mode (Phase A2/A4): device households compute
+ * locally via the shared core aggregate and mirror reads (D49/D64), synced
+ * households hit the REST API.
  */
 export function useToday() {
   const mode = useSelector((state: RootState) => state.auth.mode);
@@ -18,7 +23,7 @@ export function useToday() {
     endpoint: choresEndpoints.today,
     key: queryKeys.today(),
     options: {
-      enabled: mode === 'server',
+      enabled: true,
       queryFn:
         mode === 'device'
           ? () => deviceToday() as Promise<TodayPayload>
@@ -27,7 +32,8 @@ export function useToday() {
   });
 }
 
-export function useOccurrences(filters: { from?: string; to?: string; status?: string } = {}) {
+export function useOccurrences(filters: { from?: string; to?: string; status?: string; personId?: string } = {}) {
+  const mode = useSelector((state: RootState) => state.auth.mode);
   const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== undefined)) as Record<
     string,
     string
@@ -36,13 +42,42 @@ export function useOccurrences(filters: { from?: string; to?: string; status?: s
     endpoint: choresEndpoints.occurrences,
     queryParams: params,
     key: queryKeys.occurrences(params),
+    options: {
+      queryFn:
+        mode === 'device'
+          ? () => deviceOccurrences(filters) as Promise<{ occurrences: TitledOccurrence[] }>
+          : undefined,
+    },
   });
 }
 
 export function useResponsibility(id: string) {
+  const mode = useSelector((state: RootState) => state.auth.mode);
   return useApiQuery<ResponsibilityDetail>({
     endpoint: choresEndpoints.responsibilityDetail,
     pathParams: { id },
     key: ['responsibility', id] as const,
+    options: {
+      enabled: id !== '',
+      queryFn:
+        mode === 'device'
+          ? () => deviceResponsibilityDetail(id) as Promise<ResponsibilityDetail>
+          : undefined,
+    },
+  });
+}
+
+/** People map shared by the chores pages — device twin of GET /profiles. */
+export function usePeopleMap() {
+  const mode = useSelector((state: RootState) => state.auth.mode);
+  return useApiQuery<{ people: Array<{ id: string; name: string }> }>({
+    endpoint: { method: 'get', path: '/profiles' },
+    key: queryKeys.profiles(),
+    options: {
+      queryFn:
+        mode === 'device'
+          ? () => devicePeople().then((people) => ({ people }))
+          : undefined,
+    },
   });
 }

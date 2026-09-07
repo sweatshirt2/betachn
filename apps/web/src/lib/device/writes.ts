@@ -671,6 +671,75 @@ export async function deviceLogService(input: {
 }
 
 // ————————————————————————————————————————————————
+// Social (notifications)
+// ————————————————————————————————————————————————
+
+/** Twin of SocialService.markNotificationRead: recipient-scoped, idempotent. */
+export async function deviceMarkNotificationRead(input: {
+  notificationId: string;
+}): Promise<{ ok: boolean }> {
+  const db = await requireDeviceDb();
+  const row = await db.query.notifications!.findFirst({
+    where: eq(schema.notifications.id, input.notificationId),
+  });
+  if (!row) throw new AppError('NOT_FOUND', 'Notification not found');
+  if (row.readAt === null) {
+    await db
+      .update(schema.notifications)
+      .set({ readAt: new Date().toISOString() })
+      .where(eq(schema.notifications.id, row.id));
+  }
+  return { ok: true };
+}
+
+/** Twin of SocialService.markAllRead over THIS device's people rows. */
+export async function deviceReadAllNotifications(): Promise<{ marked: number }> {
+  const db = await requireDeviceDb();
+  const rows = await db.select().from(schema.notifications);
+  const unread = rows.filter((n) => n.readAt === null);
+  const nowIso = new Date().toISOString();
+  for (const row of unread) {
+    await db
+      .update(schema.notifications)
+      .set({ readAt: nowIso })
+      .where(eq(schema.notifications.id, row.id));
+  }
+  return { marked: unread.length };
+}
+
+/** Twin of the prefs PUT: partial merge over the stored toggles. */
+export async function deviceSaveNotificationPrefs(input: {
+  categories: Record<string, boolean>;
+}): Promise<void> {
+  const db = await requireDeviceDb();
+  const person = (await db.select().from(schema.people)).at(0);
+  if (!person) throw new AppError('NOT_FOUND', 'No person on this device');
+  const existing = await db.query.notificationPrefs!.findFirst({
+    where: eq(schema.notificationPrefs.personId, person.id),
+  });
+  const merged = { ...(existing?.categories ?? {}), ...input.categories };
+  if (existing) {
+    await db
+      .update(schema.notificationPrefs)
+      .set({ categories: merged })
+      .where(eq(schema.notificationPrefs.personId, person.id));
+  } else {
+    await db
+      .insert(schema.notificationPrefs)
+      .values({ personId: person.id, categories: merged });
+  }
+  enqueue(db, (await currentHousehold(db)).id, {
+    entity: 'notification_prefs',
+    entityId: person.id,
+    op: existing ? 'update' : 'create',
+    payload: { personId: person.id, categories: merged },
+    audienceType: 'members',
+    audienceIds: [person.id],
+    domain: 'household',
+  });
+}
+
+// ————————————————————————————————————————————————
 // Household (people, roles)
 // ————————————————————————————————————————————————
 

@@ -3,25 +3,15 @@
 import Link from 'next/link';
 import { use } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSelector } from 'react-redux';
 import { Button, Card, Chip, EmptyState, Skeleton } from '@/components/ui';
-import { useOccurrenceAct, useOccurrences, useResponsibility } from '@/features/chores';
-import { queryKeys, useApiQuery } from '@/lib/api';
-import type { RootState } from '@/store';
-
-type Person = { id: string; name: string };
+import { useOccurrenceAct, useOccurrences, useResponsibility, usePeopleMap } from '@/features/chores';
 
 export default function ChoreDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { t } = useTranslation();
-  const token = useSelector((state: RootState) => state.auth.token);
   const detail = useResponsibility(id);
   const act = useOccurrenceAct();
-  const people = useApiQuery<{ people: Person[] }>({
-    endpoint: { method: 'get', path: '/profiles' },
-    key: queryKeys.profiles(),
-    options: { enabled: token !== null },
-  });
+  const people = usePeopleMap();
   const occurrences = useOccurrences({});
   const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
 

@@ -5,11 +5,9 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, Chip, EmptyState, SectionWatermark, Skeleton } from '@/components/ui';
-import { useOccurrenceAct, useOccurrences, type TitledOccurrence } from '@/features/chores';
-import { queryKeys, useApiQuery } from '@/lib/api';
-import type { RootState } from '@/store';
+import { useOccurrenceAct, useOccurrences, usePeopleMap, type TitledOccurrence } from '@/features/chores';
+import { hasSession, type RootState } from '@/store';
 
-type Person = { id: string; name: string };
 type Tab = 'mine' | 'everyone' | 'overdue';
 
 function todayIso(): string {
@@ -19,21 +17,17 @@ function todayIso(): string {
 export default function ChoresPage() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>('everyone');
-  const activePersonId = useSelector((state: RootState) => state.auth.activePerson?.id ?? null);
-  const token = useSelector((state: RootState) => state.auth.token);
+  const auth = useSelector((state: RootState) => state.auth);
+  const activePersonId = auth.activePerson?.id ?? null;
   const act = useOccurrenceAct();
 
   const from = todayIso();
   const to = new Date(Date.now() + 14 * 86_400_000).toISOString().slice(0, 10);
   const occurrences = useOccurrences({ from, to });
-  const people = useApiQuery<{ people: Person[] }>({
-    endpoint: { method: 'get', path: '/profiles' },
-    key: queryKeys.profiles(),
-    options: { enabled: token !== null },
-  });
+  const people = usePeopleMap();
   const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
 
-  if (!token) {
+  if (!hasSession(auth)) {
     return (
       <EmptyState
         emoji="🧺"

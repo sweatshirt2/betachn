@@ -5,14 +5,22 @@ import { useSelector } from 'react-redux';
 import { queryKeys, useApiMutation, useApiQuery, useDeviceMutation } from '@/lib/api';
 import { useToast } from '@/components/ui';
 import { deviceCreateSupply, deviceCycleSupply } from '@/lib/device/writes';
+import { deviceSupplies } from '@/lib/device/reads';
 import type { RootState } from '@/store';
 import { suppliesEndpoints } from '../supplies.endpoints';
 import type { SupplyPayload, SupplyState } from '../supplies.types';
 
 export function useSupplies() {
+  const mode = useSelector((state: RootState) => state.auth.mode);
   return useApiQuery<{ supplies: SupplyPayload[] }>({
     endpoint: suppliesEndpoints.supplies,
     key: ['supplies'] as const,
+    options: {
+      queryFn:
+        mode === 'device'
+          ? () => deviceSupplies() as Promise<{ supplies: SupplyPayload[] }>
+          : undefined,
+    },
   });
 }
 

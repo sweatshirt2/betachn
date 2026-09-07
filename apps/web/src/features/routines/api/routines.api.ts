@@ -5,14 +5,22 @@ import { useSelector } from 'react-redux';
 import { useApiMutation, useApiQuery, useDeviceMutation } from '@/lib/api';
 import { useToast } from '@/components/ui';
 import { deviceCreateRoutine, deviceDeleteRoutine } from '@/lib/device/writes';
+import { deviceRoutines } from '@/lib/device/reads';
 import type { RootState } from '@/store';
 import { routinesEndpoints } from '../routines.endpoints';
 import type { RoutinePayload } from '../routines.types';
 
 export function useRoutines() {
+  const mode = useSelector((state: RootState) => state.auth.mode);
   return useApiQuery<{ routines: RoutinePayload[] }>({
     endpoint: routinesEndpoints.routines,
     key: ['routines'] as const,
+    options: {
+      queryFn:
+        mode === 'device'
+          ? () => deviceRoutines().then((routines) => ({ routines }))
+          : undefined,
+    },
   });
 }
 

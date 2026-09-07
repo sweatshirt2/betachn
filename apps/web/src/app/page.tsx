@@ -4,21 +4,8 @@ import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, Chip, EmptyState, SectionWatermark, Skeleton } from '@/components/ui';
-import { useOccurrenceAct, useToday, type TitledOccurrence } from '@/features/chores';
-import { queryKeys, useApiQuery } from '@/lib/api';
+import { useOccurrenceAct, useToday, usePeopleMap, type TitledOccurrence } from '@/features/chores';
 import { hasSession, type RootState } from '@/store';
-
-type Person = { id: string; name: string };
-
-function usePeopleMap() {
-  const token = useSelector((state: RootState) => state.auth.token);
-  const query = useApiQuery<{ people: Person[] }>({
-    endpoint: { method: 'get', path: '/profiles' },
-    key: queryKeys.profiles(),
-    options: { enabled: token !== null },
-  });
-  return new Map((query.data?.people ?? []).map((p) => [p.id, p.name] as const));
-}
 
 export default function TodayPage() {
   const { t } = useTranslation();
@@ -26,7 +13,8 @@ export default function TodayPage() {
   const token = auth.token;
   const today = useToday();
   const act = useOccurrenceAct();
-  const names = usePeopleMap();
+  const people = usePeopleMap();
+  const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
 
   if (!hasSession(auth)) {
     return (

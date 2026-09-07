@@ -6,21 +6,30 @@ import { useTranslation } from 'react-i18next';
 import { queryKeys, useApiMutation, useApiQuery, useDeviceMutation } from '@/lib/api';
 import { useToast } from '@/components/ui';
 import { deviceCreateRoom, deviceCreateAsset, deviceLogService } from '@/lib/device/writes';
+import { deviceRooms, deviceAssets } from '@/lib/device/reads';
 import type { RootState } from '@/store';
 import { homeEndpoints } from '../home.endpoints';
 import type { AssetDetail, AssetPayload, RoomPayload } from '../home.types';
 
 export function useRooms() {
+  const mode = useSelector((state: RootState) => state.auth.mode);
   return useApiQuery<{ rooms: RoomPayload[] }>({
     endpoint: homeEndpoints.rooms,
     key: ['rooms'] as const,
+    options: {
+      queryFn: mode === 'device' ? () => deviceRooms().then((rooms) => ({ rooms })) : undefined,
+    },
   });
 }
 
 export function useAssets() {
+  const mode = useSelector((state: RootState) => state.auth.mode);
   return useApiQuery<{ assets: AssetPayload[] }>({
     endpoint: homeEndpoints.assets,
     key: ['assets'] as const,
+    options: {
+      queryFn: mode === 'device' ? () => deviceAssets().then((assets) => ({ assets })) : undefined,
+    },
   });
 }
 
