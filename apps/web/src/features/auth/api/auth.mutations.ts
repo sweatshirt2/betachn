@@ -2,8 +2,9 @@
 
 import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
-import { clearApiCache, useApiMutation } from '@/lib/api';
-import { resetSession, setSession, store } from '@/store';
+import { clearApiCache, useApiMutation, useDeviceMutation } from '@/lib/api';
+import { resetSession, setSession, setDeviceSession, store } from '@/store';
+import { switchDeviceProfile, type DeviceSwitchResult } from '@/lib/device';
 import { authEndpoints } from '../auth.endpoints';
 import { toAuthState, type AuthContextPayload, type LoginResponse } from '../auth.types';
 
@@ -38,7 +39,9 @@ export function useLogout() {
 
 export function useSwitchProfile() {
   const dispatch = useDispatch();
-  return useApiMutation<
+  const mode = useSelectorWithMode();
+
+  const server = useApiMutation<
     { session: AuthContextPayload['session']; context: AuthContextPayload },
     { personId: string; password?: string }
   >({
@@ -54,4 +57,28 @@ export function useSwitchProfile() {
       },
     },
   });
+
+  // Device switching is instant (every device person is passwordless, D49);
+  // D38 cache-clear keeps stale person-scoped data from leaking across.
+  const device = useDeviceMutation<DeviceSwitchResult, { personId: string; password?: string }>({
+    write: ({ personId }) => switchDeviceProfile(personId),
+    options: {
+      onSuccess: (result) => {
+        dispatch(setDeviceSession(result));
+        clearApiCache();
+      },
+    },
+  });
+
+  return mode === 'device' ? device : server;
+}
+
+function useSelectorWithMode(): 'server' | 'device' {
+  return useModeSelector();
+}
+
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/store';
+function useModeSelector(): 'server' | 'device' {
+  return useSelector((state: RootState) => state.auth.mode);
 }

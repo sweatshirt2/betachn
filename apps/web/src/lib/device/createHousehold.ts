@@ -1,4 +1,5 @@
-import { FACTORY_MATRICES } from '@chorify/core/permissions';
+import { FACTORY_MATRICES, permissionMapFor } from '@chorify/core/permissions';
+import { AppError } from '@chorify/core/errors';
 import { builtinRoleSeedRows } from '@chorify/core/roles-rules';
 import { PendingOpQueue } from '@chorify/local-db/queue';
 import * as schema from '@chorify/local-db/schema';
@@ -174,4 +175,42 @@ export async function localRoleMap(db: DeviceDb, householdId: string): Promise<R
     if (row.householdId === householdId && row.builtinKey) map[row.builtinKey] = row.id;
   }
   return map;
+}
+
+/** The payload setDeviceSession consumes — same shape as the rehydrate thunk's. */
+export type DeviceSwitchResult = {
+  household: { id: string; name: string; code: string };
+  activePerson: { id: string; name: string };
+  permissionMap: Record<string, boolean>;
+};
+
+/**
+ * Device-mode profile switch (§4.6): every device person is passwordless
+ * (D49), so switching is instant — persist the new active person, re-resolve
+ * their permissionMap from live role rows, and return the session payload.
+ * The caller dispatches setDeviceSession + clears TanStack caches (D38).
+ */
+export async function switchDeviceProfile(personId: string): Promise<DeviceSwitchResult> {
+  const device = await openBrowserDevice();
+  if (device.db === null) {
+    throw new Error('Offline storage is unavailable on this device.');
+  }
+  const db = device.db;
+  const household = (await db.select().from(schema.households)).at(0);
+  if (!household) throw new AppError('NOT_FOUND', 'No household on this device');
+  const person = (await db.select().from(schema.people)).find(
+    (p) => p.id === personId && p.householdId === household.id,
+  );
+  if (!person) throw new AppError('NOT_FOUND', 'Person not found');
+  const role = (await db.select().from(schema.roles)).find((r) => r.id === person.roleId) ?? null;
+  const permissionMap = permissionMapFor({
+    permissionOverrides: (person.permissionOverrides ?? {}) as never,
+    role: role ? { isOwnerRole: role.isOwnerRole, permissions: role.permissions } : null,
+  });
+  writeDeviceSession({ householdId: household.id, activePersonId: person.id });
+  return {
+    household: { id: household.id, name: household.name, code: household.code },
+    activePerson: { id: person.id, name: person.name },
+    permissionMap,
+  };
 }
