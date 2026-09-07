@@ -10,6 +10,7 @@ import {
   type SchedulerTimers,
   type FlushResult,
 } from '@chorify/local-db/sync-client';
+import { runDeviceJobs } from '@chorify/local-db/jobs';
 import { openBrowserDevice } from '@/lib/device/openDevice';
 import { invalidateApiCache } from '@/lib/api/client';
 import { store, type RootState } from '@/store';
@@ -157,18 +158,32 @@ export function stopSyncClient(): void {
 }
 
 /**
- * Mount-once boot hook (Providers): verifies the device DB is reachable and
- * schedules the first flush for registered device sessions. The scheduler's
- * own online/focus/visibility/30s triggers take over from there.
+ * Mount-once boot hook (Providers): verifies the device DB is reachable,
+ * runs the D64 client jobs (missed-sweep + due-today digest — server jobs
+ * never see device rows, §6.35), and schedules the first flush. The
+ * scheduler's own online/focus/visibility/30s triggers take over from there.
  */
 export function useSyncBoot(): void {
   const mode = useSelector((state: RootState) => state.auth.mode);
   const token = useSelector((state: RootState) => state.auth.token);
+  const householdId = useSelector((state: RootState) => state.auth.household?.id);
 
   useEffect(() => {
-    if (mode !== 'device' || token === null) return;
-    scheduleSyncFlush();
-  }, [mode, token]);
+    if (mode !== 'device' || householdId === undefined) return;
+    void (async () => {
+      try {
+        const device = await openBrowserDevice();
+        if (device.db === null) return;
+        await runDeviceJobs(
+          device.db as unknown as Parameters<typeof runDeviceJobs>[0],
+          householdId,
+        );
+      } catch {
+        // Jobs are best-effort — the next app open retries.
+      }
+      scheduleSyncFlush();
+    })();
+  }, [mode, token, householdId]);
 
   useEffect(() => stopSyncClient, []);
 }
