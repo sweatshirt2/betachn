@@ -1,6 +1,7 @@
 export * from './apply-migrations';
 export * from './capability';
 export * from './client';
+export * from './jobs';
 export * from './passcode';
 export * from './sync-engine/apply';
 export * from './sync-engine/engine';
