@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { permissionMapFor } from '@chorify/core/permissions';
 import { openBrowserDevice } from '@/lib/device/openDevice';
+import { readDeviceSession } from '@/lib/device/createHousehold';
 import * as schema from '@chorify/local-db/schema';
 
 /**
@@ -104,7 +105,16 @@ export const rehydrateDeviceSession = createAsyncThunk(
     if (!household) return null;
     const people = await db.select().from(schema.people);
     const roles = await db.select().from(schema.roles);
-    const person = people.find((p) => p.householdId === household.id) ?? null;
+    // Resume the PERSISTED active person (localStorage session record) —
+    // falling back to the first member only when the record is missing or
+    // stale, never silently swapping profiles on reload.
+    const persisted = readDeviceSession();
+    const person =
+      (persisted
+        ? people.find((p) => p.householdId === household.id && p.id === persisted.activePersonId)
+        : undefined) ??
+      people.find((p) => p.householdId === household.id) ??
+      null;
     if (!person) return null;
     const role = roles.find((r) => r.id === person.roleId) ?? null;
     const permissionMap = permissionMapFor({
