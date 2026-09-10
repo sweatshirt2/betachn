@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import type { Executor } from '../../db';
-import { pgTableFor } from './sync.pg-registry';
+import { pgTableFor } from '../../db-pg-tables';
 import type { PushOp } from './sync.service';
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- generic pg applier keyed by the shared SYNC_ENTITIES registry */

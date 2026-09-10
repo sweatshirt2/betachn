@@ -1,7 +1,7 @@
 import { eq, inArray } from 'drizzle-orm';
 import type { Executor } from '../../db';
 import { DOMAIN_VIEW_KEY, type ViewerIdentity } from './sync.rules';
-import { dbExport, pgTableFor, pgEntityNames } from './sync.pg-registry';
+import { dbExport, pgTableFor, householdEntityNames } from '../../db-pg-tables';
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- generic snapshot keyed by the shared SYNC_ENTITIES registry */
 type AnyPgTable = any;
@@ -12,7 +12,7 @@ type AnyPgTable = any;
  * roles, etc. Tables resolve lazily per entity (see sync.pg-registry.ts
  * for the circular import rationale).
  */
-const SNAPSHOT_ENTITIES = pgEntityNames();
+const SNAPSHOT_ENTITIES = householdEntityNames();
 
 /** Which permission domain gates each snapshot section (CN XIX-4). */
 const DOMAIN_BY_ENTITY: Record<string, keyof typeof DOMAIN_VIEW_KEY> = {

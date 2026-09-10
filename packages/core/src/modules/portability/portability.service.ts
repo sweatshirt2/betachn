@@ -1,56 +1,19 @@
 import { eq, inArray } from 'drizzle-orm';
-import {
-  activityEvents,
-  assets,
-  assignmentRules,
-  households,
-  notificationPrefs,
-  notifications,
-  occurrences,
-  rooms as roomsRef,
-  people,
-  responsibilities,
-  roles,
-  routines,
-  serviceRecords,
-  shoppingItems,
-  subtasks,
-  supplies,
-  users,
-} from '@chorify/db';
+import { households, people, roles, users } from '@chorify/db';
 import type { Row } from '../../db';
 import { AppError } from '../../errors';
 import type { Clock } from '../../ports';
 import type { Executor, UnitOfWork } from '../../db';
+import { dbExport, pgTableFor } from '../../db-pg-tables';
 import { parseHouseholdExport, serializeHouseholdExport } from '../../txt';
 import { HouseholdsService } from '../households';
 import { ownerHolderPersonIds } from '../people';
 
 /**
- * Wire-section name → drizzle table. Rooms/assets live here too; sessions,
- * oauth ids and other credential/bookkeeping tables are NOT portable (§8).
+ * Tables resolve LAZILY via db-pg-tables (the core↔db module-evaluation
+ * cycle poisons init-time table literals — see the registry docblock).
+ * RQB keys below are strings, immune to the cycle.
  */
-const SECTION_TABLES = {
-  households,
-  people,
-  users,
-  roles,
-  routines,
-  responsibilities,
-  subtasks,
-  assignment_rules: assignmentRules,
-  occurrences,
-  rooms: roomsRef,
-  assets,
-  service_records: serviceRecords,
-  supplies,
-  shopping_items: shoppingItems,
-  activity_events: activityEvents,
-  notifications,
-  notification_prefs: notificationPrefs,
-} as const;
-
-type SectionName = keyof typeof SECTION_TABLES;
 
 /** Household-scoped content sections exported verbatim. */
 const SCOPED_SECTIONS: Exclude<SectionName, 'households' | 'notification_prefs'>[] = [
@@ -91,12 +54,27 @@ const ADOPTION_ORDER: SectionName[] = [
   'notification_prefs',
 ];
 
-function tableFor(section: SectionName) {
-  return (SECTION_TABLES as Record<SectionName, unknown>)[section] as {
-    householdId: never;
-    id: never;
-  };
-}
+type SectionName = (typeof EXPORT_SECTION_NAMES)[number];
+
+const EXPORT_SECTION_NAMES = [
+  'households',
+  'people',
+  'users',
+  'roles',
+  'routines',
+  'responsibilities',
+  'subtasks',
+  'assignment_rules',
+  'occurrences',
+  'rooms',
+  'assets',
+  'service_records',
+  'supplies',
+  'shopping_items',
+  'activity_events',
+  'notifications',
+  'notification_prefs',
+] as const;
 
 /**
  * TXT section name → drizzle relational-query key. The RQB is keyed by the
@@ -123,6 +101,20 @@ const SECTION_RELATIONS: Record<SectionName, string> = {
   notifications: 'notifications',
   notification_prefs: 'notificationPrefs',
 };
+
+/**
+ * JSON roundtrips (the txt format itself) turn pg timestamps into ISO
+ * strings, but pg timestamp columns need Date objects — without this every
+ * fresh adoption 500s on the first createdAt (same coercion the sync
+ * applier performs for device payloads).
+ */
+function coerceTimestamps(row: Row): Row {
+  const out: Row = {};
+  for (const [k, v] of Object.entries(row)) {
+    out[k] = typeof v === 'string' && k.endsWith('At') ? new Date(v) : v;
+  }
+  return out;
+}
 
 /**
  * §4.11 portability. Export = TXT snapshot minus identity material (stripped
@@ -153,7 +145,7 @@ export class PortabilityService {
         sections[section] = await this.exportNested(exec, section, householdId);
         continue;
       }
-      const table = tableFor(section);
+      const table = pgTableFor(section);
       const rows = await exec.query[SECTION_RELATIONS[section]]!.findMany({
         where: eq(table.householdId, householdId),
       }) as unknown as Row[];
@@ -177,22 +169,22 @@ export class PortabilityService {
   ): Promise<Row[]> {
     if (section === 'service_records') {
       const parentAssets = (await exec.query[SECTION_RELATIONS.assets]!.findMany({
-        where: eq(assets.householdId, householdId),
+        where: eq(dbExport('assets').householdId, householdId),
         columns: { id: true },
       })) as unknown as Array<{ id: string }>;
       const assetIds = parentAssets.map((a) => a.id);
       if (assetIds.length === 0) return [];
       return (await exec.query[SECTION_RELATIONS[section]]!.findMany({
-        where: inArray(serviceRecords.assetId, assetIds),
+        where: inArray(dbExport('serviceRecords').assetId, assetIds),
       })) as unknown as Row[];
     }
     const parents = (await exec.query[SECTION_RELATIONS.responsibilities]!.findMany({
-      where: eq(responsibilities.householdId, householdId),
+      where: eq(dbExport('responsibilities').householdId, householdId),
       columns: { id: true },
     })) as unknown as Array<{ id: string }>;
     const ids = parents.map((p) => p.id);
     if (ids.length === 0) return [];
-    const table = section === 'subtasks' ? subtasks : assignmentRules;
+    const table = section === 'subtasks' ? dbExport('subtasks') : dbExport('assignmentRules');
     return (await exec.query[SECTION_RELATIONS[section]]!.findMany({
       where: inArray(table.responsibilityId, ids),
     })) as unknown as Row[];
@@ -235,8 +227,8 @@ export class PortabilityService {
         const rows = data[section];
         if (!rows || rows.length === 0) continue;
         if (section === 'users') continue; // identity stays ours; only seat mapping below
-        const table = tableFor(section) as object;
-        await tx.insert(table).values(rows as Row[]);
+        const table = pgTableFor(section) as object;
+        await tx.insert(table).values(rows.map(coerceTimestamps) as Row[]);
       }
 
       const owners = await ownerHolderPersonIds(tx, ctx.householdId);
@@ -287,7 +279,7 @@ export class PortabilityService {
     counts.people = Math.max(0, peopleCount - (ownPersonId ? 1 : 0));
 
     for (const section of ['roles', 'routines', 'responsibilities', 'occurrences', 'rooms', 'assets', 'supplies', 'shopping_items'] as const) {
-      const table = tableFor(section) as { householdId: never };
+      const table = pgTableFor(section) as { householdId: never };
       const rows = await exec.query[SECTION_RELATIONS[section]]!.findMany({
         where: eq(table.householdId, ctx.householdId),
         columns: { id: true },
