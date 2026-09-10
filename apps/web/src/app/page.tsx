@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, Card, Chip, ChoreCheck, EmptyState, SectionWatermark, Skeleton, SwipeCard, TickNumber } from '@/components/ui';
 import { useOccurrenceAct, useToday, usePeopleMap, type TitledOccurrence } from '@/features/chores';
 import { hasSession, type RootState } from '@/store';
+import { formatDate } from '@/lib/dates';
 
 export default function TodayPage() {
   const { t } = useTranslation();
@@ -103,7 +104,7 @@ export default function TodayPage() {
                 <Card className="stagger-item flex items-center gap-3 py-2" style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">{o.title}</p>
-                    <p className="text-muted text-xs">{o.dueDate}</p>
+                    <p className="text-muted text-xs">{formatDate(o.dueDate)}</p>
                   </div>
                   <ChoreCheck
                     done={o.status === 'completed'}
@@ -145,7 +146,7 @@ export default function TodayPage() {
             {data.upcoming.map((o, index) => (
               <Card key={o.id} className="stagger-item flex items-center gap-3 py-2" style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}>
                 <p className="min-w-0 flex-1 truncate text-sm font-semibold">{o.title}</p>
-                <span className="text-muted text-xs">{o.dueDate}</span>
+                <span className="text-muted text-xs">{formatDate(o.dueDate)}</span>
               </Card>
             ))}
           </div>

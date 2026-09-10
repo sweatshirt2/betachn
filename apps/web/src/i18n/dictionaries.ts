@@ -61,6 +61,11 @@ export type Dict = {
     newHere: string;
     setupHousehold: string;
     rateLimited: string;
+    orContinueWith: string;
+    googleButton: string;
+    googleFinishing: string;
+    googleFailed: string;
+    backToLogin: string;
     switchProfile: string;
     switchProfileAria: string;
     passwordFor: string;
@@ -292,6 +297,25 @@ export type Dict = {
     catBill: string;
     catBackup: string;
   };
+  setup: {
+    title: string;
+    hint: string;
+  };
+  cal: {
+    m1: string;
+    m2: string;
+    m3: string;
+    m4: string;
+    m5: string;
+    m6: string;
+    m7: string;
+    m8: string;
+    m9: string;
+    m10: string;
+    m11: string;
+    m12: string;
+    m13: string;
+  };
   settings: {
     title: string;
     language: string;
@@ -310,6 +334,8 @@ export type Dict = {
     exportFailed: string;
     importOpened: string;
     importBlocked: string;
+    importConflict: string;
+    importTooNew: string;
     noPasswords: string;
     themeFamily: string;
     themeEmber: string;
@@ -423,6 +449,11 @@ export const en: Dict = {
     newHere: 'New here?',
     setupHousehold: 'Set up your household',
     rateLimited: 'Too many attempts — try again in {{seconds}}s.',
+    orContinueWith: 'or',
+    googleButton: 'Continue with Google',
+    googleFinishing: 'Signing you in',
+    googleFailed: 'Google sign-in did not go through. Try again, or use your household code.',
+    backToLogin: 'Back to sign in',
     switchProfile: 'Switch profile',
     switchProfileAria: 'Switch profile (currently {{name}})',
     passwordFor: 'Password for {{name}}',
@@ -657,6 +688,25 @@ export const en: Dict = {
     catBill: 'Bills',
     catBackup: 'Backup',
   },
+  setup: {
+    title: 'Household setup',
+    hint: 'Everything about how your home runs — you can change this later.',
+  },
+  cal: {
+    m1: 'Meskerem',
+    m2: 'Tikimt',
+    m3: 'Hidar',
+    m4: 'Tahsas',
+    m5: 'Tir',
+    m6: 'Yekatit',
+    m7: 'Megabit',
+    m8: 'Miazia',
+    m9: 'Ginbot',
+    m10: 'Sene',
+    m11: 'Hamle',
+    m12: 'Nehase',
+    m13: 'Pagume',
+  },
   settings: {
     title: 'Settings',
     language: 'Language',
@@ -675,6 +725,10 @@ export const en: Dict = {
     exportFailed: 'Export failed — try again.',
     importOpened: 'Household copy opened.',
     importBlocked: 'Import blocked — nothing was changed.',
+    importConflict:
+      'Import blocked: this backup does not match this household. Nothing was changed.',
+    importTooNew:
+      'Import blocked: this backup was made on a newer version. Update the app first.',
     noPasswords: 'Household copies never include passwords.',
     themeFamily: 'Family',
     themeEmber: 'Ember',
@@ -788,6 +842,11 @@ export const am: Dict = {
     newHere: 'አዲስ ነዎት?',
     setupHousehold: 'ቤተሰብዎን ያዘጋጁ',
     rateLimited: 'ብዙ ሙከራዎች — እባክዎ በ{{seconds}} ሰከንድ ውስጥ እንደገና ይሞክሩ።',
+    orContinueWith: 'ወይም',
+    googleButton: 'በGoogle ግባ',
+    googleFinishing: 'በመግባት ላይ',
+    googleFailed: 'የGoogle መግቢያ አልተሳካም። እንደገና ይሞክሩ፣ ወይም የቤተሰብ ኮድዎን ይጠቀሙ።',
+    backToLogin: 'ወደ መግቢያ ተመለስ',
     switchProfile: 'መገለጫ ቀይር',
     switchProfileAria: 'መገለጫ ቀይር (አሁን {{name}})',
     passwordFor: 'የ{{name}} የይለፍ ቃል',
@@ -1019,6 +1078,25 @@ export const am: Dict = {
     catBill: 'ክፍያዎች',
     catBackup: 'ምትኬ',
   },
+  setup: {
+    title: 'የቤተሰብ ዝግጅት',
+    hint: 'ቤታችሁን የሚያስኬድ ሁሉ — በኋላ መቀየር ይችላሉ።',
+  },
+  cal: {
+    m1: 'መስከረም',
+    m2: 'ጥቅምት',
+    m3: 'ኅዳር',
+    m4: 'ታኅሣሥ',
+    m5: 'ጥር',
+    m6: 'የካቲት',
+    m7: 'መጋቢት',
+    m8: 'ሚያዝያ',
+    m9: 'ግንቦት',
+    m10: 'ሰኔ',
+    m11: 'ሐምሌ',
+    m12: 'ነሐሴ',
+    m13: 'ጳጉሜን',
+  },
   settings: {
     title: 'ቅንብሮች',
     language: 'ቋንቋ',
@@ -1037,6 +1115,8 @@ export const am: Dict = {
     exportFailed: 'ማስቀመጥ አልተሳካም — እንደገና ይሞክሩ።',
     importOpened: 'የቤተሰብ ቅጂ ተከፍቷል።',
     importBlocked: 'ማምጣት ታግዷል — ምንም አልተቀየረም።',
+    importConflict: 'ማምጣት ታግዷል፦ ይህ መጠባበቂያ ከዚህ ቤተሰብ ጋር አይሚሱም። ምንም አልተቀየረም።',
+    importTooNew: 'ማምጣት ታግዷል፦ ይህ መጠባበቂያ በአዲስ ስሪት ተሠርቷል። መጀመሪያ መተግበሪያውን ያዘምኑ።',
     noPasswords: 'የቤተሰብ ቅጂዎች ምንም የይለፍ ቃል አያካትቱም።',
     themeFamily: 'ቤተሰብ',
     themeEmber: 'እሳት',

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, Card, Chip, ChoreCheck, EmptyState, SectionWatermark, Skeleton, SwipeCard } from '@/components/ui';
 import { useOccurrenceAct, useOccurrences, usePeopleMap, type TitledOccurrence } from '@/features/chores';
 import { hasSession, type RootState } from '@/store';
+import { formatDate } from '@/lib/dates';
 
 type Tab = 'mine' | 'everyone' | 'overdue';
 
@@ -101,7 +102,7 @@ export default function ChoresPage() {
                 <Link href={`/chores/${o.responsibilityId}`} className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{o.title}</p>
                   <p className="text-muted text-xs">
-                    {o.dueDate} · {label(o)}
+                    {formatDate(o.dueDate)} · {label(o)}
                   </p>
                 </Link>
                 {o.status === 'pending' && o.dueDate < from && <Chip tone="danger">{t('household.missed')}</Chip>}

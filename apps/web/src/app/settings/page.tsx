@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { Button, Card, useToast } from '@/components/ui';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { useLogout } from '@/features/auth';
 import { THEME_IDS, THEME_LABELS, useTheme } from '@/theme';
 import { LANGUAGE_STORAGE_KEY, LOCALES } from '@/i18n/dictionaries';
@@ -66,8 +66,16 @@ export default function SettingsPage() {
       const text = await file.text();
       await api.post('/import', text, { headers: { 'content-type': 'text/plain' } });
       toast(t('settings.importOpened'));
-    } catch {
-      toast(t('settings.importBlocked'));
+    } catch (err) {
+      // micro-67: conflict-class failures get their verbatim copy; the device
+      // twin (local import) surfaces its own message.
+      if (err instanceof ApiError && err.code === 'IMPORT_CONFLICT') {
+        toast(t('settings.importConflict'));
+      } else if (err instanceof ApiError && err.code === 'IMPORT_TOO_NEW') {
+        toast(t('settings.importTooNew'));
+      } else {
+        toast(t('settings.importBlocked'));
+      }
     } finally {
       setBusy(false);
     }
