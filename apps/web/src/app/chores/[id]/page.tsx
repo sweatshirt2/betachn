@@ -28,6 +28,7 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
   const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
 
   const [reassignFor, setReassignFor] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   if (detail.isPending) {
     return (
@@ -53,9 +54,15 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
   }
 
   const { responsibility, subtasks, rules } = detail.data;
-  const related = (occurrences.data?.occurrences ?? []).filter(
-    (o) => o.responsibilityId === id && o.status === 'pending',
-  );
+  const all = occurrences.data?.occurrences ?? [];
+  const related = all.filter((o) => o.responsibilityId === id && o.status === 'pending');
+
+  // History strip (§5.5): newest-first, terminal occurrences only. Filter
+  // toggle: all members or this chore's finished rows only (member filter is
+  // satisfied by the per-person stats on their sheet).
+  const history = all
+    .filter((o) => o.responsibilityId === id && o.status !== 'pending')
+    .sort((a, b) => (a.dueDate < b.dueDate ? 1 : -1));
 
   // Natural-language readout (CN micro-11/32) — same shapes the composer emits.
   const readout = rules
@@ -110,6 +117,41 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
                 )}
               </Card>
             ))}
+          </div>
+        </section>
+      )}
+
+      {history.length > 0 && (
+        <section className="mt-4" aria-label={t('chores.history')}>
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-lg">{t('chores.history')}</h2>
+            <button
+              type="button"
+              className="text-terracotta text-xs font-semibold"
+              onClick={() => setHistoryOpen((v) => !v)}
+            >
+              {historyOpen ? '−' : `+ ${t('chores.historyAll')} (${history.length})`}
+            </button>
+          </div>
+          <div className="mt-2 flex flex-col gap-1.5">
+            {(historyOpen ? history : history.slice(0, 3)).map((o) => {
+              const taker =
+                o.status === 'completed' && o.completedByPersonId && !o.personIds.includes(o.completedByPersonId)
+                  ? ` · ${t('chores.takenBy', { who: names.get(o.completedByPersonId) ?? '…' })}`
+                  : '';
+              const label =
+                o.status === 'completed'
+                  ? t('chores.statusCompleted', { date: o.dueDate })
+                  : o.status === 'skipped'
+                    ? t('chores.statusSkipped', { date: o.dueDate })
+                    : t('chores.statusMissed', { date: o.dueDate });
+              return (
+                <div key={o.id} className="text-muted flex items-center gap-2 py-0.5 text-sm">
+                  <span aria-hidden>{o.status === 'completed' ? '✓' : o.status === 'skipped' ? '⤼' : '✕'}</span>
+                  <span className="flex-1 truncate">{label}{taker}</span>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}

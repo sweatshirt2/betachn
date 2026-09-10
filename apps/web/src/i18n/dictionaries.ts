@@ -126,6 +126,12 @@ export type Dict = {
     reassignHint: string;
     claim: string;
     assignedToShort: string;
+    history: string;
+    historyAll: string;
+    statusCompleted: string;
+    statusSkipped: string;
+    statusMissed: string;
+    takenBy: string;
     dow0: string;
     dow1: string;
     dow2: string;
@@ -482,6 +488,12 @@ export const en: Dict = {
     reassignHint: 'Moves this occurrence only — the weekly plan stays as is.',
     claim: 'Take this',
     assignedToShort: 'Assigned: {{who}}',
+    history: 'History',
+    historyAll: 'Show all',
+    statusCompleted: 'Completed {{date}}',
+    statusSkipped: 'Skipped {{date}}',
+    statusMissed: 'Missed ({{date}})',
+    takenBy: 'taken by {{who}}',
     dow0: 'Sun',
     dow1: 'Mon',
     dow2: 'Tue',
@@ -841,6 +853,12 @@ export const am: Dict = {
     reassignHint: 'ይህንን ቀን ብቻ ያሳውራል — የሳምንቱ ዕቅድ እንደነበረ ይቀራል።',
     claim: 'ያዝበት',
     assignedToShort: 'የተመደበ፦ {{who}}',
+    history: 'ታሪክ',
+    historyAll: 'ሁሉንም አሳይ',
+    statusCompleted: 'የተጠናቀቀ {{date}}',
+    statusSkipped: 'የተዘለለ {{date}}',
+    statusMissed: 'ያለፈበት ({{date}})',
+    takenBy: '{{who}} ያዝበት',
     dow0: 'እሁድ',
     dow1: 'ሰኞ',
     dow2: 'ማክሰኞ',
