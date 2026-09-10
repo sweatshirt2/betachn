@@ -47,6 +47,8 @@ page.on('response', (res) => {
 
 // 1) Login
 await page.goto(`${BASE}/login`, { waitUntil: 'networkidle0', timeout: 60000 });
+// wait for hydration (inputs are controlled by React state)
+await page.waitForSelector('input[autocomplete="off"]', { timeout: 30000 });
 await page.type('input[autocomplete="off"]', 'BEKELE');
 await page.type('input[autocomplete="username"]', 'hana');
 await page.type('input[autocomplete="current-password"]', 'hana1234');
