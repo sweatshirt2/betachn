@@ -31,7 +31,9 @@ export async function GET(req: Request) {
       status: url.searchParams.get('status') ?? undefined,
       personId: url.searchParams.get('personId') ?? undefined,
     });
-    const occurrences = await occurrencesService.listRange(ctx.session.householdId, query);
+    // Titled join is the list wire contract (§4.14) — the Chores list renders
+    // titles from this response.
+    const occurrences = await occurrencesService.listRangeTitled(ctx.session.householdId, query);
     return { occurrences };
   });
 }

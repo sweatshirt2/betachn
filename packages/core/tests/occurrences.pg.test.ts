@@ -63,11 +63,23 @@ suite('pg-backed occurrence lifecycle (§4.9 live)', () => {
     expect(ghost).toHaveLength(0);
   });
 
-  it('act(complete) persists and second completion throws ALREADY_DONE (first-write-wins)', async () => {
+  it('listRangeTitled joins responsibility titles over the real FK', async () => {
     const seed = await h.seedHousehold();
     const svc = new OccurrencesService(h.uow, h.clock);
     await svc.materializeHousehold(seed.householdId);
 
+    const titled = await svc.listRangeTitled(seed.householdId, { from: '2026-09-10', to: '2026-09-10' });
+    expect(titled).toHaveLength(1);
+    expect(titled[0]?.title).toBe('Trash');
+    expect(titled[0]?.dueDate).toBe('2026-09-10');
+    // every row carries a non-empty title — the Chores list wire contract
+    expect(titled.every((o) => o.title.length > 0)).toBe(true);
+  });
+
+  it('act(complete) persists and second completion throws ALREADY_DONE (first-write-wins)', async () => {
+    const seed = await h.seedHousehold();
+    const svc = new OccurrencesService(h.uow, h.clock);
+    await svc.materializeHousehold(seed.householdId);
     const target = (
       await svc.listRange(seed.householdId, { from: '2026-09-07', to: '2026-09-07' })
     )[0];

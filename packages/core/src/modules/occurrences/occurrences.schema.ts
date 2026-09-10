@@ -37,3 +37,9 @@ export const occurrenceActionSchema = z.discriminatedUnion('action', [
 export type OccurrenceStatus = z.infer<typeof occurrenceStatusSchema>;
 export type OccurrenceRecord = z.infer<typeof occurrenceRowSchema>;
 export type OccurrenceAction = z.infer<typeof occurrenceActionSchema>;
+
+/** List wire shape (§4.14): occurrence row + responsibility title join. */
+export const titledOccurrenceSchema = occurrenceRowSchema.extend({
+  title: z.string().min(1),
+});
+export type TitledOccurrenceRecord = z.infer<typeof titledOccurrenceSchema>;

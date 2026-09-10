@@ -19,9 +19,11 @@ import { ownerHolderPersonIds } from '../people';
 import { applyCompletion, applyReopen, applySkip, requirePending } from './occurrences.rules';
 import {
   occurrenceRowSchema,
+  titledOccurrenceSchema,
   type OccurrenceAction,
   type OccurrenceRecord,
   type OccurrenceStatus,
+  type TitledOccurrenceRecord,
 } from './occurrences.schema';
 
 /** Generator horizon (§6.16): [today, today+13]. */
@@ -82,6 +84,34 @@ export class OccurrencesService {
     });
     let records = rows.map((row) => occurrenceRowSchema.parse(row));
     // Dialect-neutral JS filtering for jsonb/array predicates (household-scale).
+    if (opts.status) records = records.filter((r) => r.status === opts.status);
+    if (opts.personId) records = records.filter((r) => r.personIds.includes(opts.personId!));
+    return records;
+  }
+
+  /**
+   * listRange with the responsibility-title join the list wire contract
+   * (§4.14) promises — the Chores list renders titles from this. Raw
+   * listRange above stays for internal/aggregate use.
+   */
+  async listRangeTitled(
+    householdId: string,
+    opts: { from?: string; to?: string; status?: OccurrenceStatus; personId?: string } = {},
+  ): Promise<TitledOccurrenceRecord[]> {
+    const conditions = [eq(occurrences.householdId, householdId)];
+    if (opts.from) conditions.push(gte(occurrences.dueDate, opts.from));
+    if (opts.to) conditions.push(lt(occurrences.dueDate, addDays(opts.to, 1)));
+    const rows = await this.uow.exec.query.occurrences!.findMany({
+      where: and(...conditions),
+      orderBy: [occurrences.dueDate],
+      with: { responsibility: { columns: { title: true } } },
+    });
+    let records = rows.map((row) => {
+      const { responsibility, ...rest } = row as typeof row & {
+        responsibility: { title: string } | undefined;
+      };
+      return titledOccurrenceSchema.parse({ ...rest, title: responsibility?.title ?? '' });
+    });
     if (opts.status) records = records.filter((r) => r.status === opts.status);
     if (opts.personId) records = records.filter((r) => r.personIds.includes(opts.personId!));
     return records;
