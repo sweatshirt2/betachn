@@ -39,6 +39,10 @@
 
   --chorify-watermark-opacity: 0.05;
 
+  /* Check-off green wash (§5.3) — olive family in light themes. */
+  --chorify-wash-bg: #dfe8d7;
+  --chorify-wash-ink: #3f4a37;
+
   /* next/font self-hosted families (layout.tsx) with named fallbacks when
      the generated variables are absent; per-character fallback resolves
      Ethiopic through Noto Sans Ethiopic (micro-75). */
@@ -72,6 +76,9 @@
   --chorify-gradient-ember: linear-gradient(135deg, #e08a56 0%, #b25f31 100%);
 
   --chorify-watermark-opacity: 0.07;
+
+  --chorify-wash-bg: #3a4530;
+  --chorify-wash-ink: #dfe8d7;
 }
 
 [data-theme='highland'] {
@@ -94,4 +101,7 @@
   --chorify-gradient-ember: linear-gradient(135deg, #b25a2e 0%, #8f4523 100%);
 
   --chorify-watermark-opacity: 0.04;
+
+  --chorify-wash-bg: #e3ebdc;
+  --chorify-wash-ink: #33402c;
 }

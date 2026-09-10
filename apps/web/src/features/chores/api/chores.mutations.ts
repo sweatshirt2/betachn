@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { ApiError, queryKeys, useApiMutation, useDeviceMutation } from '@/lib/api';
 import { useToast } from '@/components/ui';
+import { buzz, celebrateChore } from '@/lib/motion';
 import { deviceOccurrenceAct, deviceCreateResponsibility } from '@/lib/device/writes';
 import type { RootState } from '@/store';
 import { choresEndpoints } from '../chores.endpoints';
@@ -44,6 +45,11 @@ export function useOccurrenceAct() {
   const onSuccess = ({ occurrence }: { occurrence: TitledOccurrence }) => {
     refresh();
     if (occurrence.status === 'completed') {
+      // Check-off flourish (§5.3): spring pop/green wash render on ChoreCheck
+      // where the row persists (detail view); the burst + buzz carry the
+      // moment everywhere (lists drop completed rows on refetch).
+      buzz();
+      celebrateChore();
       toast(t('activity.occurrenceCompleted', { title: occurrence.title }), {
         label: t('common.undo'),
         run: () => (mode === 'device' ? reopenDevice.mutate({ id: occurrence.id }) : reopen.mutate({ id: occurrence.id })),

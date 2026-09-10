@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Chip, EmptyState, SectionWatermark, Skeleton } from '@/components/ui';
+import { Button, Card, Chip, ChoreCheck, EmptyState, SectionWatermark, Skeleton, SwipeCard } from '@/components/ui';
 import { useOccurrenceAct, useOccurrences, usePeopleMap, type TitledOccurrence } from '@/features/chores';
 import { hasSession, type RootState } from '@/store';
 
@@ -70,7 +70,7 @@ export default function ChoresPage() {
     o.personIds.length === 0 ? t('today.upForGrabs') : o.personIds.map((id) => names.get(id) ?? '…').join(', ');
 
   return (
-    <div className="relative">
+    <div className="page-enter relative">
       <SectionWatermark variant="bubbles" />
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl">{t('chores.title')}</h1>
@@ -95,19 +95,24 @@ export default function ChoresPage() {
         <EmptyState emoji="✨" title={t('chores.allClear')} hint={t('chores.allClearHint')} />
       ) : (
         <div className="mt-3 flex flex-col gap-2">
-          {visible.map((o) => (
-            <Card key={o.id} className="flex items-center gap-3 py-2">
-              <Link href={`/chores/${o.responsibilityId}`} className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{o.title}</p>
-                <p className="text-muted text-xs">
-                  {o.dueDate} · {label(o)}
-                </p>
-              </Link>
-              {o.status === 'pending' && o.dueDate < from && <Chip tone="danger">{t('household.missed')}</Chip>}
-              <Button tone="quiet" disabled={act.isPending} onClick={() => act.mutate({ id: o.id, action: 'complete' })} aria-label={t('chores.completeAria', { title: o.title })}>
-                ✓
-              </Button>
-            </Card>
+          {visible.map((o, index) => (
+            <SwipeCard key={o.id} onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}>
+              <Card className="stagger-item flex items-center gap-3 py-2" style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}>
+                <Link href={`/chores/${o.responsibilityId}`} className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold">{o.title}</p>
+                  <p className="text-muted text-xs">
+                    {o.dueDate} · {label(o)}
+                  </p>
+                </Link>
+                {o.status === 'pending' && o.dueDate < from && <Chip tone="danger">{t('household.missed')}</Chip>}
+                <ChoreCheck
+                  done={o.status === 'completed'}
+                  disabled={act.isPending}
+                  onClick={() => act.mutate({ id: o.id, action: 'complete' })}
+                  label={t('chores.completeAria', { title: o.title })}
+                />
+              </Card>
+            </SwipeCard>
           ))}
         </div>
       )}

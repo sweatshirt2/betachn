@@ -1,9 +1,12 @@
 export { Button } from './Button';
 export { Card } from './Card';
 export { Chip } from './Chip';
+export { ChoreCheck } from './ChoreCheck';
 export { EmptyState, Skeleton } from './EmptyState';
 export { Field } from './Field';
 export { Sheet } from './Sheet';
+export { SwipeCard } from './SwipeCard';
+export { TickNumber } from './TickNumber';
 export { ToastProvider, useToast } from './Toast';
 export { SectionWatermark } from './Watermark';
 export type { WatermarkVariant } from './Watermark';

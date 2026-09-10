@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Chip, EmptyState, SectionWatermark, Skeleton } from '@/components/ui';
+import { Button, Card, Chip, ChoreCheck, EmptyState, SectionWatermark, Skeleton, SwipeCard, TickNumber } from '@/components/ui';
 import { useOccurrenceAct, useToday, usePeopleMap, type TitledOccurrence } from '@/features/chores';
 import { hasSession, type RootState } from '@/store';
 
@@ -64,7 +64,7 @@ export default function TodayPage() {
   };
 
   return (
-    <div className="relative">
+    <div className="page-enter relative">
       <SectionWatermark variant="leaves" />
       <section aria-label={t('today.today')}>
         <h2 className="font-display text-xl">{t('today.today')}</h2>
@@ -72,21 +72,21 @@ export default function TodayPage() {
           <p className="text-muted mt-2 text-sm">{t('today.empty')}</p>
         ) : (
           <div className="mt-2 flex flex-col gap-3">
-            {data.todayOccurrences.map((o) => (
-              <Card key={o.id} className="flex items-center gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold">{o.title}</p>
-                  <p className="text-muted text-xs">{assigneeLabel(o)}</p>
-                </div>
-                <Button
-                  tone="quiet"
-                  disabled={act.isPending}
-                  onClick={() => act.mutate({ id: o.id, action: 'complete' })}
-                  aria-label={t('chores.completeAria', { title: o.title })}
-                >
-                  ✓
-                </Button>
-              </Card>
+            {data.todayOccurrences.map((o, index) => (
+              <SwipeCard key={o.id} onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}>
+                <Card className="stagger-item flex items-center gap-3" style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{o.title}</p>
+                    <p className="text-muted text-xs">{assigneeLabel(o)}</p>
+                  </div>
+                  <ChoreCheck
+                    done={o.status === 'completed'}
+                    disabled={act.isPending}
+                    onClick={() => act.mutate({ id: o.id, action: 'complete' })}
+                    label={t('chores.completeAria', { title: o.title })}
+                  />
+                </Card>
+              </SwipeCard>
             ))}
           </div>
         )}
@@ -98,21 +98,21 @@ export default function TodayPage() {
             {t('today.missedRecently')} · <span className="text-clay-red font-bold">{data.missedInGrace.length}</span>
           </p>
           <div className="mt-2 flex flex-col gap-2 opacity-80">
-            {data.missedInGrace.map((o) => (
-              <Card key={o.id} className="flex items-center gap-3 py-2">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{o.title}</p>
-                  <p className="text-muted text-xs">{o.dueDate}</p>
-                </div>
-                <Button
-                  tone="quiet"
-                  disabled={act.isPending}
-                  onClick={() => act.mutate({ id: o.id, action: 'complete' })}
-                  aria-label={t('chores.completeAria', { title: o.title })}
-                >
-                  ✓
-                </Button>
-              </Card>
+            {data.missedInGrace.map((o, index) => (
+              <SwipeCard key={o.id} onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}>
+                <Card className="stagger-item flex items-center gap-3 py-2" style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">{o.title}</p>
+                    <p className="text-muted text-xs">{o.dueDate}</p>
+                  </div>
+                  <ChoreCheck
+                    done={o.status === 'completed'}
+                    disabled={act.isPending}
+                    onClick={() => act.mutate({ id: o.id, action: 'complete' })}
+                    label={t('chores.completeAria', { title: o.title })}
+                  />
+                </Card>
+              </SwipeCard>
             ))}
           </div>
         </section>
@@ -142,8 +142,8 @@ export default function TodayPage() {
         <section aria-label={t('today.comingUp')} className="mt-6">
           <h2 className="font-display text-xl">{t('today.comingUp')}</h2>
           <div className="mt-2 flex flex-col gap-2">
-            {data.upcoming.map((o) => (
-              <Card key={o.id} className="flex items-center gap-3 py-2">
+            {data.upcoming.map((o, index) => (
+              <Card key={o.id} className="stagger-item flex items-center gap-3 py-2" style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}>
                 <p className="min-w-0 flex-1 truncate text-sm font-semibold">{o.title}</p>
                 <span className="text-muted text-xs">{o.dueDate}</span>
               </Card>
@@ -153,7 +153,7 @@ export default function TodayPage() {
       )}
 
       <p className="text-muted mt-6 text-center text-sm">
-        {data.completedThisWeek} {t('today.completedWeek')}
+        <TickNumber value={data.completedThisWeek} /> {t('today.completedWeek')}
       </p>
     </div>
   );

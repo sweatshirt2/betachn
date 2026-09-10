@@ -42,3 +42,78 @@ body {
     display: none !important;
   }
 }
+
+/* ─── §5.3 motion kit ───────────────────────────────────────────────────
+ * Durations/easings resolve to --chorify-motion-* tokens; wash colors are
+ * per-theme tokens in tokens.css. All animation is disabled under
+ * prefers-reduced-motion.
+ */
+
+@keyframes chorify-fade-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/** Page transitions: fade + 8px slide, 200ms (§5.3). */
+.page-enter {
+  animation: chorify-fade-slide-in var(--chorify-motion-base) ease-out both;
+}
+
+/** Staggered list entrance: 30ms/item capped at 10 items (§5.3). Pair with
+ * an inline `animation-delay` of `min(index, 9) * 30ms`. */
+.stagger-item {
+  animation: chorify-fade-slide-in var(--chorify-motion-base) ease-out both;
+}
+
+/** One-tap completion check: spring pop + green wash when data-done flips. */
+.chore-check {
+  transition:
+    transform var(--chorify-motion-base) var(--chorify-motion-spring),
+    background-color var(--chorify-motion-fast) ease,
+    border-color var(--chorify-motion-fast) ease,
+    color var(--chorify-motion-fast) ease;
+}
+.chore-check[data-done='true'] {
+  transform: scale(1.15);
+  background-color: var(--chorify-wash-bg);
+  border-color: var(--chorify-wash-bg);
+  color: var(--chorify-wash-ink);
+}
+
+/** Bottom sheets: pop in from below (drag-to-dismiss is opt-in via Sheet's
+ * drag handle in a later pass; §5.3). */
+.sheet-panel {
+  animation: chorify-sheet-in var(--chorify-motion-base) var(--chorify-motion-spring) both;
+}
+@keyframes chorify-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .stagger-item {
+    animation: none;
+  }
+  .chore-check {
+    transition: background-color var(--chorify-motion-fast) ease, color var(--chorify-motion-fast) ease;
+  }
+  .chore-check[data-done='true'] {
+    transform: none;
+  }
+  .sheet-panel {
+    animation: none;
+  }
+}

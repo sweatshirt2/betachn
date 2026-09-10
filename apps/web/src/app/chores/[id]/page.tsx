@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { use } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Chip, EmptyState, Skeleton } from '@/components/ui';
+import { Button, Card, Chip, ChoreCheck, EmptyState, Skeleton } from '@/components/ui';
 import { useOccurrenceAct, useOccurrences, useResponsibility, usePeopleMap } from '@/features/chores';
 
 export default function ChoreDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -44,7 +44,7 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
   );
 
   return (
-    <div>
+    <div className="page-enter">
       <Link href="/chores" className="text-terracotta text-sm font-semibold">
         {t('chores.title')}
       </Link>
@@ -83,9 +83,12 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
                 <p className="flex-1 text-sm">
                   {t('chores.due', { date: o.dueDate })} · {(o.personIds.map((pid) => names.get(pid) ?? '…').join(', ') || t('today.upForGrabs'))}
                 </p>
-                <Button tone="quiet" disabled={act.isPending} onClick={() => act.mutate({ id: o.id, action: 'complete' })} aria-label={t('chores.complete')}>
-                  ✓
-                </Button>
+                <ChoreCheck
+                  done={false}
+                  disabled={act.isPending}
+                  onClick={() => act.mutate({ id: o.id, action: 'complete' })}
+                  label={t('chores.completeAria', { title: o.title ?? responsibility.title })}
+                />
               </Card>
             ))}
           </div>
