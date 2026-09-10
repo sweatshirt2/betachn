@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { buildActivity, type ActivityType } from '@chorify/core/activity';
+import type { RuleInput } from '@chorify/core';
 import { AppError } from '@chorify/core/errors';
 import { KIND_CATEGORY, filterByPrefs, resolveRecipients, type NotifyKind } from '@chorify/core/notify';
 import {
@@ -283,7 +284,7 @@ export async function deviceCreateResponsibility(input: {
   icon?: string;
   routineId?: string | null;
   subtasks: Array<{ title: string; assigneePersonId?: string | null }>;
-  rules: Array<{ pattern: 'once' | 'daily' | 'weekly' | 'monthly'; startDate: string; personIds: string[] }>;
+  rules: RuleInput[];
 }): Promise<{ id: string; title: string }> {
   const db = await requireDeviceDb();
   const { householdId, actorPersonId } = input;
@@ -309,23 +310,34 @@ export async function deviceCreateResponsibility(input: {
       assigneePersonId: subtask.assigneePersonId ?? null,
     });
   }
-  // Server semantics (responsibilities.service): server fills interval (1) for
-  // every_n patterns and anchors anchored patterns at startDate (§6.15); the
-  // v1 composer emits the four simple patterns only.
+  // Server semantics (responsibilities.service §6.15): interval defaults to 1
+  // for every_n patterns, anchored patterns anchor at startDate, weekly
+  // without daysOfWeek pins the startDate weekday, monthly without monthDay
+  // pins the startDate day-of-month, rotation persists verbatim.
   for (const rule of input.rules) {
     const ruleId = randomId();
+    const everyN = rule.pattern === 'every_n_days' || rule.pattern === 'every_n_weeks';
     await db.insert(schema.assignmentRules).values({
       id: ruleId,
       responsibilityId: id,
       pattern: rule.pattern,
-      interval: null,
-      daysOfWeek: rule.pattern === 'weekly' ? weekdayOf(rule.startDate) : null,
-      anchorDate: null,
-      monthDay: rule.pattern === 'monthly' ? Number(rule.startDate.slice(8, 10)) : null,
-      dates: null,
+      interval: everyN ? (rule.interval ?? 1) : null,
+      daysOfWeek:
+        rule.pattern === 'weekly' || rule.pattern === 'every_n_weeks'
+          ? (rule.daysOfWeek ?? weekdayOf(rule.startDate))
+          : null,
+      anchorDate:
+        rule.pattern === 'every_n_days' || rule.pattern === 'every_n_weeks' || rule.rotation
+          ? (rule.anchorDate ?? rule.startDate)
+          : null,
+      monthDay:
+        rule.pattern === 'monthly'
+          ? (rule.monthDay ?? Number(rule.startDate.slice(8, 10)))
+          : null,
+      dates: rule.dates ?? null,
       startDate: rule.startDate,
-      endDate: null,
-      rotation: null,
+      endDate: rule.endDate ?? null,
+      rotation: rule.rotation ?? null,
       personIds: rule.personIds,
       active: true,
       createdByPersonId: actorPersonId,

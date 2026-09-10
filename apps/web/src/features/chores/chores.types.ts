@@ -1,3 +1,5 @@
+import type { RuleInput, RuleRecord } from '@chorify/core';
+
 export type OccurrenceStatus = 'pending' | 'completed' | 'skipped' | 'missed';
 
 export type TitledOccurrence = {
@@ -35,7 +37,7 @@ export type OccurrenceAction =
 export type ResponsibilityDetail = {
   responsibility: { id: string; title: string; notes: string | null; icon: string; routineId: string | null };
   subtasks: Array<{ id: string; title: string; assigneePersonId: string | null }>;
-  rules: Array<{ id: string; pattern: string; personIds: string[]; startDate: string }>;
+  rules: RuleRecord[];
 };
 
 export type CreateResponsibilityBody = {
@@ -44,5 +46,5 @@ export type CreateResponsibilityBody = {
   icon?: string;
   routineId?: string | null;
   subtasks: Array<{ title: string; assigneePersonId?: string | null }>;
-  rules: Array<{ pattern: 'once' | 'daily' | 'weekly' | 'monthly'; startDate: string; personIds: string[] }>;
+  rules: RuleInput[];
 };

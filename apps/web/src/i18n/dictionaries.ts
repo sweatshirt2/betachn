@@ -87,8 +87,14 @@ export type Dict = {
     repeats: string;
     once: string;
     daily: string;
+    every_n_days: string;
     weekly: string;
+    every_n_weeks: string;
     monthly: string;
+    range: string;
+    dates: string;
+    icon: string;
+    startDate: string;
     assignedTo: string;
     addChore: string;
     adding: string;
@@ -104,6 +110,29 @@ export type Dict = {
     titlePlaceholder: string;
     updatedToast: string;
     alreadyHandled: string;
+    intervalDays: string;
+    intervalWeeks: string;
+    daysOfWeek: string;
+    monthlyDay: string;
+    endDate: string;
+    rotation: string;
+    rotationPeriod: string;
+    addStep: string;
+    stepPlaceholder: string;
+    nextUp: string;
+    assignAgain: string;
+    reassign: string;
+    reassignTitle: string;
+    reassignHint: string;
+    claim: string;
+    assignedToShort: string;
+    dow0: string;
+    dow1: string;
+    dow2: string;
+    dow3: string;
+    dow4: string;
+    dow5: string;
+    dow6: string;
   };
   household: {
     title: string;
@@ -356,8 +385,14 @@ export const en: Dict = {
     repeats: 'Repeats',
     once: 'Just once',
     daily: 'Every day',
+    every_n_days: 'Every N days',
     weekly: 'Every week',
+    every_n_weeks: 'Every N weeks',
     monthly: 'Every month',
+    range: 'Daily until…',
+    dates: 'On chosen dates',
+    icon: 'Icon',
+    startDate: 'Starting',
     assignedTo: 'Assigned to (empty = up for grabs)',
     addChore: 'Add chore',
     adding: 'Adding…',
@@ -373,6 +408,29 @@ export const en: Dict = {
     titlePlaceholder: 'Take out the trash',
     updatedToast: '{{title}} updated.',
     alreadyHandled: 'Already handled — list refreshed.',
+    intervalDays: 'Every {{n}} days',
+    intervalWeeks: 'Every {{n}} weeks',
+    daysOfWeek: 'On days',
+    monthlyDay: 'Day of month',
+    endDate: 'Until (optional)',
+    rotation: 'Rotate between people',
+    rotationPeriod: 'Rotates every {{n}} days',
+    addStep: 'Add step',
+    stepPlaceholder: 'Step description',
+    nextUp: 'Next up',
+    assignAgain: 'Assign again',
+    reassign: 'Reassign',
+    reassignTitle: 'This week only',
+    reassignHint: 'Moves this occurrence only — the weekly plan stays as is.',
+    claim: 'Take this',
+    assignedToShort: 'Assigned: {{who}}',
+    dow0: 'Sun',
+    dow1: 'Mon',
+    dow2: 'Tue',
+    dow3: 'Wed',
+    dow4: 'Thu',
+    dow5: 'Fri',
+    dow6: 'Sat',
   },
   household: {
     title: 'Household',
@@ -627,8 +685,14 @@ export const am: Dict = {
     repeats: 'ይደገማል',
     once: 'አንድ ጊዜ ብቻ',
     daily: 'በየቀኑ',
+    every_n_days: 'በየ N ቀኑ',
     weekly: 'በየሳምንቱ',
+    every_n_weeks: 'በየ N ሳምንቱ',
     monthly: 'በየወሩ',
+    range: 'ዕለት በዕለት እስከ…',
+    dates: 'በተመረጡ ቀናት',
+    icon: 'ምልክት',
+    startDate: 'የሚጀምርበት',
     assignedTo: 'ለማን (ባዶ = ለሁሉም ክፍት)',
     addChore: 'ሥራ ጨምር',
     adding: 'በመጨመር ላይ…',
@@ -644,6 +708,29 @@ export const am: Dict = {
     titlePlaceholder: 'መጣጥን አውጣ',
     updatedToast: '{{title}} ተዘምኗል።',
     alreadyHandled: 'አስቀድሞ ተከናውኗል — ዝርዝሩ ተባስቷል።',
+    intervalDays: 'በየ {{n}} ቀኑ',
+    intervalWeeks: 'በየ {{n}} ሳምንቱ',
+    daysOfWeek: 'በቀናት ላይ',
+    monthlyDay: 'የወሩ ቀን',
+    endDate: 'እስከ (አማራጭ)',
+    rotation: 'በሰዎች መካከል ማዞር',
+    rotationPeriod: 'በየ {{n}} ቀኑ ይለዋወጣል',
+    addStep: 'ደረጃ ጨምር',
+    stepPlaceholder: 'የደረጃ መግለጫ',
+    nextUp: 'ቀጥሎ ያለ',
+    assignAgain: 'እንደገና መድብ',
+    reassign: 'አሳዋር',
+    reassignTitle: 'ለዚህ ሳምንብ ብቻ',
+    reassignHint: 'ይህንን ቀን ብቻ ያሳውራል — የሳምንቱ ዕቅድ እንደነበረ ይቀራል።',
+    claim: 'ያዝበት',
+    assignedToShort: 'የተመደበ፦ {{who}}',
+    dow0: 'እሁድ',
+    dow1: 'ሰኞ',
+    dow2: 'ማክሰኞ',
+    dow3: 'ረቡዕ',
+    dow4: 'ሐሙስ',
+    dow5: 'ዓርብ',
+    dow6: 'ቅዳሜ',
   },
   household: {
     title: 'ቤተሰብ',

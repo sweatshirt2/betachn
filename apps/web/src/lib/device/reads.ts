@@ -311,8 +311,16 @@ export async function deviceResponsibilityDetail(
     rules: rules.map((r) => ({
       id: r.id,
       pattern: r.pattern,
-      personIds: (r.personIds ?? []) as string[],
+      interval: r.interval,
+      daysOfWeek: (r.daysOfWeek ?? null) as number[] | null,
+      anchorDate: r.anchorDate,
+      monthDay: r.monthDay,
+      dates: (r.dates ?? null) as string[] | null,
       startDate: r.startDate,
+      endDate: r.endDate,
+      rotation: (r.rotation ?? null) as { periodDays: number; personIds: string[] } | null,
+      personIds: (r.personIds ?? []) as string[],
+      active: r.active,
     })),
   };
 }
