@@ -1,52 +1,38 @@
 import { eq, inArray } from 'drizzle-orm';
-import {
-  activityEvents,
-  assets,
-  assignmentRules,
-  households,
-  notificationPrefs,
-  notifications,
-  occurrences,
-  people,
-  responsibilities,
-  roles,
-  rooms,
-  routines,
-  serviceRecords,
-  shoppingItems,
-  subtasks,
-  supplies,
-  users,
-} from '@chorify/db';
 import type { Executor } from '../../db';
 import { DOMAIN_VIEW_KEY, type ViewerIdentity } from './sync.rules';
+import { dbExport, pgTableFor, pgEntityNames } from './sync.pg-registry';
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- generic snapshot keyed by the shared SYNC_ENTITIES registry */
 type AnyPgTable = any;
 
 /**
- * SYNC_ENTITIES ↔ pg tables — the server-side twin of the device registry.
- * KEY ORDER IS FK-SAFE (parents before children) — the device applies
- * sections in wire order, so people must never precede roles, etc.
+ * SYNC_ENTITIES iteration order — FK-SAFE (parents before children); the
+ * device applies sections in wire order, so people must never precede
+ * roles, etc. Tables resolve lazily per entity (see sync.pg-registry.ts
+ * for the circular import rationale).
  */
-const PG_SNAPSHOT_TABLES: Record<string, { table: AnyPgTable; domain: keyof typeof DOMAIN_VIEW_KEY }> = {
-  households: { table: households, domain: 'household' },
-  roles: { table: roles, domain: 'household' },
-  people: { table: people, domain: 'household' },
-  users: { table: users, domain: 'household' },
-  routines: { table: routines, domain: 'responsibilities' },
-  rooms: { table: rooms, domain: 'home' },
-  responsibilities: { table: responsibilities, domain: 'responsibilities' },
-  subtasks: { table: subtasks, domain: 'responsibilities' },
-  assignment_rules: { table: assignmentRules, domain: 'responsibilities' },
-  occurrences: { table: occurrences, domain: 'responsibilities' },
-  assets: { table: assets, domain: 'home' },
-  service_records: { table: serviceRecords, domain: 'home' },
-  supplies: { table: supplies, domain: 'resources' },
-  shopping_items: { table: shoppingItems, domain: 'resources' },
-  activity_events: { table: activityEvents, domain: 'household' },
-  notifications: { table: notifications, domain: 'household' },
-  notification_prefs: { table: notificationPrefs, domain: 'household' },
+const SNAPSHOT_ENTITIES = pgEntityNames();
+
+/** Which permission domain gates each snapshot section (CN XIX-4). */
+const DOMAIN_BY_ENTITY: Record<string, keyof typeof DOMAIN_VIEW_KEY> = {
+  households: 'household',
+  roles: 'household',
+  people: 'household',
+  users: 'household',
+  routines: 'responsibilities',
+  rooms: 'home',
+  responsibilities: 'responsibilities',
+  subtasks: 'responsibilities',
+  assignment_rules: 'responsibilities',
+  occurrences: 'responsibilities',
+  assets: 'home',
+  service_records: 'home',
+  supplies: 'resources',
+  shopping_items: 'resources',
+  activity_events: 'household',
+  notifications: 'household',
+  notification_prefs: 'household',
 };
 
 /**
@@ -66,20 +52,22 @@ export async function buildBootstrapSnapshot(
   // Parent-child tables hang off responsibility/asset ids — collect once.
   const responsibilityIds = (
     (await exec.query.responsibilities!.findMany({
-      where: eq(responsibilities.householdId, householdId),
+      where: eq(dbExport('responsibilities').householdId, householdId),
       columns: { id: true },
     })) as unknown as Array<{ id: string }>
   ).map((r) => r.id);
   const assetIds = (
     (await exec.query.assets!.findMany({
-      where: eq(assets.householdId, householdId),
+      where: eq(dbExport('assets').householdId, householdId),
       columns: { id: true },
     })) as unknown as Array<{ id: string }>
   ).map((r) => r.id);
 
-  for (const [entity, spec] of Object.entries(PG_SNAPSHOT_TABLES)) {
-    if (!viewer.resolves(DOMAIN_VIEW_KEY[spec.domain])) continue;
-    const table = spec.table;
+  for (const entity of SNAPSHOT_ENTITIES) {
+    const table: AnyPgTable = pgTableFor(entity);
+    if (!table) continue;
+    const domain = DOMAIN_BY_ENTITY[entity];
+    if (!domain || !viewer.resolves(DOMAIN_VIEW_KEY[domain])) continue;
     let rows: Array<Record<string, unknown>>;
     if (entity === 'subtasks' || entity === 'assignment_rules') {
       if (responsibilityIds.length === 0) continue;
@@ -89,17 +77,17 @@ export async function buildBootstrapSnapshot(
     } else if (entity === 'service_records') {
       if (assetIds.length === 0) continue;
       rows = (await exec.query.serviceRecords!.findMany({
-        where: inArray(serviceRecords.assetId, assetIds),
+        where: inArray(dbExport('serviceRecords').assetId, assetIds),
       })) as unknown as Array<Record<string, unknown>>;
     } else if (entity === 'households') {
       // The root row itself — no householdId column to filter on.
       rows = (await exec.query.households!.findMany({
-        where: eq(households.id, householdId),
+        where: eq(dbExport('households').id, householdId),
       })) as unknown as Array<Record<string, unknown>>;
     } else if (entity === 'notification_prefs') {
       // Person-keyed — only the viewer's own prefs travel (§4.12 audience).
       rows = (await exec.query.notificationPrefs!.findMany({
-        where: eq(notificationPrefs.personId, viewer.personId),
+        where: eq(dbExport('notificationPrefs').personId, viewer.personId),
       })) as unknown as Array<Record<string, unknown>>;
     } else {
       rows = (await exec.query[camelOf(entity)]!.findMany({

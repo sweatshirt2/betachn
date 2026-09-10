@@ -1,53 +1,10 @@
 import { eq } from 'drizzle-orm';
-import {
-  activityEvents,
-  assets,
-  assignmentRules,
-  households,
-  notificationPrefs,
-  notifications,
-  occurrences,
-  people,
-  responsibilities,
-  roles,
-  rooms,
-  routines,
-  serviceRecords,
-  shoppingItems,
-  subtasks,
-  supplies,
-  users,
-} from '@chorify/db';
 import type { Executor } from '../../db';
+import { pgTableFor } from './sync.pg-registry';
 import type { PushOp } from './sync.service';
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- generic pg applier keyed by the shared SYNC_ENTITIES registry */
 type AnyPgTable = any;
-
-/**
- * SYNC_ENTITIES ↔ pg tables — the server-side twin of the device's
- * ENTITY_TABLES registry. Same names, same row shapes; the feed payload is
- * a full after-state row either way (D76).
- */
-export const PG_ENTITY_TABLES: Record<string, AnyPgTable> = {
-  households,
-  people,
-  users,
-  roles,
-  routines,
-  responsibilities,
-  subtasks,
-  assignment_rules: assignmentRules,
-  occurrences,
-  rooms,
-  assets,
-  service_records: serviceRecords,
-  supplies,
-  shopping_items: shoppingItems,
-  activity_events: activityEvents,
-  notifications,
-  notification_prefs: notificationPrefs,
-};
 
 /**
  * D91 push write-through (§4.12): a device-originated change is APPLIED to
@@ -59,12 +16,15 @@ export const PG_ENTITY_TABLES: Record<string, AnyPgTable> = {
  * (later creates may resurrect); create/update ⇒ full-row upsert on `id`.
  * Poison rows (FK/NOT NULL from a buggy client) REJECT the op rather than
  * wedging the batch — the device drops it and notifies per D75/D76.
+ *
+ * Tables resolve lazily per call — see sync.pg-registry.ts for the circular
+ * import rationale.
  */
 export async function applyToServerTables(
   exec: Executor,
   op: PushOp,
 ): Promise<void> {
-  const table = PG_ENTITY_TABLES[op.entity];
+  const table = pgTableFor(op.entity);
   if (!table) return; // unknown entity from a NEWER client — feed-only, lenient
   if (op.op === 'delete') {
     await exec.delete(table).where(eqId(table, op.entityId));
