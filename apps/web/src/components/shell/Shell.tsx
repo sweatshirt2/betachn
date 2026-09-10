@@ -8,7 +8,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Button, Sheet } from '@/components/ui';
 import { clearApiCache, queryKeys, useApiQuery } from '@/lib/api';
 import { useSyncBoot, useSyncStatus } from '@/lib/sync/syncClient';
-import { exitViewAs, type RootState } from '@/store';
+import { exitViewAs, hasSession, type RootState } from '@/store';
+import { deviceNotifications } from '@/lib/device/reads';
 import { ProfileSwitcher } from './ProfileSwitcher';
 
 type TabItem = { href: string; key: 'today' | 'chores' | 'household' | 'more' | 'routines' | 'home' | 'supplies' | 'shopping' | 'activity' | 'notifications' | 'settings'; icon: string };
@@ -52,6 +53,21 @@ export function Shell({ children }: { children: React.ReactNode }) {
     options: { enabled: hasToken },
   });
   const viewedName = people.data?.people.find((p) => p.id === viewAsPersonId)?.name;
+  // Unread notification dot on the More tab (micro-24 companion): poll is
+  // handled by the global sync tick; enabled only with a session.
+  const notifications = useApiQuery<{ notifications: Array<{ readAt: string | null }> }>({
+    endpoint: { method: 'get', path: '/notifications' },
+    key: ['notifications', 'all'] as const,
+    options: {
+      enabled: hasToken || mode === 'device',
+      queryFn:
+        mode === 'device'
+          ? () => deviceNotifications(false) as Promise<{ notifications: Array<{ readAt: string | null }> }>
+          : undefined,
+    },
+  });
+  const unreadCount = (notifications.data?.notifications ?? []).filter((n) => n.readAt === null).length;
+  const hasSessionRedux = useSelector(hasSession);
 
   if (CHROMELESS.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
     return <>{children}</>;
@@ -160,7 +176,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
           ))}
           <span className="w-12" aria-hidden />
           {TABS.slice(2).map((item) => (
-            <Tab key={item.href} href={item.href} label={t(`nav.${item.key}`)} icon={item.icon} active={pathname === item.href} />
+            <Tab
+              key={item.href}
+              href={item.href}
+              label={t(`nav.${item.key}`)}
+              icon={item.icon}
+              active={pathname === item.href}
+              dot={item.key === 'more' && hasSessionRedux && unreadCount > 0}
+            />
           ))}
         </nav>
 
@@ -212,16 +235,29 @@ function SyncChip(props: {
   );
 }
 
-function Tab({ href, label, icon, active }: { href: string; label: string; icon: string; active: boolean }) {
+function Tab({
+  href,
+  label,
+  icon,
+  active,
+  dot = false,
+}: {
+  href: string;
+  label: string;
+  icon: string;
+  active: boolean;
+  dot?: boolean;
+}) {
   return (
     <Link
       href={href}
-      className={`flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-semibold ${active ? 'text-terracotta' : 'text-muted'}`}
+      className={`relative flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-semibold ${active ? 'text-terracotta' : 'text-muted'}`}
       aria-current={active ? 'page' : undefined}
     >
       <span className="text-xl" aria-hidden>
         {icon}
       </span>
+      {dot && <span className="bg-clay-red absolute top-1 right-1/4 h-2 w-2 rounded-full" aria-hidden />}
       {label}
     </Link>
   );

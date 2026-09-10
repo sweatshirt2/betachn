@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'next/navigation';
 import type { TFunction } from 'i18next';
 import { Button, Card, EmptyState, Skeleton } from '@/components/ui';
 import {
@@ -43,6 +44,7 @@ export default function NotificationsPage() {
   const { t } = useTranslation();
   const inbox = useNotifications();
   const markRead = useMarkRead();
+  const router = useRouter();
   const readAll = useReadAll();
   const prefs = useNotificationPrefs();
   const savePrefs = useSavePrefs();
@@ -79,6 +81,8 @@ export default function NotificationsPage() {
               className="w-full text-left"
               onClick={() => {
                 if (n.readAt === null) markRead.mutate({ id: n.id });
+                // Deep-link (micro-24): server events persist a route, never prose.
+                if (n.linkPath) router.push(n.linkPath);
               }}
             >
               <p className="text-sm font-semibold">{describe(t, n.type, n.paramsJson)}</p>
