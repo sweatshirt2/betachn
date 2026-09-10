@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Fraunces, Noto_Sans_Ethiopic, Nunito_Sans } from 'next/font/google';
 import type { ReactNode } from 'react';
 import '../styles/globals.css';
@@ -18,7 +18,6 @@ export const metadata: Metadata = {
   title: 'Chorify',
   description: 'Household operating system',
   manifest: '/manifest.webmanifest',
-  themeColor: '#FAF6F0',
   appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Chorify' },
   icons: {
     icon: [
@@ -27,6 +26,10 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#FAF6F0',
 };
 
 const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem('chorify-theme');if(t==='ember'||t==='highland'||t==='family'){document.documentElement.dataset.theme=t;}}catch(e){}})();`;
