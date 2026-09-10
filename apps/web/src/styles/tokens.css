@@ -39,8 +39,13 @@
 
   --chorify-watermark-opacity: 0.05;
 
-  --chorify-font-display: 'Fraunces', 'Noto Sans Ethiopic', Georgia, serif;
-  --chorify-font-body: 'Nunito Sans', 'Noto Sans Ethiopic', system-ui, sans-serif;
+  /* next/font self-hosted families (layout.tsx) with named fallbacks when
+     the generated variables are absent; per-character fallback resolves
+     Ethiopic through Noto Sans Ethiopic (micro-75). */
+  --chorify-font-display: var(--font-next-fraunces, 'Fraunces'),
+    var(--font-next-ethiopic, 'Noto Sans Ethiopic'), Georgia, serif;
+  --chorify-font-body: var(--font-next-nunito, 'Nunito Sans'),
+    var(--font-next-ethiopic, 'Noto Sans Ethiopic'), system-ui, sans-serif;
 
   --chorify-motion-fast: 150ms;
   --chorify-motion-base: 200ms;

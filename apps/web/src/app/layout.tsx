@@ -1,8 +1,18 @@
 import type { Metadata } from 'next';
+import { Fraunces, Noto_Sans_Ethiopic, Nunito_Sans } from 'next/font/google';
 import type { ReactNode } from 'react';
 import '../styles/globals.css';
 import { Shell } from '@/components/shell';
 import { Providers } from './providers';
+
+/**
+ * Self-hosted at build time (served same-origin from /_next/static/media) —
+ * guarantees Ethiopic glyph coverage (micro-75) with zero external origins,
+ * so CSP stays font-src 'self'. Variables feed styles/tokens.css.
+ */
+const fraunces = Fraunces({ subsets: ['latin'], variable: '--font-next-fraunces', display: 'swap' });
+const nunitoSans = Nunito_Sans({ subsets: ['latin'], variable: '--font-next-nunito', display: 'swap' });
+const notoEthiopic = Noto_Sans_Ethiopic({ subsets: ['ethiopic'], variable: '--font-next-ethiopic', display: 'swap' });
 
 export const metadata: Metadata = {
   title: 'Chorify',
@@ -23,7 +33,12 @@ const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem('chorify-t
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" data-theme="family" suppressHydrationWarning>
+    <html
+      lang="en"
+      data-theme="family"
+      suppressHydrationWarning
+      className={`${fraunces.variable} ${nunitoSans.variable} ${notoEthiopic.variable}`}
+    >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
       </head>
