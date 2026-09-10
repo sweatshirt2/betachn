@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/lib/api';
 import { Button, Card, Field } from '@/components/ui';
@@ -14,6 +14,28 @@ export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
+  const [meta, setMeta] = useState<{ googleEnabled: boolean; googleClientId: string | null } | null>(null);
+
+  // Static deployment config — public endpoint, safe to read pre-auth.
+  useEffect(() => {
+    fetch('/api/v1/meta')
+      .then((r) => r.json())
+      .then((j) => setMeta(j.data))
+      .catch(() => setMeta(null));
+  }, []);
+
+  function continueWithGoogle() {
+    if (!meta?.googleClientId) return;
+    const redirectUri = `${window.location.origin}/auth/google/callback`;
+    const params = new URLSearchParams({
+      client_id: meta.googleClientId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: 'openid email profile',
+      prompt: 'select_account',
+    });
+    window.location.assign(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
+  }
 
   const error = login.error;
   const genericError = error instanceof ApiError && error.code === 'UNAUTHENTICATED' ? error.message : null;
@@ -60,6 +82,18 @@ export default function LoginPage() {
             {login.isPending ? t('auth.signingIn') : t('auth.signIn')}
           </Button>
         </form>
+        {meta?.googleEnabled && (
+          <>
+            <div className="text-muted my-1 flex items-center gap-3 text-xs">
+              <span className="bg-line h-px flex-1" />
+              {t('auth.orContinueWith')}
+              <span className="bg-line h-px flex-1" />
+            </div>
+            <Button tone="quiet" onClick={continueWithGoogle}>
+              <span aria-hidden>🔵</span> {t('auth.googleButton')}
+            </Button>
+          </>
+        )}
       </Card>
       <p className="text-muted mt-4 text-center text-sm">
         {t('auth.newHere')}{' '}

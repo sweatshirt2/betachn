@@ -22,6 +22,25 @@ export function useLogin() {
   });
 }
 
+/**
+ * Continue with Google (D50): exchanges the OAuth authorization code that the
+ * /auth/google/callback page captured. Server-mode only — device households
+ * are offline-local by definition.
+ */
+export function useGoogleLogin() {
+  const dispatch = useDispatch();
+  const router = useRouter();
+  return useApiMutation<LoginResponse, { oauthCode: string; redirectUri: string }>({
+    endpoint: authEndpoints.google,
+    options: {
+      onSuccess: ({ token, context }) => {
+        dispatch(setSession(toAuthState(token, context)));
+        router.push('/');
+      },
+    },
+  });
+}
+
 export function useLogout() {
   const dispatch = useDispatch();
   const router = useRouter();
