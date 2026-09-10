@@ -13,6 +13,7 @@
     "./activity": "./src/activity.ts",
     "./notify": "./src/notify.ts",
     "./schedule": "./src/schedule.ts",
+    "./calendar": "./src/calendar.ts",
     "./today": "./src/modules/occurrences/today.aggregate.ts",
     "./occurrence-rules": "./src/modules/occurrences/occurrences.rules.ts",
     "./resources-rules": "./src/modules/resources/resources.rules.ts",
