@@ -21,6 +21,7 @@ import type { DeviceDb } from './createHousehold';
 import { openBrowserDevice } from './openDevice';
 import { randomId } from './random';
 import type { OccurrenceAction, TitledOccurrence } from '@/features/chores/chores.types';
+import type { PersonPayload } from '@/features/household/household.types';
 
 /** Mirror-state union (resources.ts keeps it inline — no named export). */
 type SupplyState = 'available' | 'low' | 'out';
@@ -764,7 +765,7 @@ export async function deviceCreatePerson(input: {
   birthDate?: string;
   age?: number;
   avatarEmoji?: string;
-}): Promise<{ id: string; name: string; avatarEmoji: string; roleId: string | null; phone: string | null }> {
+}): Promise<PersonPayload> {
   const db = await requireDeviceDb();
   if (input.roleId) {
     const role = await db.query.roles!.findFirst({ where: eq(schema.roles.id, input.roleId) });
@@ -813,7 +814,14 @@ export async function deviceCreatePerson(input: {
     },
     domain: 'household',
   });
-  return { id, name: input.name, avatarEmoji: input.avatarEmoji ?? '🙂', roleId: input.roleId ?? null, phone: null };
+  return {
+    id,
+    name: input.name,
+    avatarEmoji: input.avatarEmoji ?? '🙂',
+    roleId: input.roleId ?? null,
+    phone: null,
+    permissionOverrides: {},
+  };
 }
 
 export async function deviceDeletePerson(input: {
@@ -860,7 +868,7 @@ export async function deviceUpdatePerson(input: {
   birthDate?: string | null;
   age?: number | null;
   phone?: string | null;
-}): Promise<{ id: string; name: string; avatarEmoji: string; roleId: string | null; phone: string | null }> {
+}): Promise<PersonPayload> {
   const db = await requireDeviceDb();
   const row = await db.query.people!.findFirst({ where: eq(schema.people.id, input.personId) });
   if (!row || row.householdId !== input.householdId) {
@@ -920,6 +928,7 @@ export async function deviceUpdatePerson(input: {
     avatarEmoji: after?.avatarEmoji ?? row.avatarEmoji,
     roleId: after?.roleId ?? null,
     phone: after?.phone ?? null,
+    permissionOverrides: (after?.permissionOverrides ?? {}) as Record<string, boolean>,
   };
 }
 

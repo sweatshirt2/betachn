@@ -4,6 +4,7 @@ export type PersonPayload = {
   avatarEmoji: string;
   roleId: string | null;
   phone: string | null;
+  permissionOverrides: Record<string, boolean>;
 };
 
 export type RolePayload = {

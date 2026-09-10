@@ -158,6 +158,64 @@ export type Dict = {
     removeConfirm: string;
     keep: string;
     personRemovedToast: string;
+    finishedWeek: string;
+    finishedMonth: string;
+    trend8w: string;
+    breakdown: string;
+    printWeekly: string;
+    boundarySentence: string;
+    customizePermissions: string;
+    changePassword: string;
+    createAccount: string;
+    permissionsHint: string;
+  };
+  perms: {
+    domains: {
+      household: string;
+      responsibilities: string;
+      finances: string;
+      home: string;
+      resources: string;
+    };
+    household: {
+      view_people: string;
+      add_people: string;
+      invite_people: string;
+      remove_people: string;
+      manage_roles: string;
+      manage_ownership: string;
+      configure_permissions: string;
+    };
+    responsibilities: {
+      view: string;
+      create: string;
+      assign: string;
+      reassign: string;
+      manage_routines: string;
+      complete: string;
+      view_history: string;
+    };
+    finances: {
+      view: string;
+      view_expenses: string;
+      create_expenses: string;
+      edit_expenses: string;
+      view_accounts: string;
+      manage_accounts: string;
+      view_budgets: string;
+      manage_budgets: string;
+      manage_goals: string;
+    };
+    home: {
+      view_assets: string;
+      manage_assets: string;
+      manage_maintenance: string;
+    };
+    resources: {
+      manage_supplies: string;
+      manage_shopping: string;
+      manage_purchases: string;
+    };
   };
   ops: {
     routines: string;
@@ -458,6 +516,65 @@ export const en: Dict = {
       'Remove {{name}}? Their account and sessions go too — history keeps their name.',
     keep: 'Keep',
     personRemovedToast: '{{name}} removed.',
+    finishedWeek: 'this week',
+    finishedMonth: 'this month',
+    trend8w: 'Last 8 weeks',
+    breakdown: 'Most completed',
+    printWeekly: 'Print weekly sheet',
+    boundarySentence:
+      '{{name}} can do everything a {{role}} can — except what is marked ● below.',
+    customizePermissions: 'Customize permissions',
+    changePassword: 'Change password',
+    createAccount: 'Create account',
+    permissionsHint: 'Switches start from the role. Toggling twice returns to the role default.',
+  },
+  perms: {
+    domains: {
+      household: 'Household',
+      responsibilities: 'Chores',
+      finances: 'Money',
+      home: 'Home',
+      resources: 'Supplies & shopping',
+    },
+    household: {
+      view_people: 'See people',
+      add_people: 'Add people',
+      invite_people: 'Invite by code',
+      remove_people: 'Remove people',
+      manage_roles: 'Manage roles',
+      manage_ownership: 'Manage ownership',
+      configure_permissions: 'Configure permissions',
+    },
+    responsibilities: {
+      view: 'See chores',
+      create: 'Create chores',
+      assign: 'Assign',
+      reassign: 'Reassign',
+      manage_routines: 'Manage routines',
+      complete: 'Complete',
+      view_history: 'See history',
+    },
+    finances: {
+      view: 'See money',
+      view_expenses: 'See expenses',
+      create_expenses: 'Add expenses',
+      edit_expenses: 'Edit expenses',
+      view_accounts: 'See accounts',
+      manage_accounts: 'Manage accounts',
+      view_budgets: 'See budgets',
+      manage_budgets: 'Manage budgets',
+      manage_goals: 'Manage goals',
+    },
+    home: {
+      view_assets: 'See assets',
+      manage_assets: 'Manage assets',
+      manage_maintenance: 'Manage maintenance',
+    },
+    resources: {
+      manage_supplies: 'Manage supplies',
+      manage_shopping: 'Manage shopping',
+      manage_purchases: 'Mark purchases',
+    },
   },
   ops: {
     routines: 'Routines',
@@ -756,6 +873,64 @@ export const am: Dict = {
     removeConfirm: '{{name}} ን አስወግድ? መገለጫውና ክፍለ-ጊዜያቱም ይሰረዛሉ — ታሪኩ ስሙን ይጠብቃል።',
     keep: 'አቆይ',
     personRemovedToast: '{{name}} ተነሷል።',
+    finishedWeek: 'በዚህ ሳምንት',
+    finishedMonth: 'በዚህ ወር',
+    trend8w: 'የመጨረሻዎቹ 8 ሳምንታት',
+    breakdown: 'ብዙ የተጠናቀቁ',
+    printWeekly: 'የሳምንቱን ወረቀት አትም',
+    boundarySentence: '{{name}} እንደ {{role}} ማድረግ የሚችል ሁሉ ይችላል — ከሚታየው ● በስተቀር።',
+    customizePermissions: 'ፍቃዶችን ማስተካከል',
+    changePassword: 'የይለፍ ቃል ቀይር',
+    createAccount: 'መለያ ፍጠር',
+    permissionsHint: 'ማብሪያዎቹ ከሚናው ይጀምራሉ። ሁለት ጊዜ መጫን ወደ ሚናው ነባሪ ይመልሳል።',
+  },
+  perms: {
+    domains: {
+      household: 'ቤተሰብ',
+      responsibilities: 'ተጠያቂነቶች',
+      finances: 'ገንዘብ',
+      home: 'ቤት',
+      resources: 'እቃዎችና ግዢያ',
+    },
+    household: {
+      view_people: 'ሰዎችን ማየት',
+      add_people: 'ሰው መጨመር',
+      invite_people: 'በኮድ መጋበዝ',
+      remove_people: 'ሰው ማስወጣት',
+      manage_roles: 'ሚናዎችን አስተዳደር',
+      manage_ownership: 'ባለቤትነት አስተዳደር',
+      configure_permissions: 'ፍቃዶችን ማስተካከል',
+    },
+    responsibilities: {
+      view: 'ተጠያቂነቶችን ማየት',
+      create: 'ተጠያቂነት መፍጠር',
+      assign: 'መመደብ',
+      reassign: 'እንደገና መመደብ',
+      manage_routines: 'ሥርዓቶችን አስተዳደር',
+      complete: 'ማጠናቀቅ',
+      view_history: 'ታሪክ ማየት',
+    },
+    finances: {
+      view: 'ገንዘብ ማየት',
+      view_expenses: 'ወጪዎችን ማየት',
+      create_expenses: 'ወጪ መጨመር',
+      edit_expenses: 'ወጪ ማስተካከል',
+      view_accounts: 'ሂሳቦችን ማየት',
+      manage_accounts: 'ሂሳቦችን አስተዳደር',
+      view_budgets: 'በጀቶችን ማየት',
+      manage_budgets: 'በጀቶችን አስተዳደር',
+      manage_goals: 'ግቦችን አስተዳደር',
+    },
+    home: {
+      view_assets: 'ንብረቶችን ማየት',
+      manage_assets: 'ንብረቶችን አስተዳደር',
+      manage_maintenance: 'ጥገና አስተዳደር',
+    },
+    resources: {
+      manage_supplies: 'እቃዎችን አስተዳደር',
+      manage_shopping: 'ግዢያ አስተዳደር',
+      manage_purchases: 'ግዢያ መጨረስ',
+    },
   },
   ops: {
     routines: 'ሥርዓቶች',

@@ -336,6 +336,7 @@ export async function devicePeople(): Promise<DevicePersonPayload[]> {
     avatarEmoji: p.avatarEmoji,
     roleId: p.roleId,
     phone: p.phone,
+    permissionOverrides: (p.permissionOverrides ?? {}) as Record<string, boolean>,
   }));
 }
 
