@@ -34,15 +34,22 @@ type QueryConfig<TData> = {
 
 /** Generic GET wrapper — feature hooks compose it with registry entries. */
 export function useApiQuery<TData>(config: QueryConfig<TData>) {
+  // Device-mode hooks pass `queryFn: mode === 'device' ? deviceFn : undefined`.
+  // Spreading `{ queryFn: undefined }` would CLOBBER the axios fetcher below,
+  // leaving server-mode queries with no fetcher (eternal skeleton) — so the
+  // override is destructured out and only applied when actually defined.
+  const { queryFn: deviceQueryFn, ...restOptions } = config.options ?? {};
   return useQuery<TData, ApiError>({
     queryKey: config.key,
-    queryFn: async () => {
-      const res = await api.get<TData>(fillPath(config.endpoint.path, config.pathParams), {
-        params: config.queryParams,
-      });
-      return res as unknown as TData;
-    },
-    ...config.options,
+    queryFn:
+      deviceQueryFn ??
+      (async () => {
+        const res = await api.get<TData>(fillPath(config.endpoint.path, config.pathParams), {
+          params: config.queryParams,
+        });
+        return res as unknown as TData;
+      }),
+    ...restOptions,
   });
 }
 

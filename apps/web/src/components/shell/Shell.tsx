@@ -28,7 +28,6 @@ const RAIL: TabItem[] = [
   { href: '/shopping', key: 'shopping', icon: '🛒' },
   { href: '/activity', key: 'activity', icon: '📜' },
   { href: '/notifications', key: 'notifications', icon: '🔔' },
-  { href: '/household', key: 'household', icon: '⚙️' },
   { href: '/settings', key: 'settings', icon: '🔧' },
 ];
 
