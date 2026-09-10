@@ -10,16 +10,20 @@ import * as schema from '@chorify/db';
 
 /**
  * PG-backed service test harness (§16.3 "fake-based unit tests mask real
- * driver bugs"). Creates a THROWAWAY `chorify_test` database, applies the
- * real drizzle migrations from packages/db/drizzle, and hands out a real
- * pgUnitOfWork — the same edge services get in production.
+ * driver bugs"). Creates a THROWAWAY database (name suffixed with the worker
+ * pid — vitest runs files in parallel processes, and a shared name raced on
+ * DROP/CREATE, skipping the losers), applies the real drizzle migrations
+ * from packages/db/drizzle, and hands out a real pgUnitOfWork — the same
+ * edge services get in production.
  *
  * Suites using it skip cleanly when Postgres is unreachable, so
  * `pnpm test` stays green on machines without a server (CI note: provide
- * DATABASE_URL + a superuser-capable postgres to enable).
+ * DATABASE_URL + a superuser-capable postgres to enable). Crashed runs can
+ * leave `chorify_test_<pid>` databases behind — prune occasionally with
+ * `DROP DATABASE ... WITH (FORCE)`.
  */
 
-const TEST_DB = 'chorify_test';
+const TEST_DB = `chorify_test_${process.pid}`;
 const ADMIN_URL = process.env.PG_ADMIN_URL ?? 'postgres://postgres:postgres@localhost:5432/postgres';
 
 export interface PgHarness {
