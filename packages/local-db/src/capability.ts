@@ -1,40 +1,20 @@
 /**
  * §4.12 capability ladder: OPFS (sync access handles, worker context) →
- * in-memory session persistence → online-only mode. Proxy mini-browsers get
- * 'online-only' and the UI shows the "use Chrome" hint (§4.12).
+ * in-memory session tier → none. The WORKER is the authority: it attempts
+ * OPFS and falls back to `:memory:` inside its bootstrap (see the web app's
+ * device.worker.ts); this module stays the pure model — the ladder type and
+ * the injectable decision function its tests pin.
  */
 
-export type DeviceCapability = 'opfs' | 'memory' | 'online-only';
+export type DeviceCapability = 'opfs' | 'memory' | 'none';
 
 /** Detection inputs, injectable so tests never touch a real browser. */
 export interface CapabilityEnvironment {
-  hasWorker: boolean;
-  hasStorageGetDirectory: boolean;
-  hasSyncAccessHandle: boolean;
+  opfsInstallSucceeded: boolean;
 }
 
 export function detectCapability(env: CapabilityEnvironment): DeviceCapability {
-  if (!env.hasWorker || !env.hasStorageGetDirectory || !env.hasSyncAccessHandle) {
-    return 'online-only';
-  }
-  return 'opfs';
-}
-
-/** Real-browser probe — every global touched via typeof, never imported. */
-export function detectBrowserCapability(): DeviceCapability {
-  const env: CapabilityEnvironment = {
-    hasWorker: typeof Worker !== 'undefined',
-    hasStorageGetDirectory:
-      typeof navigator !== 'undefined' &&
-      navigator.storage !== undefined &&
-      typeof navigator.storage.getDirectory === 'function',
-    hasSyncAccessHandle:
-      typeof FileSystemFileHandle !== 'undefined' &&
-      // Runtime probe: TS DOM types lag the API; `in` avoids constructing one
-      typeof (FileSystemFileHandle.prototype as { createSyncAccessHandle?: unknown })
-        .createSyncAccessHandle === 'function',
-  };
-  return detectCapability(env);
+  return env.opfsInstallSucceeded ? 'opfs' : 'memory';
 }
 
 export interface StaleBannerState {

@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
-import { Button, Card, useToast } from '@/components/ui';
+import { Button, Card, Field, useToast } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
 import { useLogout } from '@/features/auth';
 import { THEME_IDS, THEME_LABELS, useTheme } from '@/theme';
 import { LANGUAGE_STORAGE_KEY, LOCALES } from '@/i18n/dictionaries';
 import i18n from '@/i18n';
+import { readPasscodeGateState, setPasscodeGate, clearPasscodeGate, MemoryTierError, type PasscodeGateState } from '@/lib/device/passcodeGate';
 import type { RootState } from '@/store';
 
 const CALENDAR_STORAGE_KEY = 'chorify-calendar';
@@ -84,6 +85,8 @@ export default function SettingsPage() {
   return (
     <div>
       <h1 className="font-display text-2xl">{t('settings.title')}</h1>
+
+      <PasscodeSection />
 
       <section aria-label={t('settings.language')} className="mt-4">
         <h2 className="font-display text-lg">{t('settings.language')} / ቋንቋ</h2>
@@ -169,5 +172,126 @@ export default function SettingsPage() {
         </Button>
       </div>
     </div>
+  );
+}
+
+/**
+ * Device passcode (D63): optional lock over app entry on THIS device.
+ * Gate-only hash in the device DB — synced accounts recover via online
+ * sign-in; offline households are warned that forgetting means resetting.
+ */
+function PasscodeSection() {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const mode = useSelector((state: RootState) => state.auth.mode);
+  const [state, setState] = useState<PasscodeGateState | 'checking'>('checking');
+  const [passcode, setPasscode] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [hint, setHint] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [removing, setRemoving] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void readPasscodeGateState()
+      .then((s) => {
+        if (!cancelled) setState(s);
+      })
+      .catch(() => {
+        if (!cancelled) setState({ status: 'none' });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function save() {
+    if (passcode.length < 4) {
+      toast(t('settings.passcodeTooShort'));
+      return;
+    }
+    if (passcode !== confirm) {
+      toast(t('settings.passcodeMismatch'));
+      return;
+    }
+    setBusy(true);
+    try {
+      await setPasscodeGate(passcode, hint.trim() || null);
+      toast(t('settings.passcodeSaved'));
+      setPasscode('');
+      setConfirm('');
+      setHint('');
+      setState({ status: 'gate', hint: hint.trim() || null });
+    } catch (err) {
+      console.error('passcode save failed', err);
+      toast(err instanceof MemoryTierError ? t('settings.passcodeNeedsDurable') : t('common.loadError'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove() {
+    setBusy(true);
+    try {
+      await clearPasscodeGate();
+      toast(t('settings.passcodeRemoved'));
+      setState({ status: 'none' });
+      setRemoving(false);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const locked = state !== 'checking' && state.status === 'gate';
+
+  return (
+    <section aria-label={t('settings.passcode')} className="mt-4">
+      <h2 className="font-display text-lg">{t('settings.passcode')}</h2>
+      <Card className="mt-2 flex flex-col gap-2">
+        <p className="text-muted text-xs">
+          {mode === 'server' ? t('settings.passcodeExplainSynced') : t('settings.passcodeExplainOffline')}
+        </p>
+        {state === 'checking' ? null : locked ? (
+          <>
+            <p className="text-sm font-semibold">{t('settings.passcodeOn')}</p>
+            {removing ? (
+              <div className="flex gap-2">
+                <Button disabled={busy} onClick={() => void remove()}>
+                  {t('settings.passcodeRemoveConfirm')}
+                </Button>
+                <Button tone="quiet" onClick={() => setRemoving(false)}>
+                  {t('common.cancel')}
+                </Button>
+              </div>
+            ) : (
+              <Button tone="quiet" onClick={() => setRemoving(true)}>
+                {t('settings.passcodeRemove')}
+              </Button>
+            )}
+          </>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <Field
+              label={t('settings.passcodeNew')}
+              type="password"
+              value={passcode}
+              onChange={(e) => setPasscode(e.target.value)}
+              autoComplete="new-password"
+            />
+            <Field
+              label={t('settings.passcodeConfirm')}
+              type="password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              autoComplete="new-password"
+            />
+            <Field label={t('settings.passcodeHint')} value={hint} onChange={(e) => setHint(e.target.value)} />
+            <Button disabled={busy} onClick={() => void save()}>
+              {t('settings.passcodeSave')}
+            </Button>
+          </div>
+        )}
+      </Card>
+    </section>
   );
 }

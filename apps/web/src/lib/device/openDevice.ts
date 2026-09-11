@@ -1,20 +1,20 @@
 import { drizzle } from 'drizzle-orm/sqlite-proxy';
-import { detectBrowserCapability, type DeviceCapability } from '@chorify/local-db/capability';
 import * as schema from '@chorify/local-db/schema';
-import type { DeviceRequest, DeviceResponse } from './migrationClient';
+import type { DeviceCapability, DeviceRequest, DeviceResponse } from './migrationClient';
 
 export type BrowserDevice =
-  | { capability: 'online-only' | 'memory'; db: null }
-  | { capability: 'opfs'; db: ReturnType<typeof drizzle<typeof schema>>; worker: Worker };
+  | { capability: 'opfs' | 'memory'; db: ReturnType<typeof drizzle<typeof schema>>; worker: Worker }
+  | { capability: 'none'; db: null };
 
 /**
- * Main-thread device opener. OPFS-capable browsers get a worker-backed
- * sqlite-proxy drizzle handle (migrations already applied at worker
- * bootstrap); anything else reports its capability so the UI can show the
- * online-required / memory-mode hint instead of failing obscurely.
+ * Main-thread device opener (§4.12 capability ladder, worker-authoritative).
+ * The worker owns the truth: it attempts OPFS, falls back to an in-memory
+ * session tier, and reports what it achieved in its ready message. The main
+ * thread no longer guesses from main-thread API presence — SAH is a
+ * worker-only API, so a window-side probe misclassifies every browser.
  *
  * The open is MEMOIZED — one worker per page lifetime, shared by reads,
- * writes and the sync engine's flush loop (a per-call worker would leak).
+ * writes, the gate store and the sync engine's flush loop.
  */
 let openPromise: Promise<BrowserDevice> | null = null;
 
@@ -29,11 +29,15 @@ export async function openBrowserDevice(): Promise<BrowserDevice> {
 }
 
 async function openOnce(): Promise<BrowserDevice> {
-  const capability: DeviceCapability = detectBrowserCapability();
-  if (capability !== 'opfs') return { capability, db: null };
+  if (typeof Worker === 'undefined') return { capability: 'none', db: null };
 
   const worker = new Worker(new URL('./device.worker.ts', import.meta.url));
-  await waitForReady(worker);
+  const ready = await waitForReady(worker);
+
+  if (ready.capability === 'none') {
+    worker.terminate();
+    return { capability: 'none', db: null };
+  }
 
   let nextId = 1;
   const pending = new Map<number, (response: DeviceResponse) => void>();
@@ -55,16 +59,21 @@ async function openOnce(): Promise<BrowserDevice> {
     return { rows: response.rows };
   });
 
-  return { capability: 'opfs', db, worker };
+  return { capability: ready.capability, db, worker };
 }
 
-function waitForReady(worker: Worker): Promise<void> {
+interface WorkerReady {
+  capability: DeviceCapability;
+  error?: string;
+}
+
+function waitForReady(worker: Worker): Promise<WorkerReady> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => reject(new Error('device worker bootstrap timed out')), 30_000);
     worker.onmessage = (event: MessageEvent<DeviceResponse>) => {
       if ('kind' in event.data && event.data.kind === 'ready') {
         clearTimeout(timeout);
-        resolve();
+        resolve(event.data);
       }
     };
     worker.onerror = (event) => {

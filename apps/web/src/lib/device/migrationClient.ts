@@ -50,9 +50,7 @@ export function sqliteWasmMigrationClient(db: WasmDb): MigrationClient {
       return typeof value === 'number' ? value : 0;
     },
   };
-}
-
-/** Main-thread ↔ device-worker message protocol. */
+}/** Main-thread ↔ device-worker message protocol. */
 export type DeviceRequest =
   | { id: number; kind: 'query'; sql: string; params: unknown[] }
   | { id: number; kind: 'ping' };
@@ -60,4 +58,7 @@ export type DeviceRequest =
 export type DeviceResponse =
   | { id: number; ok: true; rows: unknown[][] }
   | { id: number; ok: false; error: string }
-  | { kind: 'ready'; appliedVersion: number };
+  | { kind: 'ready'; appliedVersion: number; capability: DeviceCapability; error?: string };
+
+/** Capability achieved by the worker's bootstrap ladder (§4.12). */
+export type DeviceCapability = 'opfs' | 'memory' | 'none';

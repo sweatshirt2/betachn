@@ -301,6 +301,16 @@ export type Dict = {
     title: string;
     hint: string;
   };
+  lock: {
+    title: string;
+    subtitle: string;
+    passcode: string;
+    wrong: string;
+    hintLabel: string;
+    unlock: string;
+    recoverOnline: string;
+    recoverWarning: string;
+  };
   cal: {
     m1: string;
     m2: string;
@@ -337,6 +347,21 @@ export type Dict = {
     importConflict: string;
     importTooNew: string;
     noPasswords: string;
+    passcode: string;
+    passcodeOn: string;
+    passcodeNew: string;
+    passcodeConfirm: string;
+    passcodeHint: string;
+    passcodeSave: string;
+    passcodeSaved: string;
+    passcodeRemove: string;
+    passcodeRemoveConfirm: string;
+    passcodeRemoved: string;
+    passcodeTooShort: string;
+    passcodeMismatch: string;
+    passcodeExplainSynced: string;
+    passcodeExplainOffline: string;
+    passcodeNeedsDurable: string;
     themeFamily: string;
     themeEmber: string;
     themeHighland: string;
@@ -692,6 +717,16 @@ export const en: Dict = {
     title: 'Household setup',
     hint: 'Everything about how your home runs — you can change this later.',
   },
+  lock: {
+    title: 'Locked',
+    subtitle: 'Enter this device’s passcode to continue.',
+    passcode: 'Passcode',
+    wrong: 'Wrong passcode — try again.',
+    hintLabel: 'Hint: {{hint}}',
+    unlock: 'Unlock',
+    recoverOnline: 'Sign in online to reset the passcode',
+    recoverWarning: 'Offline-only household? Resetting erases data on this device.',
+  },
   cal: {
     m1: 'Meskerem',
     m2: 'Tikimt',
@@ -730,6 +765,24 @@ export const en: Dict = {
     importTooNew:
       'Import blocked: this backup was made on a newer version. Update the app first.',
     noPasswords: 'Household copies never include passwords.',
+    passcode: 'Device passcode',
+    passcodeOn: 'Passcode is on for this device.',
+    passcodeNew: 'New passcode (4+ characters)',
+    passcodeConfirm: 'Confirm passcode',
+    passcodeHint: 'Hint (optional, shown on the lock screen)',
+    passcodeSave: 'Turn on passcode',
+    passcodeSaved: 'Passcode saved.',
+    passcodeRemove: 'Remove passcode',
+    passcodeRemoveConfirm: 'Remove passcode from this device?',
+    passcodeRemoved: 'Passcode removed.',
+    passcodeTooShort: 'Passcode must be at least 4 characters.',
+    passcodeMismatch: 'Passcodes do not match.',
+    passcodeExplainSynced:
+      'Locks this app on this device. Forgot it? Sign in online and the passcode resets.',
+    passcodeExplainOffline:
+      'Locks this app on this device. This household is offline-only — forgetting the passcode means resetting the app and losing data on this device.',
+    passcodeNeedsDurable:
+      'This browser session has no durable storage, so a passcode cannot be saved. Open the app in Chrome, Edge, Safari or Firefox.',
     themeFamily: 'Family',
     themeEmber: 'Ember',
     themeHighland: 'Highland',
@@ -1082,6 +1135,16 @@ export const am: Dict = {
     title: 'የቤተሰብ ዝግጅት',
     hint: 'ቤታችሁን የሚያስኬድ ሁሉ — በኋላ መቀየር ይችላሉ።',
   },
+  lock: {
+    title: 'ተዘግቷል',
+    subtitle: 'ለመቀጠል የዚህን መሣሪያ የይለፍ ቃል ያስገቡ።',
+    passcode: 'የይለፍ ቃል',
+    wrong: 'ተሳስቷል — እንደገና ይሞክሩ።',
+    hintLabel: 'ፍንጭ፦ {{hint}}',
+    unlock: 'ክፈት',
+    recoverOnline: 'የይለፍ ቃሉን ለማሳረስ በመስመር ላይ ይግቡ',
+    recoverWarning: 'መሣሪያው ብቻውን የሚሰራ ቤተሰብ ከሆነ፦ ማሳረስ በዚህ መሣሪያ ላይ ያለውን መረጃ ይሰርዛል።',
+  },
   cal: {
     m1: 'መስከረም',
     m2: 'ጥቅምት',
@@ -1118,6 +1181,23 @@ export const am: Dict = {
     importConflict: 'ማምጣት ታግዷል፦ ይህ መጠባበቂያ ከዚህ ቤተሰብ ጋር አይሚሱም። ምንም አልተቀየረም።',
     importTooNew: 'ማምጣት ታግዷል፦ ይህ መጠባበቂያ በአዲስ ስሪት ተሠርቷል። መጀመሪያ መተግበሪያውን ያዘምኑ።',
     noPasswords: 'የቤተሰብ ቅጂዎች ምንም የይለፍ ቃል አያካትቱም።',
+    passcode: 'የመሣሪያ የይለፍ ቃል',
+    passcodeOn: 'በዚህ መሣሪያ ላይ የይለፍ ቃል በርቷል።',
+    passcodeNew: 'አዲስ የይለፍ ቃል (4+ ፊደላት)',
+    passcodeConfirm: 'ያረጋግጡ',
+    passcodeHint: 'ፍንጭ (አማራጭ፣ በመቆለፊያ ስክሪኑ ላይ ይታያል)',
+    passcodeSave: 'የይለፍ ቃል አብራ',
+    passcodeSaved: 'የይለፍ ቃል ተቀምጧል።',
+    passcodeRemove: 'የይለፍ ቃል አጥፋ',
+    passcodeRemoveConfirm: 'ከዚህ መሣሪያ የይለፍ ቃል ይወገድ?',
+    passcodeRemoved: 'የይለፍ ቃል ተወግዷል።',
+    passcodeTooShort: 'የይለፍ ቃል ቢያንስ 4 ፊደላት መሆን አለበት።',
+    passcodeMismatch: 'የይለፍ ቃሎቹ አይመሳሰሉም።',
+    passcodeExplainSynced: 'መቆለፊያው የሚሠራው በዚህ መሣሪያ ላይ ነው። ረስተዋል? በመስመር ላይ ሲገቡ የይለፍ ቃሉ ይሳረሳል።',
+    passcodeExplainOffline:
+      'መቆለፊያው የሚሠራው በዚህ መሣሪያ ላይ ነው። ይህ ቤተሰብ መሣሪያውን ብቻ ይጠቀማል — ረስተዋል? መተግበሪያውን ማሳረስ ብቻ ነው፤ መረጃው ይጠፋል።',
+    passcodeNeedsDurable:
+      'በዚህ አሳሽ ክፍለ-ጊዜ ዘላቂ ማከማቻ የለም፤ ስለዚህ የይለፍ ቃል ሊቀመጥ አይችልም። መተግበሪያውን በChrome፣ Edge፣ Safari ወይም Firefox ይክፈቱ።',
     themeFamily: 'ቤተሰብ',
     themeEmber: 'እሳት',
     themeHighland: 'ከፍታ',

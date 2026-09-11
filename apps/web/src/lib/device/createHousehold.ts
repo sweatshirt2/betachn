@@ -47,11 +47,12 @@ export async function createLocalHousehold(input: {
 }): Promise<LocalHouseholdSeed> {
   const device: BrowserDevice = await openBrowserDevice();
   if (device.db === null) {
-    throw new Error(
-      device.capability === 'online-only'
-        ? 'This browser cannot store offline data — use Chrome, Edge, Safari or Firefox.'
-        : 'Offline storage is unavailable on this device.',
-    );
+    throw new Error('This browser cannot run the app offline — use Chrome, Edge, Safari or Firefox.');
+  }
+  // An offline household on the memory tier dies with the tab: refuse rather
+  // than fake durability (§4.12 — memory is for synced sessions only).
+  if (device.capability === 'memory') {
+    throw new Error('Durable storage is unavailable — offline households need OPFS. Try Chrome, Edge, Safari or Firefox.');
   }
   const { db } = device;
   const queue = new PendingOpQueue(db as never);

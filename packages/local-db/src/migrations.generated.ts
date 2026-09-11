@@ -15,5 +15,9 @@ export const DEVICE_MIGRATIONS: readonly DeviceMigration[] = [
   {
     "tag": "0001_sad_terrax",
     "sql": "ALTER TABLE `device_sync_state` ADD `pushed_seqs` text;"
+  },
+  {
+    "tag": "0002_yellow_brother_voodoo",
+    "sql": "CREATE TABLE `device_settings` (\n\t`key` text PRIMARY KEY NOT NULL,\n\t`value` text NOT NULL,\n\t`updated_at` text NOT NULL\n);\n"
   }
 ];

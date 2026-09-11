@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button, Sheet } from '@/components/ui';
@@ -10,6 +10,8 @@ import { clearApiCache, queryKeys, useApiQuery } from '@/lib/api';
 import { useSyncBoot, useSyncStatus } from '@/lib/sync/syncClient';
 import { exitViewAs, hasSession, type RootState } from '@/store';
 import { deviceNotifications } from '@/lib/device/reads';
+import { readPasscodeGateState } from '@/lib/device/passcodeGate';
+import { LockScreen } from './LockScreen';
 import { ProfileSwitcher } from './ProfileSwitcher';
 
 type TabItem = { href: string; key: 'today' | 'chores' | 'household' | 'more' | 'routines' | 'home' | 'supplies' | 'shopping' | 'activity' | 'notifications' | 'settings'; icon: string };
@@ -32,7 +34,10 @@ const RAIL: TabItem[] = [
   { href: '/settings', key: 'settings', icon: '🔧' },
 ];
 
-const CHROMELESS = ['/login', '/onboarding'];
+const CHROMELESS = ['/login', '/onboarding', '/auth'];
+
+/** sessionStorage marker that the app-entry gate was satisfied this tab session. */
+const ENTRY_KEY = 'chorify-entry-ok';
 
 /** App shell (§5.1): greeting bar + bottom tabs on mobile, left rail wide. */
 export function Shell({ children }: { children: React.ReactNode }) {
@@ -45,6 +50,28 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const hasToken = useSelector((state: RootState) => state.auth.token !== null);
   const activePerson = useSelector((state: RootState) => state.auth.activePerson);
   const viewAsPersonId = useSelector((state: RootState) => state.auth.viewAsPersonId);
+  // Device passcode gate (D63): while a gate exists and the entry secret isn't
+  // in sessionStorage, the shell renders the LockScreen INSTEAD of the app —
+  // queries inside children stay unmounted, so nothing leaks.
+  const [gateState, setGateState] = useState<'checking' | 'locked' | 'open'>('checking');
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        if (sessionStorage.getItem(ENTRY_KEY) === '1') {
+          if (!cancelled) setGateState('open');
+          return;
+        }
+        const state = await readPasscodeGateState();
+        if (!cancelled) setGateState(state.status === 'gate' ? 'locked' : 'open');
+      } catch {
+        if (!cancelled) setGateState('open'); // fail-open: never brick the app
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   useSyncBoot();
   const sync = useSyncStatus();
   const people = useApiQuery<{ people: Array<{ id: string; name: string }> }>({
@@ -69,8 +96,26 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const unreadCount = (notifications.data?.notifications ?? []).filter((n) => n.readAt === null).length;
   const hasSessionRedux = useSelector(hasSession);
 
-  if (CHROMELESS.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+  const chromeless = CHROMELESS.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  if (chromeless) {
     return <>{children}</>;
+  }
+  if (gateState === 'checking') {
+    return <div className="bg-cream min-h-screen" aria-busy="true" />;
+  }
+  if (gateState === 'locked') {
+    return (
+      <LockScreen
+        onUnlocked={() => {
+          try {
+            sessionStorage.setItem(ENTRY_KEY, '1');
+          } catch {
+            // private-mode — gate re-asks per navigation, acceptable
+          }
+          setGateState('open');
+        }}
+      />
+    );
   }
 
   return (

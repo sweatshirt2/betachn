@@ -2,19 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { detectCapability, staleBannerState } from './capability';
 
 describe('capability ladder (§4.12)', () => {
-  it('requires worker + OPFS sync handles for the fast path', () => {
-    expect(
-      detectCapability({ hasWorker: true, hasStorageGetDirectory: true, hasSyncAccessHandle: true }),
-    ).toBe('opfs');
-    expect(
-      detectCapability({ hasWorker: false, hasStorageGetDirectory: true, hasSyncAccessHandle: true }),
-    ).toBe('online-only');
-    expect(
-      detectCapability({ hasWorker: true, hasStorageGetDirectory: false, hasSyncAccessHandle: true }),
-    ).toBe('online-only');
-    expect(
-      detectCapability({ hasWorker: true, hasStorageGetDirectory: true, hasSyncAccessHandle: false }),
-    ).toBe('online-only');
+  it('worker bootstrap decides: OPFS install success → opfs, else memory tier', () => {
+    expect(detectCapability({ opfsInstallSucceeded: true })).toBe('opfs');
+    expect(detectCapability({ opfsInstallSucceeded: false })).toBe('memory');
   });
 });
 

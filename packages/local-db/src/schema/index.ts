@@ -12,3 +12,4 @@ export * from './home';
 export * from './resources';
 export * from './relations';
 export * from './social';
+export * from './device-settings';
