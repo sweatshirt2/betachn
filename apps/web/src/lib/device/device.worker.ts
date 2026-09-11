@@ -3,7 +3,7 @@
  * lives HERE, never on the main thread (sync access handles are worker-only).
  *
  * Bootstrap ladder, in order:
- *  1. init wasm → installOpfsSAHPoolVfs → open OpfsDb → migrations. Success
+ *  1. init wasm → installOpfsSAHPoolVfs → open oo1.DB on 'opfs-sahpool' → migrations. Success
  *     reports `ready, capability:'opfs'` — the durable tier.
  *  2. OPFS unavailable (install throws): fall back to an in-memory sqlite
  *     (`:memory:` tier from §4.12) so the session still works; reports
