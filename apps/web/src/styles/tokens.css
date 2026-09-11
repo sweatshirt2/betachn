@@ -144,3 +144,33 @@
   --chorify-wash-bg: #dee8f0;
   --chorify-wash-ink: #2f3d4d;
 }
+
+/* Honey — warm breakfast table: morning cream, deep honey primary,
+ * cocoa FAB. Light, sweet, unhurried. */
+[data-theme='honey'] {
+  --chorify-bg: #fbf5ea;
+  --chorify-surface: #fffdf8;
+  --chorify-ink: #3a2e22;
+  --chorify-muted: #97816a;
+  --chorify-line: #eadfc9;
+  --chorify-primary: #b97f16;
+  --chorify-primary-ink: #ffffff;
+  --chorify-secondary: #7a8b6f;
+  --chorify-accent: #e3b23c;
+  --chorify-danger: #c75b5b;
+  --chorify-info: #5b9bd5;
+
+  --chorify-fab: #7a5230;
+  --chorify-fab-ink: #fff9f0;
+
+  --chorify-shadow-soft: 0 2px 12px rgb(58 46 34 / 0.08);
+  --chorify-shadow-lift: 0 8px 28px rgb(58 46 34 / 0.14);
+
+  --chorify-gradient-dawn: linear-gradient(135deg, #fbf5ea 0%, #f6e9cf 55%, #f1dcb4 100%);
+  --chorify-gradient-ember: linear-gradient(135deg, #b97f16 0%, #8f6110 100%);
+
+  --chorify-watermark-opacity: 0.05;
+
+  --chorify-wash-bg: #f3e8c8;
+  --chorify-wash-ink: #4a3a14;
+}

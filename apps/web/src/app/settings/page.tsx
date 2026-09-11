@@ -16,11 +16,12 @@ const CALENDAR_STORAGE_KEY = 'chorify-calendar';
 type CalendarPref = 'gregorian' | 'ethiopian' | 'both';
 
 /** Theme toggle labels resolve through i18n (EN+AM parity per the AM-parity law). */
-const THEME_DICT_KEYS: Record<ThemeId, 'settings.themeFamily' | 'settings.themeEmber' | 'settings.themeHighland' | 'settings.themeGlacier'> = {
+const THEME_DICT_KEYS: Record<ThemeId, 'settings.themeFamily' | 'settings.themeEmber' | 'settings.themeHighland' | 'settings.themeGlacier' | 'settings.themeHoney'> = {
   family: 'settings.themeFamily',
   ember: 'settings.themeEmber',
   highland: 'settings.themeHighland',
   glacier: 'settings.themeGlacier',
+  honey: 'settings.themeHoney',
 };
 
 function readCalendar(): CalendarPref {
