@@ -365,6 +365,7 @@ export type Dict = {
     themeFamily: string;
     themeEmber: string;
     themeHighland: string;
+    themeGlacier: string;
   };
   print: {
     title: string;
@@ -786,6 +787,7 @@ export const en: Dict = {
     themeFamily: 'Family',
     themeEmber: 'Ember',
     themeHighland: 'Highland',
+    themeGlacier: 'Glacier',
   },
   print: {
     title: 'Print week',
@@ -1201,6 +1203,7 @@ export const am: Dict = {
     themeFamily: 'ቤተሰብ',
     themeEmber: 'እሳት',
     themeHighland: 'ከፍታ',
+    themeGlacier: 'ግላሲየር',
   },
   print: {
     title: 'ሳምንቱን አትም',

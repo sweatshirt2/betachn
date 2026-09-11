@@ -88,8 +88,7 @@
   --chorify-wash-ink: #dfe8d7;
 }
 
-[data-theme='highland'] {
-  --chorify-bg: #ffffff;
+[data-theme='highland'] {  --chorify-bg: #ffffff;
   --chorify-surface: #fffdf9;
   --chorify-ink: #1a1a1a;
   --chorify-muted: #5f5b55;
@@ -114,4 +113,34 @@
 
   --chorify-wash-bg: #e3ebdc;
   --chorify-wash-ink: #33402c;
+}
+
+/* Glacier — the reference screenshots: warm-gray canvas, glacier-blue
+ * interactive primary, warm tan FAB. Light, calm, family-warm. */
+[data-theme='glacier'] {
+  --chorify-bg: #f4f2ee;
+  --chorify-surface: #ffffff;
+  --chorify-ink: #33302b;
+  --chorify-muted: #8a857b;
+  --chorify-line: #e2ddd4;
+  --chorify-primary: #5b9bd5;
+  --chorify-primary-ink: #ffffff;
+  --chorify-secondary: #7a8b6f;
+  --chorify-accent: #c89b6a;
+  --chorify-danger: #c75b5b;
+  --chorify-info: #4a8ac4;
+
+  --chorify-fab: #c89b6a;
+  --chorify-fab-ink: #ffffff;
+
+  --chorify-shadow-soft: 0 2px 12px rgb(51 48 43 / 0.08);
+  --chorify-shadow-lift: 0 8px 28px rgb(51 48 43 / 0.14);
+
+  --chorify-gradient-dawn: linear-gradient(135deg, #f4f2ee 0%, #eae6dd 55%, #dce6ee 100%);
+  --chorify-gradient-ember: linear-gradient(135deg, #5b9bd5 0%, #3f7ab5 100%);
+
+  --chorify-watermark-opacity: 0.05;
+
+  --chorify-wash-bg: #dee8f0;
+  --chorify-wash-ink: #2f3d4d;
 }
