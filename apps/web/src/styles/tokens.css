@@ -174,3 +174,33 @@
   --chorify-wash-bg: #f3e8c8;
   --chorify-wash-ink: #4a3a14;
 }
+
+/* Garden — fresh and growing: mint-white canvas, leaf-green primary,
+ * pond-blue secondary, sky FAB. Light, alive, hopeful. */
+[data-theme='garden'] {
+  --chorify-bg: #f2f6ee;
+  --chorify-surface: #ffffff;
+  --chorify-ink: #2e352a;
+  --chorify-muted: #7e8a76;
+  --chorify-line: #dee5d5;
+  --chorify-primary: #5f8f4e;
+  --chorify-primary-ink: #ffffff;
+  --chorify-secondary: #527a8b;
+  --chorify-accent: #e3b23c;
+  --chorify-danger: #c75b5b;
+  --chorify-info: #5b9bd5;
+
+  --chorify-fab: #5b9bd5;
+  --chorify-fab-ink: #ffffff;
+
+  --chorify-shadow-soft: 0 2px 12px rgb(46 53 42 / 0.08);
+  --chorify-shadow-lift: 0 8px 28px rgb(46 53 42 / 0.14);
+
+  --chorify-gradient-dawn: linear-gradient(135deg, #f2f6ee 0%, #e4ebd8 55%, #d5e2c8 100%);
+  --chorify-gradient-ember: linear-gradient(135deg, #5f8f4e 0%, #476e38 100%);
+
+  --chorify-watermark-opacity: 0.05;
+
+  --chorify-wash-bg: #dfe9d2;
+  --chorify-wash-ink: #33402c;
+}
