@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { Button, Card, Field, useToast } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
 import { useLogout } from '@/features/auth';
-import { THEME_IDS, THEME_LABELS, useTheme } from '@/theme';
+import { THEME_IDS, useTheme, type ThemeId } from '@/theme';
 import { LANGUAGE_STORAGE_KEY, LOCALES } from '@/i18n/dictionaries';
 import i18n from '@/i18n';
 import { readPasscodeGateState, setPasscodeGate, clearPasscodeGate, MemoryTierError, type PasscodeGateState } from '@/lib/device/passcodeGate';
@@ -14,6 +14,13 @@ import type { RootState } from '@/store';
 
 const CALENDAR_STORAGE_KEY = 'chorify-calendar';
 type CalendarPref = 'gregorian' | 'ethiopian' | 'both';
+
+/** Theme toggle labels resolve through i18n (EN+AM parity per the AM-parity law). */
+const THEME_DICT_KEYS: Record<ThemeId, 'settings.themeFamily' | 'settings.themeEmber' | 'settings.themeHighland'> = {
+  family: 'settings.themeFamily',
+  ember: 'settings.themeEmber',
+  highland: 'settings.themeHighland',
+};
 
 function readCalendar(): CalendarPref {
   try {
@@ -112,10 +119,10 @@ export default function SettingsPage() {
 
       <section aria-label={t('settings.theme')} className="mt-4">
         <h2 className="font-display text-lg">{t('settings.theme')}</h2>
-        <div className="mt-2 flex gap-2" role="group" aria-label={t('settings.theme')}>
+        <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label={t('settings.theme')}>
           {THEME_IDS.map((id) => (
             <Button key={id} tone={theme === id ? 'primary' : 'quiet'} onClick={() => setTheme(id)}>
-              {THEME_LABELS[id]}
+              {t(THEME_DICT_KEYS[id])}
             </Button>
           ))}
         </div>

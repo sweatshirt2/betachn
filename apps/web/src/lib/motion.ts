@@ -15,7 +15,7 @@ export function buzz(): void {
 
 /**
  * Check-off confetti burst (§5.3). Colors resolve from the live theme tokens
- * so every theme (family/ember/highland) bursts in its own palette.
+ * so every theme bursts in its own palette.
  */
 export function celebrateChore(): void {
   if (prefersReducedMotion()) return;

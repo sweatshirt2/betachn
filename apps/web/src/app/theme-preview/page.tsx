@@ -20,7 +20,7 @@ export default function ThemePreview() {
         re-skin.
       </p>
 
-      <div className="mt-4 flex gap-2" role="group" aria-label="Theme">
+      <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Theme">
         {THEME_IDS.map((id) => (
           <Button
             key={id}

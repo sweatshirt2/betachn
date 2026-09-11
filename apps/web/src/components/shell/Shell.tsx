@@ -204,7 +204,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-2 lg:pb-12">{children}</main>
 
         <button
-          className="bg-terracotta text-terracotta-ink fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full text-2xl shadow-lift lg:bottom-8 lg:right-8"
+          className="bg-fab text-fab-ink fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full text-2xl shadow-lift lg:bottom-8 lg:right-8"
           onClick={() => setCreateOpen(true)}
           aria-label={t('nav.create')}
         >

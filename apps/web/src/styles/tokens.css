@@ -24,6 +24,10 @@
   --chorify-danger: #c75b5b;
   --chorify-info: #6fa8dc;
 
+  /* Universal + action: reads its own tokens so every theme ships a matching FAB. */
+  --chorify-fab: #c96f4a;
+  --chorify-fab-ink: #fffdf9;
+
   --chorify-radius-sm: 12px;
   --chorify-radius-md: 16px;
   --chorify-radius-lg: 24px;
@@ -69,6 +73,9 @@
   --chorify-danger: #d97b7b;
   --chorify-info: #8fbef0;
 
+  --chorify-fab: #e08a56;
+  --chorify-fab-ink: #211913;
+
   --chorify-shadow-soft: 0 2px 12px rgb(0 0 0 / 0.35);
   --chorify-shadow-lift: 0 8px 28px rgb(0 0 0 / 0.5);
 
@@ -93,6 +100,9 @@
   --chorify-accent: #c9971c;
   --chorify-danger: #b03a3a;
   --chorify-info: #2f6fb2;
+
+  --chorify-fab: #b25a2e;
+  --chorify-fab-ink: #ffffff;
 
   --chorify-shadow-soft: 0 2px 10px rgb(26 26 26 / 0.1);
   --chorify-shadow-lift: 0 8px 24px rgb(26 26 26 / 0.18);

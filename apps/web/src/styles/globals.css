@@ -18,6 +18,8 @@
   --color-mustard: var(--chorify-accent);
   --color-clay-red: var(--chorify-danger);
   --color-sky: var(--chorify-info);
+  --color-fab: var(--chorify-fab);
+  --color-fab-ink: var(--chorify-fab-ink);
 
   --radius-sm: var(--chorify-radius-sm);
   --radius-md: var(--chorify-radius-md);
