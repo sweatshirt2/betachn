@@ -143,7 +143,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between gap-2 px-4 pt-4">
-          <p className="font-display text-2xl">
+          <p className="font-display text-xl sm:text-2xl">
             {t(greetingKey())}, {activePerson?.name ?? t('nav.family')}
           </p>
           <div className="flex items-center gap-2">
@@ -209,7 +209,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
         <ProfileSwitcher open={profilesOpen} onClose={() => setProfilesOpen(false)} />
 
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-2 lg:pb-12">{children}</main>
+        <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-2 sm:px-6 lg:pb-12 xl:max-w-4xl">{children}</main>
 
         <button
           className="bg-fab text-fab-ink tap-spring fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full text-2xl shadow-lift transition-transform duration-200 hover:scale-105 hover:shadow-glow lg:bottom-8 lg:right-8"
