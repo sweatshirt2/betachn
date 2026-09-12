@@ -13,3 +13,5 @@ coverage/
 apps/web/public/sqlite3-wasm/
 
 **/tmp/
+
+.trigger
