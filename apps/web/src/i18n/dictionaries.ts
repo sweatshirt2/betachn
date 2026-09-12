@@ -369,6 +369,41 @@ export type Dict = {
     themeButter: string;
     themeRose: string;
   };
+  themePreview: {
+    title: string;
+    subtitle: string;
+    themes: string;
+    surfaces: string;
+    cardWash: string;
+    actions: string;
+    tasks: string;
+    backToApp: string;
+  };
+  pantry: {
+    title: string;
+    subtitle: string;
+    runningOut: string;
+    stockedHint: string;
+    boughtIt: string;
+    runningLowCta: string;
+    toShopping: string;
+    shopping: string;
+    stocked: string;
+    noSupplies: string;
+    deadlines: string;
+    upcoming: string;
+  };
+  family: {
+    title: string;
+    subtitle: string;
+    today: string;
+    done: string;
+    missed: string;
+    filterAll: string;
+    filterMine: string;
+    viewFull: string;
+    emptyToday: string;
+  };
   print: {
     title: string;
     signInToPrint: string;
@@ -793,6 +828,41 @@ export const en: Dict = {
     themeButter: 'Butter',
     themeRose: 'Rose',
   },
+  themePreview: {
+    title: 'Theme studio',
+    subtitle: 'Six pastel rooms — tap one to wear it.',
+    themes: 'Themes',
+    surfaces: 'Surfaces',
+    cardWash: 'Soft gradient wash, hairline border, layered shadow.',
+    actions: 'Actions',
+    tasks: 'Task rows',
+    backToApp: 'Back to the app',
+  },
+  pantry: {
+    title: 'Pantry',
+    subtitle: 'What is running out, what to buy next, and dates to remember.',
+    runningOut: 'Running out',
+    stockedHint: 'Everything is stocked — nothing needs attention.',
+    boughtIt: 'Bought it',
+    runningLowCta: 'Almost out',
+    toShopping: 'Add to shopping list',
+    shopping: 'Shopping list',
+    stocked: 'Stocked',
+    noSupplies: 'No supplies yet — add the first one below.',
+    deadlines: 'Dates to remember',
+    upcoming: 'Upcoming',
+  },
+  family: {
+    title: 'Family',
+    subtitle: 'Who has what today — and how the week went.',
+    today: 'Today',
+    done: 'Done',
+    missed: 'Missed',
+    filterAll: 'Everyone',
+    filterMine: 'Mine',
+    viewFull: 'Full view',
+    emptyToday: 'Nothing scheduled for today.',
+  },
   print: {
     title: 'Print week',
     signInToPrint: 'Sign in to print',
@@ -1210,6 +1280,41 @@ export const am: Dict = {
     themeMint: 'ሚንት',
     themeButter: 'በተር',
     themeRose: 'ሮዝ',
+  },
+  themePreview: {
+    title: 'የገጽታ ክፍል',
+    subtitle: 'ስድስት የቀለም ክፍያዎች — አንዱን ተጫን።',
+    themes: 'ገጽታዎች',
+    surfaces: 'ስርዓቶች',
+    cardWash: 'ለስላሳ የቀለም መሸጋገሪያ፣ ደካማ ወሰን፣ ሶፍት ጥላ።',
+    actions: 'እርምጃዎች',
+    tasks: 'የተግባር ረድፎች',
+    backToApp: 'ወደ መተግበሪያው ተመለስ',
+  },
+  pantry: {
+    title: 'ማከማቻ',
+    subtitle: 'ምን እየጨረሰ ነው፣ ምን መግዛት እንዳለበት እና መታሠቢያ ቀኖች።',
+    runningOut: 'እየጨረሰ ነው',
+    stockedHint: 'ሁሉም ነገር በቂ ነው — የሚታይ ነገር የለም።',
+    boughtIt: 'ገዛሁት',
+    runningLowCta: 'አልቋል',
+    toShopping: 'ወደ ግዢ ዝርዝር ጨምር',
+    shopping: 'የግዢ ዝርዝር',
+    stocked: 'የቀሩ',
+    noSupplies: 'እስካሁን ምንም እቃ አልታከለም — ከታች የመጀመሪያውን ይጨምሩ።',
+    deadlines: 'መታሠቢያ ቀኖች',
+    upcoming: 'ቅርብ',
+  },
+  family: {
+    title: 'ቤተሰብ',
+    subtitle: 'የዛሬ ማን ምን እንዳለበት — እና ሳምንቱ እንዴት እንደፈሰ።',
+    today: 'የዛሬ',
+    done: 'የተጠናቀቁ',
+    missed: 'ያለፉ',
+    filterAll: 'ሁሉም',
+    filterMine: 'የኔ',
+    viewFull: 'ሙሉ እይታ',
+    emptyToday: 'ዛሬ የተሰማራ ተግባር የለም።',
   },
   print: {
     title: 'ሳምንቱን አትም',
