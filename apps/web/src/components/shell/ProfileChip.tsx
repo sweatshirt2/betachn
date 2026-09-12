@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 import { PersonAvatar } from '@/components/ui';
 import { NavIcon } from '@/components/icons';
 import { usePeople, useRoles } from '@/features/household';
+import { personFactsTag } from '@/lib/facts';
 import type { RootState } from '@/store';
 
 /**
@@ -23,6 +24,7 @@ export function ProfileChip({ onOpen }: { onOpen: () => void }) {
   const me = people.data?.people.find((p) => p.id === activePerson.id) ?? null;
   const role = roles.data?.roles.find((r) => r.id === me?.roleId) ?? null;
   const roleLine = role ? `${role.isOwnerRole ? '★ ' : ''}${role.name}` : t('household.noRole');
+  const factsTag = me !== null ? personFactsTag(me, t) : null;
 
   return (
     <button
@@ -45,6 +47,8 @@ export function ProfileChip({ onOpen }: { onOpen: () => void }) {
         <span className="block max-w-28 truncate text-sm font-bold leading-tight sm:max-w-40">{activePerson.name}</span>
         <span className="text-muted block max-w-28 truncate text-[10px] font-semibold leading-tight sm:max-w-40">
           {roleLine}
+          {factsTag !== null && <span aria-hidden> · </span>}
+          {factsTag}
         </span>
       </span>
       <NavIcon name="more" variant="outline" className="text-muted h-4 w-4 shrink-0" aria-hidden />

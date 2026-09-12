@@ -379,6 +379,20 @@ export type Dict = {
     tasks: string;
     backToApp: string;
   };
+  facts: {
+    title: string;
+    sex: string;
+    male: string;
+    female: string;
+    birthDate: string;
+    age: string;
+    agePlaceholder: string;
+    ageHint: string;
+  };
+  switcher: {
+    inUse: string;
+    hasPin: string;
+  };
   pantry: {
     title: string;
     subtitle: string;
@@ -838,6 +852,20 @@ export const en: Dict = {
     tasks: 'Task rows',
     backToApp: 'Back to the app',
   },
+  facts: {
+    title: 'About',
+    sex: 'Girl or boy',
+    male: 'Boy',
+    female: 'Girl',
+    birthDate: 'Birthday',
+    age: 'Age',
+    agePlaceholder: '—',
+    ageHint: 'Pick the birthday, or just type the age.',
+  },
+  switcher: {
+    inUse: 'In use',
+    hasPin: 'PIN',
+  },
   pantry: {
     title: 'Pantry',
     subtitle: 'What is running out, what to buy next, and dates to remember.',
@@ -1290,6 +1318,20 @@ export const am: Dict = {
     actions: 'እርምጃዎች',
     tasks: 'የተግባር ረድፎች',
     backToApp: 'ወደ መተግበሪያው ተመለስ',
+  },
+  facts: {
+    title: 'ስለ ሰውየው',
+    sex: 'ልጅ ወይስ የወንድ',
+    male: 'ወንድ',
+    female: 'ሴት',
+    birthDate: 'የልደት ቀን',
+    age: 'እድሜ',
+    agePlaceholder: '—',
+    ageHint: 'የልደት ቀኑን ይምረጡ፣ ወይም እድሜውን ብቻ ይጻፉ።',
+  },
+  switcher: {
+    inUse: 'እየተጠቀመ ነው',
+    hasPin: 'ኮድ',
   },
   pantry: {
     title: 'ማከማቻ',
