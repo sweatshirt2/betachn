@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Chip, ChoreCheck, EmptyState, SectionWatermark, Skeleton, SwipeCard } from '@/components/ui';
+import { Button, Card, Chip, ChoreCheck, EmptyState, SectionWatermark, Skeleton, SwipeCard, crayon } from '@/components/ui';
 import { useOccurrenceAct, useOccurrences, usePeopleMap, type TitledOccurrence } from '@/features/chores';
 import { hasSession, type RootState } from '@/store';
 import { formatDate } from '@/lib/dates';
@@ -86,7 +86,9 @@ export default function ChoresPage() {
             role="tab"
             aria-selected={tab === tabOption}
             onClick={() => setTab(tabOption)}
-            className={`rounded-sm px-3 py-1 text-sm font-semibold ${tab === tabOption ? 'bg-terracotta text-terracotta-ink' : 'bg-surface text-ink border-line border'}`}
+            className={`tap-spring rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+              tab === tabOption ? 'bg-accent-wash text-ink shadow-soft' : 'bg-surface text-muted border-line border'
+            }`}
           >
             {tab === 'mine' ? t('chores.mine') : tab === 'everyone' ? t('chores.everyone') : `${t('chores.overdue')}${overdue.length > 0 ? ` · ${overdue.length}` : ''}`}
           </button>
@@ -95,13 +97,21 @@ export default function ChoresPage() {
       {visible.length === 0 ? (
         <EmptyState emoji="✨" title={t('chores.allClear')} hint={t('chores.allClearHint')} />
       ) : (
-        <div className="mt-3 flex flex-col gap-2">
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {visible.map((o, index) => (
             <SwipeCard key={o.id} onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}>
-              <Card className="stagger-item flex items-center gap-3 py-2" style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}>
+              <Card
+                className="stagger-item flex items-center gap-3 py-2.5"
+                style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}
+              >
+                <span
+                  className="h-9 w-1.5 shrink-0 rounded-full"
+                  style={{ background: crayon(index) }}
+                  aria-hidden
+                />
                 <Link href={`/chores/${o.responsibilityId}`} className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{o.title}</p>
-                  <p className="text-muted text-xs">
+                  <p className="text-muted mt-0.5 truncate text-xs">
                     {formatDate(o.dueDate)} · {label(o)}
                   </p>
                 </Link>
