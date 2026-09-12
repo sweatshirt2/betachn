@@ -45,7 +45,7 @@ function defaultRule(today: string): ComposerRule {
 }
 
 const inputClass =
-  'bg-surface text-ink border-line mt-1 w-full rounded-md border px-3 py-2 text-sm';
+  'bg-surface-alt text-ink border-line shadow-soft outline-none transition-colors focus:border-terracotta focus:ring-2 focus:ring-terracotta/30 mt-1 w-full rounded-md border px-3 py-2 text-sm';
 
 /** Chore composer (§5.5): full pattern picker + rotation builder + subtasks. */
 export default function NewChorePage() {
@@ -166,7 +166,7 @@ export default function NewChorePage() {
                   type="button"
                   onClick={() => setIcon(emoji)}
                   aria-pressed={icon === emoji}
-                  className={`rounded-md px-2 py-1 text-xl ${icon === emoji ? 'bg-terracotta/20 border-terracotta border' : 'border-line border'}`}
+                  className={`tap-spring rounded-md px-2 py-1 text-xl transition-colors ${icon === emoji ? 'border-terracotta bg-accent-wash shadow-soft border' : 'border-line bg-surface border'}`}
                 >
                   {emoji}
                 </button>
@@ -183,7 +183,7 @@ export default function NewChorePage() {
                   type="button"
                   onClick={() => patchRule({ pattern: option })}
                   aria-pressed={rule.pattern === option}
-                  className={`rounded-sm border px-3 py-1 text-sm font-semibold ${rule.pattern === option ? 'border-terracotta bg-terracotta text-terracotta-ink' : 'border-line bg-surface text-ink'}`}
+                  className={`tap-spring rounded-full border px-3 py-1 text-sm font-semibold transition-colors ${rule.pattern === option ? 'border-terracotta bg-accent-wash text-ink shadow-soft' : 'border-line bg-surface text-muted'}`}
                 >
                   {t(`chores.${option}`)}
                 </button>
@@ -218,7 +218,7 @@ export default function NewChorePage() {
                       type="button"
                       onClick={() => toggleDay(day)}
                       aria-pressed={(rule.daysOfWeek ?? []).includes(day)}
-                      className={`rounded-sm border px-2 py-1 text-xs font-semibold ${(rule.daysOfWeek ?? []).includes(day) ? 'border-terracotta bg-terracotta text-terracotta-ink' : 'border-line bg-surface text-ink'}`}
+                      className={`tap-spring rounded-full border px-2 py-1 text-xs font-semibold transition-colors ${(rule.daysOfWeek ?? []).includes(day) ? 'border-terracotta bg-accent-wash text-ink shadow-soft' : 'border-line bg-surface text-muted'}`}
                     >
                       {t(`chores.dow${day}`)}
                     </button>
@@ -284,7 +284,7 @@ export default function NewChorePage() {
                     type="button"
                     onClick={() => (isRotation ? toggleRotationPerson(p.id) : togglePerson(p.id))}
                     aria-pressed={selected}
-                    className={`rounded-sm border px-3 py-1 text-sm font-semibold ${selected ? 'border-terracotta bg-terracotta text-terracotta-ink' : 'border-line bg-surface text-ink'}`}
+                    className={`tap-spring rounded-full border px-3 py-1 text-sm font-semibold transition-colors ${selected ? 'border-terracotta bg-accent-wash text-ink shadow-soft' : 'border-line bg-surface text-muted'}`}
                   >
                     {p.name}
                   </button>

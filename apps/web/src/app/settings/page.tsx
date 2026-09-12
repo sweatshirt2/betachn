@@ -183,7 +183,7 @@ export default function SettingsPage() {
           <Button tone="quiet" disabled={busy} onClick={exportHousehold}>
             {t('settings.saveCopy')}
           </Button>
-          <label className="bg-surface text-ink border-line cursor-pointer rounded-md border px-4 py-2 text-center text-sm font-semibold">
+          <label className="bg-surface-alt text-ink border-line shadow-soft tap-spring cursor-pointer rounded-md border px-4 py-2 text-center text-sm font-semibold">
             {t('settings.openCopy')}
             <input
               type="file"

@@ -140,7 +140,7 @@ export default function OnboardingPage() {
             {people.map((person, index) => (
               <div key={index} className="flex gap-2">
                 <input
-                  className="bg-surface text-ink border-line min-w-0 flex-1 rounded-md border px-3 py-2 text-sm"
+                  className="bg-surface-alt text-ink border-line shadow-soft focus:border-terracotta focus:ring-terracotta/30 min-w-0 flex-1 rounded-md border px-3 py-2 text-sm outline-none transition-colors focus:ring-2"
                   placeholder="Name"
                   value={person.name}
                   onChange={(e) =>
@@ -151,7 +151,7 @@ export default function OnboardingPage() {
                   aria-label={t('onboarding.personNameAria', { index: index + 1 })}
                 />
                 <select
-                  className="bg-surface text-ink border-line rounded-md border px-2 py-2 text-sm"
+                  className="bg-surface-alt text-ink border-line shadow-soft focus:border-terracotta focus:ring-terracotta/30 rounded-md border px-2 py-2 text-sm outline-none transition-colors focus:ring-2"
                   value={person.roleKey}
                   onChange={(e) =>
                     setPeople((current) =>

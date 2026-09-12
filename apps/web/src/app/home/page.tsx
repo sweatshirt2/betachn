@@ -85,7 +85,7 @@ export default function HomePage() {
             <label className="block">
               <span className="text-sm font-semibold">{t('ops.roomOptional')}</span>
               <select
-                className="bg-surface text-ink border-line mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                className="bg-surface-alt text-ink border-line shadow-soft focus:border-terracotta focus:ring-terracotta/30 mt-1 w-full rounded-md border px-3 py-2 text-sm outline-none transition-colors focus:ring-2"
                 value={assetRoom}
                 onChange={(e) => setAssetRoom(e.target.value)}
               >

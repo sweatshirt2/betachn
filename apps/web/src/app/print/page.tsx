@@ -92,7 +92,7 @@ export default function PrintPage() {
             {t('print.nextWeek')}
           </Button>
           <select
-            className="bg-surface text-ink border-line rounded-md border px-2 py-2 text-sm"
+            className="bg-surface-alt text-ink border-line rounded-md border px-2 py-2 text-sm"
             value={memberFilter}
             onChange={(e) => setMemberFilter(e.target.value)}
             aria-label={t('print.membersAria')}

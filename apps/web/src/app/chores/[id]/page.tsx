@@ -237,7 +237,7 @@ function ReassignSheet({
               )
             }
             aria-pressed={personIds.includes(p.id)}
-            className={`rounded-sm border px-3 py-1 text-sm font-semibold ${personIds.includes(p.id) ? 'border-terracotta bg-terracotta text-terracotta-ink' : 'border-line bg-surface text-ink'}`}
+            className={`tap-spring rounded-full border px-3 py-1 text-sm font-semibold transition-colors ${personIds.includes(p.id) ? 'border-terracotta bg-accent-wash text-ink shadow-soft' : 'border-line bg-surface text-muted'}`}
           >
             {p.name}
           </button>

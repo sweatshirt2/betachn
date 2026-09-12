@@ -106,7 +106,7 @@ export default function NotificationsPage() {
                   aria-checked={on}
                   aria-label={t('notify.categoryAria', { category: t(CATEGORY_KEYS[category as keyof typeof CATEGORY_KEYS] ?? 'notify.title') })}
                   onClick={() => savePrefs.mutate({ categories: { ...categories, [category]: !on } })}
-                  className={`rounded-sm px-3 py-1 text-sm font-bold ${on ? 'bg-olive text-terracotta-ink' : 'bg-cream text-muted border-line border'}`}
+                  className={`tap-spring rounded-full px-3 py-1 text-sm font-bold transition-colors ${on ? 'bg-accent-wash text-ink shadow-soft' : 'bg-surface text-muted border-line border'}`}
                 >
                   {on ? t('notify.on') : t('notify.off')}
                 </button>
