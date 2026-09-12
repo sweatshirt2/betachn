@@ -57,8 +57,8 @@ export function SwipeCard({
     >
       {/* Completion cue behind the card, revealed by the drag */}
       <div
-        className="text-surface pointer-events-none absolute inset-0 flex items-center gap-2 bg-olive/85 pl-4 text-sm font-bold"
-        style={{ opacity: progress * 0.9 }}
+        className="bg-wash pointer-events-none absolute inset-0 flex items-center gap-2 pl-4 text-sm font-bold"
+        style={{ opacity: progress * 0.95 }}
         aria-hidden
       >
         <span style={{ transform: `translateX(${dx * 0.4 - 16}px)` }}>✓</span>

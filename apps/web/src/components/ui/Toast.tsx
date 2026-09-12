@@ -32,13 +32,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className="bg-ink text-cream pointer-events-auto flex items-center gap-3 rounded-md px-4 py-2 shadow-lift"
+            className="bg-card-wash text-ink border-line shadow-lift toast-in pointer-events-auto flex items-center gap-3 rounded-md border px-4 py-2"
             role="status"
           >
             <span className="text-sm">{t.message}</span>
             {t.actionLabel && (
               <button
-                className="text-mustard text-sm font-bold"
+                className="text-terracotta text-sm font-bold"
                 onClick={() => {
                   t.onAction?.();
                   setToasts((current) => current.filter((x) => x.id !== t.id));

@@ -8,14 +8,15 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const TONES: Record<ButtonTone, string> = {
-  primary: 'bg-terracotta text-terracotta-ink shadow-soft',
-  quiet: 'bg-surface text-ink border border-line shadow-soft',
+  primary: 'bg-primary-wash shadow-soft hover:shadow-glow',
+  quiet: 'bg-surface-alt text-ink border-line shadow-soft hover:shadow-glow border',
 };
 
+/** Buttons press with a spring and glow on hover — playful, never heavy. */
 export function Button({ tone = 'primary', children, className = '', ...rest }: ButtonProps) {
   return (
     <button
-      className={`rounded-md px-4 py-2 font-body text-sm font-semibold transition-transform active:scale-97 ${TONES[tone]} ${className}`}
+      className={`tap-spring border-line text-terracotta-ink rounded-md border border-transparent px-4 py-2 font-body text-sm font-semibold ${TONES[tone]} ${className}`}
       {...rest}
     >
       {children}

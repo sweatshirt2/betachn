@@ -12,7 +12,7 @@ export function Field({ label, error, id, ...rest }: FieldProps) {
       <span className="text-sm font-semibold">{label}</span>
       <input
         id={fieldId}
-        className="bg-surface text-ink border-line mt-1 w-full rounded-md border px-3 py-2 text-sm"
+        className="bg-surface-alt text-ink border-line shadow-soft focus:border-terracotta focus:ring-terracotta/30 mt-1 w-full rounded-md border px-3 py-2 text-sm outline-none transition-colors focus:ring-2"
         {...rest}
       />
       {error && (

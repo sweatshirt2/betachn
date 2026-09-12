@@ -38,7 +38,7 @@ export function Sheet({
         aria-label={t('common.close')}
         tabIndex={-1}
       />
-      <div className="sheet-panel bg-surface text-ink relative w-full max-w-lg rounded-t-lg p-5 shadow-lift sm:rounded-lg">
+      <div className="sheet-panel bg-card-wash text-ink shadow-lift border-line relative w-full max-w-lg rounded-t-lg border-x border-t p-5 sm:rounded-lg sm:border">
         <h2 className="font-display text-xl">{title}</h2>
         <div className="mt-3">{children}</div>
       </div>

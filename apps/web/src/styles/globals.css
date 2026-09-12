@@ -68,6 +68,10 @@ body {
 .bg-accent-wash {
   background: var(--chorify-gradient-accent);
 }
+.bg-wash {
+  background-color: var(--chorify-wash-bg);
+  color: var(--chorify-wash-ink);
+}
 
 /* ─── Ambient room light (§5.3): two very soft crayon glows drifting
  * behind the app. Fixed, GPU-cheap (transform only), sub-perceptual speed.
