@@ -337,6 +337,9 @@ export async function devicePeople(): Promise<DevicePersonPayload[]> {
     roleId: p.roleId,
     phone: p.phone,
     permissionOverrides: (p.permissionOverrides ?? {}) as Record<string, boolean>,
+    sex: (p.sex ?? null) as PersonPayload['sex'],
+    birthDate: p.birthDate ?? null,
+    age: p.age ?? null,
   }));
 }
 

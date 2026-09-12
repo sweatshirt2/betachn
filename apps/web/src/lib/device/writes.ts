@@ -761,9 +761,9 @@ export async function deviceCreatePerson(input: {
   actorPersonId: string;
   name: string;
   roleId?: string | null;
-  sex?: 'male' | 'female';
-  birthDate?: string;
-  age?: number;
+  sex?: 'male' | 'female' | null;
+  birthDate?: string | null;
+  age?: number | null;
   avatarEmoji?: string;
 }): Promise<PersonPayload> {
   const db = await requireDeviceDb();
@@ -821,6 +821,9 @@ export async function deviceCreatePerson(input: {
     roleId: input.roleId ?? null,
     phone: null,
     permissionOverrides: {},
+    sex: input.sex ?? null,
+    birthDate: input.birthDate ?? null,
+    age: input.age ?? null,
   };
 }
 
@@ -929,6 +932,9 @@ export async function deviceUpdatePerson(input: {
     roleId: after?.roleId ?? null,
     phone: after?.phone ?? null,
     permissionOverrides: (after?.permissionOverrides ?? {}) as Record<string, boolean>,
+    sex: (after?.sex ?? null) as PersonPayload['sex'],
+    birthDate: after?.birthDate ?? null,
+    age: after?.age ?? null,
   };
 }
 

@@ -1,3 +1,4 @@
+/** Person = household identity (CN §4). Wire type shared with GET /people + /profiles. */
 export type PersonPayload = {
   id: string;
   name: string;
@@ -5,6 +6,10 @@ export type PersonPayload = {
   roleId: string | null;
   phone: string | null;
   permissionOverrides: Record<string, boolean>;
+  /** Identity facts (§5.5 header/member cards). Mirrors core personRowSchema. */
+  sex: 'male' | 'female' | null;
+  birthDate: string | null;
+  age: number | null;
 };
 
 export type RolePayload = {
@@ -22,6 +27,9 @@ export type CreatePersonBody = {
   avatarEmoji?: string;
   roleId?: string | null;
   phone?: string | null;
+  sex?: 'male' | 'female' | null;
+  birthDate?: string | null;
+  age?: number | null;
 };
 
 export type UpdatePersonBody = {
@@ -29,4 +37,7 @@ export type UpdatePersonBody = {
   roleId?: string | null;
   phone?: string | null;
   permissionOverrides?: Record<string, boolean>;
+  sex?: 'male' | 'female' | null;
+  birthDate?: string | null;
+  age?: number | null;
 };
