@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button, Sheet } from '@/components/ui';
+import { NavIcon, type NavIconName } from '@/components/icons';
 import { clearApiCache, queryKeys, useApiQuery } from '@/lib/api';
 import { useSyncBoot, useSyncStatus } from '@/lib/sync/syncClient';
 import { exitViewAs, hasSession, type RootState } from '@/store';
@@ -14,24 +15,24 @@ import { readPasscodeGateState } from '@/lib/device/passcodeGate';
 import { LockScreen } from './LockScreen';
 import { ProfileSwitcher } from './ProfileSwitcher';
 
-type TabItem = { href: string; key: 'today' | 'chores' | 'household' | 'more' | 'routines' | 'home' | 'supplies' | 'shopping' | 'activity' | 'notifications' | 'settings'; icon: string };
+type TabItem = { href: string; key: 'today' | 'chores' | 'household' | 'more' | 'routines' | 'home' | 'supplies' | 'shopping' | 'activity' | 'notifications' | 'settings'; icon: NavIconName };
 
 const TABS: TabItem[] = [
-  { href: '/', key: 'today', icon: '🏠' },
-  { href: '/chores', key: 'chores', icon: '🧺' },
-  { href: '/household', key: 'household', icon: '👨‍👩‍👧' },
-  { href: '/more', key: 'more', icon: '⋯' },
+  { href: '/', key: 'today', icon: 'today' },
+  { href: '/chores', key: 'chores', icon: 'chores' },
+  { href: '/household', key: 'household', icon: 'household' },
+  { href: '/more', key: 'more', icon: 'more' },
 ];
 
 const RAIL: TabItem[] = [
   ...TABS.slice(0, 3),
-  { href: '/routines', key: 'routines', icon: '🌅' },
-  { href: '/home', key: 'home', icon: '🏡' },
-  { href: '/supplies', key: 'supplies', icon: '🧴' },
-  { href: '/shopping', key: 'shopping', icon: '🛒' },
-  { href: '/activity', key: 'activity', icon: '📜' },
-  { href: '/notifications', key: 'notifications', icon: '🔔' },
-  { href: '/settings', key: 'settings', icon: '🔧' },
+  { href: '/routines', key: 'routines', icon: 'routines' },
+  { href: '/home', key: 'home', icon: 'home' },
+  { href: '/supplies', key: 'supplies', icon: 'supplies' },
+  { href: '/shopping', key: 'shopping', icon: 'shopping' },
+  { href: '/activity', key: 'activity', icon: 'activity' },
+  { href: '/notifications', key: 'notifications', icon: 'notifications' },
+  { href: '/settings', key: 'settings', icon: 'settings' },
 ];
 
 const CHROMELESS = ['/login', '/onboarding', '/auth'];
@@ -126,18 +127,22 @@ export function Shell({ children }: { children: React.ReactNode }) {
       >
         <p className="font-display px-2 text-xl">Chorify</p>
         <nav className="mt-2 flex flex-col gap-1" aria-label={t('nav.primary')}>
-          {RAIL.map((item) => (
-            <Link
-              key={`${item.href}-${item.key}`}
-              href={item.href}
-              className={`tap-spring flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
-                pathname === item.href ? 'bg-accent-wash text-ink shadow-soft' : 'text-muted hover:bg-surface-alt'
-              }`}
-              aria-current={pathname === item.href ? 'page' : undefined}
-            >
-              <span aria-hidden>{item.icon}</span> {t(`nav.${item.key}`)}
-            </Link>
-          ))}
+          {RAIL.map((item) => {
+            const active = pathname === item.href;
+            return (
+              <Link
+                key={`${item.href}-${item.key}`}
+                href={item.href}
+                className={`tap-spring flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+                  active ? 'bg-accent-wash text-ink shadow-soft' : 'text-muted hover:bg-surface-alt'
+                }`}
+                aria-current={active ? 'page' : undefined}
+              >
+                <NavIcon name={item.icon} variant={active ? 'filled' : 'outline'} className="h-5 w-5" />
+                {t(`nav.${item.key}`)}
+              </Link>
+            );
+          })}
         </nav>
       </aside>
 
@@ -212,7 +217,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-2 sm:px-6 lg:pb-12 xl:max-w-4xl">{children}</main>
 
         <button
-          className="bg-fab text-fab-ink tap-spring fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full text-2xl shadow-lift transition-transform duration-200 hover:scale-105 hover:shadow-glow lg:bottom-8 lg:right-8"
+          className="bg-fab text-fab-ink tap-spring outline-surface shadow-lift hover:shadow-glow fixed bottom-[4.5rem] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full text-2xl outline-4 transition-all duration-200 hover:scale-105 sm:right-6 lg:bottom-8 lg:right-8"
           onClick={() => setCreateOpen(true)}
           aria-label={t('nav.create')}
         >
@@ -227,7 +232,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           {TABS.slice(0, 2).map((item) => (
             <Tab key={item.href} href={item.href} label={t(`nav.${item.key}`)} icon={item.icon} active={pathname === item.href} />
           ))}
-          <span className="w-12" aria-hidden />
+          <span className="w-14" aria-hidden />
           {TABS.slice(2).map((item) => (
             <Tab
               key={item.href}
@@ -297,21 +302,19 @@ function Tab({
 }: {
   href: string;
   label: string;
-  icon: string;
+  icon: NavIconName;
   active: boolean;
   dot?: boolean;
 }) {
   return (
     <Link
       href={href}
-      className={`tap-spring relative flex flex-1 flex-col items-center gap-0.5 rounded-md py-2 text-xs font-semibold transition-colors ${
-        active ? 'bg-accent-wash text-ink' : 'text-muted'
+      className={`tap-spring relative flex flex-1 flex-col items-center gap-0.5 rounded-md py-2 text-[10px] font-semibold leading-tight transition-colors ${
+        active ? 'text-ink' : 'text-muted'
       }`}
       aria-current={active ? 'page' : undefined}
     >
-      <span className="text-xl" aria-hidden>
-        {icon}
-      </span>
+      <NavIcon name={icon} variant={active ? 'filled' : 'outline'} className="h-6 w-6" aria-hidden />
       {dot && <span className="bg-clay-red absolute top-1 right-1/4 h-2 w-2 rounded-full" aria-hidden />}
       {label}
     </Link>
