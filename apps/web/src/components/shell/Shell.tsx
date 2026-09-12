@@ -13,26 +13,40 @@ import { exitViewAs, hasSession, type RootState } from '@/store';
 import { deviceNotifications } from '@/lib/device/reads';
 import { readPasscodeGateState } from '@/lib/device/passcodeGate';
 import { LockScreen } from './LockScreen';
+import { LanguageSwitcher } from './LanguageSwitcher';
+import { ProfileChip } from './ProfileChip';
 import { ProfileSwitcher } from './ProfileSwitcher';
 
-type TabItem = { href: string; key: 'today' | 'chores' | 'household' | 'more' | 'routines' | 'home' | 'supplies' | 'shopping' | 'activity' | 'notifications' | 'settings'; icon: NavIconName };
+type TabKey =
+  | 'today'
+  | 'duties'
+  | 'pantry'
+  | 'family'
+  | 'routines'
+  | 'home'
+  | 'activity'
+  | 'notifications'
+  | 'settings';
 
+type TabItem = { href: string; key: TabKey; icon: NavIconName };
+
+/** Five destinations per the §5.5 nav spec: Home, Tasks, Pantry, Family, Settings. */
 const TABS: TabItem[] = [
   { href: '/', key: 'today', icon: 'today' },
-  { href: '/chores', key: 'chores', icon: 'chores' },
-  { href: '/household', key: 'household', icon: 'household' },
-  { href: '/more', key: 'more', icon: 'more' },
+  { href: '/chores', key: 'duties', icon: 'chores' },
+  { href: '/pantry', key: 'pantry', icon: 'supplies' },
+  { href: '/family', key: 'family', icon: 'household' },
+  { href: '/settings', key: 'settings', icon: 'settings' },
 ];
 
+/** Wide-screen rail: the five tabs plus the management pages. */
 const RAIL: TabItem[] = [
   ...TABS.slice(0, 3),
   { href: '/routines', key: 'routines', icon: 'routines' },
   { href: '/home', key: 'home', icon: 'home' },
-  { href: '/supplies', key: 'supplies', icon: 'supplies' },
-  { href: '/shopping', key: 'shopping', icon: 'shopping' },
   { href: '/activity', key: 'activity', icon: 'activity' },
   { href: '/notifications', key: 'notifications', icon: 'notifications' },
-  { href: '/settings', key: 'settings', icon: 'settings' },
+  ...TABS.slice(3),
 ];
 
 const CHROMELESS = ['/login', '/onboarding', '/auth'];
@@ -40,7 +54,7 @@ const CHROMELESS = ['/login', '/onboarding', '/auth'];
 /** sessionStorage marker that the app-entry gate was satisfied this tab session. */
 const ENTRY_KEY = 'chorify-entry-ok';
 
-/** App shell (§5.1): greeting bar + bottom tabs on mobile, left rail wide. */
+/** App shell (§5.5): profile chip + language header, 5-tab bottom nav on mobile, left rail wide. */
 export function Shell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { t } = useTranslation();
@@ -81,8 +95,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
     options: { enabled: hasToken },
   });
   const viewedName = people.data?.people.find((p) => p.id === viewAsPersonId)?.name;
-  // Unread notification dot on the More tab (micro-24 companion): poll is
-  // handled by the global sync tick; enabled only with a session.
+  // Unread notification dot rides the header bell (micro-24 companion); the
+  // poll is handled by the global sync tick, enabled only with a session.
   const notifications = useApiQuery<{ notifications: Array<{ readAt: string | null }> }>({
     endpoint: { method: 'get', path: '/notifications' },
     key: ['notifications', 'all'] as const,
@@ -95,7 +109,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     },
   });
   const unreadCount = (notifications.data?.notifications ?? []).filter((n) => n.readAt === null).length;
-  const hasSessionRedux = useSelector(hasSession);
+  useSelector(hasSession);
 
   const chromeless = CHROMELESS.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
   if (chromeless) {
@@ -148,13 +162,16 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between gap-2 px-4 pt-4">
-          <p className="font-display text-xl sm:text-2xl">
-            {t(greetingKey())}, {activePerson?.name ?? t('nav.family')}
-          </p>
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 items-center gap-3">
+            {activePerson && <ProfileChip onOpen={() => setProfilesOpen(true)} />}
+            <p className="font-display hidden text-xl sm:block sm:text-2xl">
+              {t(greetingKey())}, {activePerson?.name ?? t('nav.family')}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
             {mode === 'server' && hasToken && (
               <span
-                className="border-line bg-surface/80 shadow-soft rounded-full border px-2.5 py-0.5 text-xs"
+                className="border-line bg-surface/80 shadow-soft hidden rounded-full border px-2.5 py-0.5 text-xs md:block"
                 role="status"
               >
                 {t('nav.upToDate')}
@@ -169,20 +186,30 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 pendingLabel={t('sync.pending', { count: sync.pendingCount })}
               />
             )}
-            {activePerson && (
-              <button
-                className="bg-surface/80 border-line shadow-soft tap-spring rounded-full border px-2.5 py-1 text-sm"
-                onClick={() => setProfilesOpen(true)}
-                aria-label={t('auth.switchProfileAria', { name: activePerson.name })}
-              >
-                🙂
-              </button>
-            )}
+            <LanguageSwitcher />
+            <Link
+              href="/notifications"
+              className="border-line bg-surface/80 shadow-soft tap-spring relative flex h-9 w-9 items-center justify-center rounded-full border"
+              aria-label={t('nav.notifications')}
+            >
+              <NavIcon
+                name="notifications"
+                variant={unreadCount > 0 ? 'filled' : 'outline'}
+                className="text-ink h-5 w-5"
+                aria-hidden
+              />
+              {unreadCount > 0 && (
+                <span className="bg-clay-red absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full" aria-hidden />
+              )}
+            </Link>
           </div>
         </header>
 
         {viewAsPersonId && (
-          <div className="bg-mustard text-ink mx-4 mt-2 flex items-center justify-between rounded-md px-3 py-2 text-sm font-semibold" role="status">
+          <div
+            className="bg-accent-wash text-ink mx-4 mt-2 flex items-center justify-between rounded-md px-3 py-2 text-sm font-semibold"
+            role="status"
+          >
             <span>{t('nav.previewingAs', { name: viewedName ?? t('nav.family') })}</span>
             <button
               className="underline"
@@ -229,18 +256,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
           aria-label={t('nav.primary')}
           data-no-print
         >
-          {TABS.slice(0, 2).map((item) => (
-            <Tab key={item.href} href={item.href} label={t(`nav.${item.key}`)} icon={item.icon} active={pathname === item.href} />
-          ))}
-          <span className="w-14" aria-hidden />
-          {TABS.slice(2).map((item) => (
+          {TABS.map((item) => (
             <Tab
               key={item.href}
               href={item.href}
               label={t(`nav.${item.key}`)}
               icon={item.icon}
               active={pathname === item.href}
-              dot={item.key === 'more' && hasSessionRedux && unreadCount > 0}
             />
           ))}
         </nav>
@@ -283,11 +305,12 @@ function SyncChip(props: {
   pendingLabel: string;
 }) {
   const label =
-    props.level === 'resync' || props.pendingCount === 0
-      ? props.freshLabel
-      : props.pendingLabel;
+    props.level === 'resync' || props.pendingCount === 0 ? props.freshLabel : props.pendingLabel;
   return (
-    <span className="border-line bg-surface/80 shadow-soft rounded-full border px-2.5 py-0.5 text-xs" role="status">
+    <span
+      className="border-line bg-surface/80 shadow-soft hidden rounded-full border px-2.5 py-0.5 text-xs md:block"
+      role="status"
+    >
       {label}
     </span>
   );
@@ -298,13 +321,11 @@ function Tab({
   label,
   icon,
   active,
-  dot = false,
 }: {
   href: string;
   label: string;
   icon: NavIconName;
   active: boolean;
-  dot?: boolean;
 }) {
   return (
     <Link
@@ -315,7 +336,6 @@ function Tab({
       aria-current={active ? 'page' : undefined}
     >
       <NavIcon name={icon} variant={active ? 'filled' : 'outline'} className="h-6 w-6" aria-hidden />
-      {dot && <span className="bg-clay-red absolute top-1 right-1/4 h-2 w-2 rounded-full" aria-hidden />}
       {label}
     </Link>
   );
