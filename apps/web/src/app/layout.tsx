@@ -29,16 +29,20 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#FAF6F0',
+  themeColor: '#F4F7FB',
 };
 
-const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem('chorify-theme');if(t==='ember'||t==='highland'||t==='family'||t==='glacier'||t==='honey'||t==='garden'||t==='rose'||t==='buna'||t==='olive'||t==='meskel'){document.documentElement.dataset.theme=t;}}catch(e){}})();`;
+/**
+ * FOUC guard: applies the persisted theme before first paint. Legacy ids
+ * from previous builds fall back to the default (sky).
+ */
+const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem('chorify-theme');var ok=t==='sky'||t==='peach'||t==='caramel'||t==='mint'||t==='butter'||t==='rose';document.documentElement.dataset.theme=ok?t:'sky';}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
-      data-theme="family"
+      data-theme="sky"
       suppressHydrationWarning
       className={`${fraunces.variable} ${nunitoSans.variable} ${notoEthiopic.variable}`}
     >

@@ -1,27 +1,37 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { THEME_STORAGE_KEY, isThemeId, type ThemeId } from './themes';
+import { DEFAULT_THEME, THEME_STORAGE_KEY, isLegacyThemeId, normalizeStoredTheme, type ThemeId } from './themes';
 
-const DEFAULT_THEME: ThemeId = 'family';
-
-function readStoredTheme(): ThemeId {
+/**
+ * Applies a theme id to <html data-theme> and persists it. Old stored ids
+ * (previous builds) resolve to the default via normalizeStoredTheme, and the
+ * stored value is rewritten so the migration is sticky.
+ */
+function applyStoredTheme(): ThemeId {
+  let stored: string | null = null;
   try {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    if (isThemeId(stored)) return stored;
+    stored = localStorage.getItem(THEME_STORAGE_KEY);
   } catch {
     // Storage unavailable (private mode) — fall through to default.
   }
-  return DEFAULT_THEME;
+  const resolved = normalizeStoredTheme(stored);
+  if (isLegacyThemeId(stored)) {
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, resolved);
+    } catch {
+      // Non-fatal: theme still applies for this session.
+    }
+  }
+  document.documentElement.dataset.theme = resolved;
+  return resolved;
 }
 
 export function useTheme() {
   const [theme, setThemeState] = useState<ThemeId>(DEFAULT_THEME);
 
   useEffect(() => {
-    const stored = readStoredTheme();
-    setThemeState(stored);
-    document.documentElement.dataset.theme = stored;
+    setThemeState(applyStoredTheme());
   }, []);
 
   const setTheme = useCallback((next: ThemeId) => {

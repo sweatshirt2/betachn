@@ -5,51 +5,72 @@
  * variables. Tailwind utilities never carry raw values: `globals.css` maps
  * them via `@theme inline`, so editing a value here re-skins the whole app.
  *
- * Themes: `family` (warm light, §5.2 default) lives in `:root`;
- * `ember` (warm dark) and `highland` (high-contrast light) override the
- * same variables under `[data-theme="…"]` on `<html>`.
+ * The visual system (plan §5.2, D-new): six LIGHT pastel themes, each built
+ * from the same "kids decorated room" recipe — a long, low-delta gradient
+ * wash across the page background (3 stops, lightness drift ≤ ~4%), near-
+ * white cards on top, low-contrast ink, per-theme pastel crayon accents for
+ * chips/avatars/sections, and layered warm-tinted shadows. The FAB always
+ * wears the theme primary.
+ *
+ * Theme ids here are mirrored in:
+ *  - apps/web/src/theme/themes.ts (THEME_IDS / isThemeId)
+ *  - apps/web/src/app/layout.tsx (THEME_BOOT_SCRIPT allowlist)
+ * Keep the three in sync when adding or renaming a theme.
  */
 
 :root,
-[data-theme='family'] {
-  --chorify-bg: #faf6f0;
-  --chorify-surface: #fffdf9;
-  --chorify-ink: #2d2a26;
-  --chorify-muted: #8a8177;
-  --chorify-line: #e8ded1;
-  --chorify-primary: #c96f4a;
-  --chorify-primary-ink: #fffdf9;
-  --chorify-secondary: #7a8b6f;
-  --chorify-accent: #e3b23c;
-  --chorify-danger: #c75b5b;
-  --chorify-info: #6fa8dc;
+[data-theme='sky'] {
+  /* Sky — the reference design: ice-blue canvas, pastel sky primary. */
+  --chorify-bg: #f2f6fa;
+  --chorify-bg-mid: #f3f7fb;
+  --chorify-bg-deep: #e9f1f8;
+  --chorify-surface: #fdfeff;
+  --chorify-surface-alt: #f6fafd;
+  --chorify-ink: #46525e;
+  --chorify-muted: #90a0ae;
+  --chorify-line: #e3edf5;
+  --chorify-primary: #7fb5d8;
+  --chorify-primary-ink: #ffffff;
+  --chorify-primary-soft: #dceef8;
+  --chorify-secondary: #e8bfaf;
+  --chorify-accent: #cca075;
+  --chorify-danger: #d98a8a;
+  --chorify-info: #8fb8d6;
 
-  /* Universal + action: reads its own tokens so every theme ships a matching FAB. */
-  --chorify-fab: #c96f4a;
-  --chorify-fab-ink: #fffdf9;
+  --chorify-fab: #7fb5d8;
+  --chorify-fab-ink: #ffffff;
+
+  --chorify-crayon-1: #a9cede;
+  --chorify-crayon-2: #f2d8c8;
+  --chorify-crayon-3: #f5e3d2;
+  --chorify-crayon-4: #f4d7dc;
 
   --chorify-radius-sm: 12px;
-  --chorify-radius-md: 16px;
-  --chorify-radius-lg: 24px;
+  --chorify-radius-md: 18px;
+  --chorify-radius-lg: 26px;
 
-  --chorify-shadow-soft: 0 2px 12px rgb(45 42 38 / 0.08);
-  --chorify-shadow-lift: 0 8px 28px rgb(45 42 38 / 0.14);
+  --chorify-shadow-soft:
+    0 1px 2px rgb(84 106 128 / 0.05),
+    0 4px 14px rgb(84 106 128 / 0.07);
+  --chorify-shadow-lift:
+    0 2px 6px rgb(84 106 128 / 0.08),
+    0 12px 32px rgb(84 106 128 / 0.12);
+  --chorify-shadow-glow: 0 8px 22px rgb(127 181 216 / 0.35);
 
-  --chorify-gradient-dawn: linear-gradient(135deg, #faf6f0 0%, #f5e6d3 55%, #eed9c2 100%);
-  --chorify-gradient-ember: linear-gradient(135deg, #c96f4a 0%, #a85838 100%);
+  --chorify-gradient-page: linear-gradient(168deg, #f4f7fb 0%, #f3f7fb 48%, #eaf2f9 100%);
+  --chorify-gradient-card: linear-gradient(170deg, #feffff 0%, #f8fbfe 100%);
+  --chorify-gradient-primary: linear-gradient(170deg, #8cbfdf 0%, #79b0d4 100%);
+  --chorify-gradient-accent: linear-gradient(170deg, #a9cede 0%, #93c2d6 100%);
 
   --chorify-gutter: 16px;
   --chorify-max-width: 72rem;
 
-  --chorify-watermark-opacity: 0.05;
+  --chorify-watermark-opacity: 0.06;
 
-  /* Check-off green wash (§5.3) — olive family in light themes. */
-  --chorify-wash-bg: #dfe8d7;
-  --chorify-wash-ink: #3f4a37;
+  /* Check-off wash (§5.3) — soft blue-green, stays gentle. */
+  --chorify-wash-bg: #dceef2;
+  --chorify-wash-ink: #3f5c68;
 
-  /* next/font self-hosted families (layout.tsx) with named fallbacks when
-     the generated variables are absent; per-character fallback resolves
-     Ethiopic through Noto Sans Ethiopic (micro-75). */
   --chorify-font-display: var(--font-next-fraunces, 'Fraunces'),
     var(--font-next-ethiopic, 'Noto Sans Ethiopic'), Georgia, serif;
   --chorify-font-body: var(--font-next-nunito, 'Nunito Sans'),
@@ -60,267 +81,227 @@
   --chorify-motion-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-[data-theme='ember'] {
-  --chorify-bg: #211913;
-  --chorify-surface: #2c231b;
-  --chorify-ink: #f5ebdd;
-  --chorify-muted: #b3a48f;
-  --chorify-line: #453729;
-  --chorify-primary: #e08a56;
-  --chorify-primary-ink: #211913;
-  --chorify-secondary: #9aa88d;
-  --chorify-accent: #eec25e;
-  --chorify-danger: #d97b7b;
-  --chorify-info: #8fbef0;
-
-  --chorify-fab: #e08a56;
-  --chorify-fab-ink: #211913;
-
-  --chorify-shadow-soft: 0 2px 12px rgb(0 0 0 / 0.35);
-  --chorify-shadow-lift: 0 8px 28px rgb(0 0 0 / 0.5);
-
-  --chorify-gradient-dawn: linear-gradient(135deg, #211913 0%, #332619 55%, #45331f 100%);
-  --chorify-gradient-ember: linear-gradient(135deg, #e08a56 0%, #b25f31 100%);
-
-  --chorify-watermark-opacity: 0.07;
-
-  --chorify-wash-bg: #3a4530;
-  --chorify-wash-ink: #dfe8d7;
-}
-
-[data-theme='highland'] {  --chorify-bg: #ffffff;
-  --chorify-surface: #fffdf9;
-  --chorify-ink: #1a1a1a;
-  --chorify-muted: #5f5b55;
-  --chorify-line: #d5c9b8;
-  --chorify-primary: #b25a2e;
+/* Peach — sunny nursery: peach leads, sky supports. */
+[data-theme='peach'] {
+  --chorify-bg: #fdf4ee;
+  --chorify-bg-mid: #fdf5f0;
+  --chorify-bg-deep: #f9e8dd;
+  --chorify-surface: #fffdfa;
+  --chorify-surface-alt: #fdf3ec;
+  --chorify-ink: #5c5049;
+  --chorify-muted: #a89689;
+  --chorify-line: #f2e3d8;
+  --chorify-primary: #e2a184;
   --chorify-primary-ink: #ffffff;
-  --chorify-secondary: #5f7052;
-  --chorify-accent: #c9971c;
-  --chorify-danger: #b03a3a;
-  --chorify-info: #2f6fb2;
+  --chorify-primary-soft: #fbe7da;
+  --chorify-secondary: #a3c9d9;
+  --chorify-accent: #cca075;
+  --chorify-danger: #d98a8a;
+  --chorify-info: #9cc1d8;
 
-  --chorify-fab: #b25a2e;
+  --chorify-fab: #e2a184;
   --chorify-fab-ink: #ffffff;
 
-  --chorify-shadow-soft: 0 2px 10px rgb(26 26 26 / 0.1);
-  --chorify-shadow-lift: 0 8px 24px rgb(26 26 26 / 0.18);
+  --chorify-crayon-1: #f2d8c8;
+  --chorify-crayon-2: #a9cede;
+  --chorify-crayon-3: #f4d7dc;
+  --chorify-crayon-4: #f5e3d2;
 
-  --chorify-gradient-dawn: linear-gradient(135deg, #ffffff 0%, #faf3e6 60%, #f3e7d0 100%);
-  --chorify-gradient-ember: linear-gradient(135deg, #b25a2e 0%, #8f4523 100%);
+  --chorify-shadow-soft:
+    0 1px 2px rgb(120 92 74 / 0.05),
+    0 4px 14px rgb(120 92 74 / 0.07);
+  --chorify-shadow-lift:
+    0 2px 6px rgb(120 92 74 / 0.08),
+    0 12px 32px rgb(120 92 74 / 0.12);
+  --chorify-shadow-glow: 0 8px 22px rgb(226 161 132 / 0.35);
 
-  --chorify-watermark-opacity: 0.04;
+  --chorify-gradient-page: linear-gradient(168deg, #fdf5f0 0%, #fcf3ec 48%, #f8e9de 100%);
+  --chorify-gradient-card: linear-gradient(170deg, #fffefc 0%, #fdf5ee 100%);
+  --chorify-gradient-primary: linear-gradient(170deg, #e8ae93 0%, #de9a7b 100%);
+  --chorify-gradient-accent: linear-gradient(170deg, #f2d8c8 0%, #eac9b3 100%);
 
-  --chorify-wash-bg: #e3ebdc;
-  --chorify-wash-ink: #33402c;
+  --chorify-watermark-opacity: 0.06;
+
+  --chorify-wash-bg: #f6e3d6;
+  --chorify-wash-ink: #6b4f3c;
 }
 
-/* Glacier — the reference screenshots: warm-gray canvas, glacier-blue
- * interactive primary, warm tan FAB. Light, calm, family-warm. */
-[data-theme='glacier'] {
-  --chorify-bg: #f4f2ee;
-  --chorify-surface: #ffffff;
-  --chorify-ink: #33302b;
-  --chorify-muted: #8a857b;
-  --chorify-line: #e2ddd4;
-  --chorify-primary: #5b9bd5;
+/* Caramel — toasty playroom: warm caramel on cream. */
+[data-theme='caramel'] {
+  --chorify-bg: #faf3e8;
+  --chorify-bg-mid: #faf4ea;
+  --chorify-bg-deep: #f1e3cc;
+  --chorify-surface: #fffcf6;
+  --chorify-surface-alt: #f9f0df;
+  --chorify-ink: #574a38;
+  --chorify-muted: #a29074;
+  --chorify-line: #eee0c8;
+  --chorify-primary: #c89a68;
   --chorify-primary-ink: #ffffff;
-  --chorify-secondary: #7a8b6f;
-  --chorify-accent: #c89b6a;
-  --chorify-danger: #c75b5b;
-  --chorify-info: #4a8ac4;
+  --chorify-primary-soft: #f3e3cc;
+  --chorify-secondary: #e8bfaf;
+  --chorify-accent: #d9a441;
+  --chorify-danger: #d98a8a;
+  --chorify-info: #9cc1d8;
 
-  --chorify-fab: #c89b6a;
+  --chorify-fab: #c89a68;
   --chorify-fab-ink: #ffffff;
 
-  --chorify-shadow-soft: 0 2px 12px rgb(51 48 43 / 0.08);
-  --chorify-shadow-lift: 0 8px 28px rgb(51 48 43 / 0.14);
+  --chorify-crayon-1: #f5e3d2;
+  --chorify-crayon-2: #e8bfaf;
+  --chorify-crayon-3: #f4d7dc;
+  --chorify-crayon-4: #dce9dd;
 
-  --chorify-gradient-dawn: linear-gradient(135deg, #f4f2ee 0%, #eae6dd 55%, #dce6ee 100%);
-  --chorify-gradient-ember: linear-gradient(135deg, #5b9bd5 0%, #3f7ab5 100%);
+  --chorify-shadow-soft:
+    0 1px 2px rgb(110 88 60 / 0.06),
+    0 4px 14px rgb(110 88 60 / 0.08);
+  --chorify-shadow-lift:
+    0 2px 6px rgb(110 88 60 / 0.09),
+    0 12px 32px rgb(110 88 60 / 0.13);
+  --chorify-shadow-glow: 0 8px 22px rgb(200 154 104 / 0.35);
 
-  --chorify-watermark-opacity: 0.05;
+  --chorify-gradient-page: linear-gradient(168deg, #faf4ea 0%, #f9f1e2 48%, #f2e4cd 100%);
+  --chorify-gradient-card: linear-gradient(170deg, #fffdf8 0%, #f9f1e1 100%);
+  --chorify-gradient-primary: linear-gradient(170deg, #d1a778 0%, #c2925e 100%);
+  --chorify-gradient-accent: linear-gradient(170deg, #f0d9ba 0%, #e6c99f 100%);
 
-  --chorify-wash-bg: #dee8f0;
-  --chorify-wash-ink: #2f3d4d;
+  --chorify-watermark-opacity: 0.06;
+
+  --chorify-wash-bg: #f0e4cb;
+  --chorify-wash-ink: #5c4a2e;
 }
 
-/* Honey — warm breakfast table: morning cream, deep honey primary,
- * cocoa FAB. Light, sweet, unhurried. */
-[data-theme='honey'] {
-  --chorify-bg: #fbf5ea;
-  --chorify-surface: #fffdf8;
-  --chorify-ink: #3a2e22;
-  --chorify-muted: #97816a;
-  --chorify-line: #eadfc9;
-  --chorify-primary: #b97f16;
+/* Mint — fresh meadow: soft green on warm cream. */
+[data-theme='mint'] {
+  --chorify-bg: #f1f7f1;
+  --chorify-bg-mid: #f2f8f3;
+  --chorify-bg-deep: #e2efe4;
+  --chorify-surface: #fdfffd;
+  --chorify-surface-alt: #f0f7f1;
+  --chorify-ink: #475747;
+  --chorify-muted: #8ba08b;
+  --chorify-line: #dfecdf;
+  --chorify-primary: #8fbc9f;
   --chorify-primary-ink: #ffffff;
-  --chorify-secondary: #7a8b6f;
-  --chorify-accent: #e3b23c;
-  --chorify-danger: #c75b5b;
-  --chorify-info: #5b9bd5;
+  --chorify-primary-soft: #ddf0e3;
+  --chorify-secondary: #f2d8c8;
+  --chorify-accent: #cca075;
+  --chorify-danger: #d98a8a;
+  --chorify-info: #9cc1d8;
 
-  --chorify-fab: #7a5230;
-  --chorify-fab-ink: #fff9f0;
-
-  --chorify-shadow-soft: 0 2px 12px rgb(58 46 34 / 0.08);
-  --chorify-shadow-lift: 0 8px 28px rgb(58 46 34 / 0.14);
-
-  --chorify-gradient-dawn: linear-gradient(135deg, #fbf5ea 0%, #f6e9cf 55%, #f1dcb4 100%);
-  --chorify-gradient-ember: linear-gradient(135deg, #b97f16 0%, #8f6110 100%);
-
-  --chorify-watermark-opacity: 0.05;
-
-  --chorify-wash-bg: #f3e8c8;
-  --chorify-wash-ink: #4a3a14;
-}
-
-/* Garden — fresh and growing: mint-white canvas, leaf-green primary,
- * pond-blue secondary, sky FAB. Light, alive, hopeful. */
-[data-theme='garden'] {
-  --chorify-bg: #f2f6ee;
-  --chorify-surface: #ffffff;
-  --chorify-ink: #2e352a;
-  --chorify-muted: #7e8a76;
-  --chorify-line: #dee5d5;
-  --chorify-primary: #5f8f4e;
-  --chorify-primary-ink: #ffffff;
-  --chorify-secondary: #527a8b;
-  --chorify-accent: #e3b23c;
-  --chorify-danger: #c75b5b;
-  --chorify-info: #5b9bd5;
-
-  --chorify-fab: #5b9bd5;
+  --chorify-fab: #8fbc9f;
   --chorify-fab-ink: #ffffff;
 
-  --chorify-shadow-soft: 0 2px 12px rgb(46 53 42 / 0.08);
-  --chorify-shadow-lift: 0 8px 28px rgb(46 53 42 / 0.14);
+  --chorify-crayon-1: #dce9dd;
+  --chorify-crayon-2: #f2d8c8;
+  --chorify-crayon-3: #a9cede;
+  --chorify-crayon-4: #f4d7dc;
 
-  --chorify-gradient-dawn: linear-gradient(135deg, #f2f6ee 0%, #e4ebd8 55%, #d5e2c8 100%);
-  --chorify-gradient-ember: linear-gradient(135deg, #5f8f4e 0%, #476e38 100%);
+  --chorify-shadow-soft:
+    0 1px 2px rgb(76 104 84 / 0.05),
+    0 4px 14px rgb(76 104 84 / 0.07);
+  --chorify-shadow-lift:
+    0 2px 6px rgb(76 104 84 / 0.08),
+    0 12px 32px rgb(76 104 84 / 0.12);
+  --chorify-shadow-glow: 0 8px 22px rgb(143 188 159 / 0.35);
 
-  --chorify-watermark-opacity: 0.05;
+  --chorify-gradient-page: linear-gradient(168deg, #f2f8f3 0%, #f1f7f2 48%, #e5f1e7 100%);
+  --chorify-gradient-card: linear-gradient(170deg, #fefffe 0%, #f5faf6 100%);
+  --chorify-gradient-primary: linear-gradient(170deg, #9cc6ab 0%, #86b696 100%);
+  --chorify-gradient-accent: linear-gradient(170deg, #dce9dd 0%, #c8ddd0 100%);
 
-  --chorify-wash-bg: #dfe9d2;
-  --chorify-wash-ink: #33402c;
+  --chorify-watermark-opacity: 0.06;
+
+  --chorify-wash-bg: #e0f0e4;
+  --chorify-wash-ink: #33513a;
 }
 
-/* Rose — soft and caring: blush canvas, gentle rose primary, warm
- * taupe FAB. Light, tender, never loud. */
+/* Butter — sunny breakfast table: soft yellow on ivory. */
+[data-theme='butter'] {
+  --chorify-bg: #fdf8ea;
+  --chorify-bg-mid: #fdf9ee;
+  --chorify-bg-deep: #f8edcf;
+  --chorify-surface: #fffefa;
+  --chorify-surface-alt: #faf3e0;
+  --chorify-ink: #5c5340;
+  --chorify-muted: #a89c7f;
+  --chorify-line: #f1e8cd;
+  --chorify-primary: #dfb878;
+  --chorify-primary-ink: #ffffff;
+  --chorify-primary-soft: #f9ecd2;
+  --chorify-secondary: #a3c9d9;
+  --chorify-accent: #d9a441;
+  --chorify-danger: #d98a8a;
+  --chorify-info: #9cc1d8;
+
+  --chorify-fab: #dfb878;
+  --chorify-fab-ink: #ffffff;
+
+  --chorify-crayon-1: #f7e8c3;
+  --chorify-crayon-2: #f4d7dc;
+  --chorify-crayon-3: #a9cede;
+  --chorify-crayon-4: #dce9dd;
+
+  --chorify-shadow-soft:
+    0 1px 2px rgb(112 96 62 / 0.05),
+    0 4px 14px rgb(112 96 62 / 0.07);
+  --chorify-shadow-lift:
+    0 2px 6px rgb(112 96 62 / 0.08),
+    0 12px 32px rgb(112 96 62 / 0.12);
+  --chorify-shadow-glow: 0 8px 22px rgb(223 184 120 / 0.35);
+
+  --chorify-gradient-page: linear-gradient(168deg, #fdf9ee 0%, #fcf7ea 48%, #f8eed3 100%);
+  --chorify-gradient-card: linear-gradient(170deg, #fffefb 0%, #fbf5e4 100%);
+  --chorify-gradient-primary: linear-gradient(170deg, #e5c288 0%, #dab270 100%);
+  --chorify-gradient-accent: linear-gradient(170deg, #f6e5bd 0%, #eed9a8 100%);
+
+  --chorify-watermark-opacity: 0.06;
+
+  --chorify-wash-bg: #f5ead0;
+  --chorify-wash-ink: #5f4f28;
+}
+
+/* Rose — cozy blanket: dusty rose on blush. */
 [data-theme='rose'] {
-  --chorify-bg: #fbf3f1;
-  --chorify-surface: #ffffff;
-  --chorify-ink: #3a2c28;
-  --chorify-muted: #9a8078;
-  --chorify-line: #eddad4;
-  --chorify-primary: #c26e7d;
+  --chorify-bg: #fbf2f2;
+  --chorify-bg-mid: #fbf3f3;
+  --chorify-bg-deep: #f4e2e3;
+  --chorify-surface: #fffcfc;
+  --chorify-surface-alt: #faf0f0;
+  --chorify-ink: #5e4c50;
+  --chorify-muted: #ab9195;
+  --chorify-line: #f2e1e2;
+  --chorify-primary: #d294a2;
   --chorify-primary-ink: #ffffff;
-  --chorify-secondary: #7a8b6f;
-  --chorify-accent: #e3b23c;
-  --chorify-danger: #b03a3a;
-  --chorify-info: #5b9bd5;
+  --chorify-primary-soft: #f7e0e5;
+  --chorify-secondary: #a9cede;
+  --chorify-accent: #cca075;
+  --chorify-danger: #d98a8a;
+  --chorify-info: #9cc1d8;
 
-  --chorify-fab: #8a6f62;
+  --chorify-fab: #d294a2;
   --chorify-fab-ink: #ffffff;
 
-  --chorify-shadow-soft: 0 2px 12px rgb(58 44 40 / 0.08);
-  --chorify-shadow-lift: 0 8px 28px rgb(58 44 40 / 0.14);
+  --chorify-crayon-1: #f4d7dc;
+  --chorify-crayon-2: #f2d8c8;
+  --chorify-crayon-3: #a9cede;
+  --chorify-crayon-4: #f5e3d2;
 
-  --chorify-gradient-dawn: linear-gradient(135deg, #fbf3f1 0%, #f5e2dc 55%, #efd3cb 100%);
-  --chorify-gradient-ember: linear-gradient(135deg, #c26e7d 0%, #9e4f5d 100%);
+  --chorify-shadow-soft:
+    0 1px 2px rgb(116 88 94 / 0.05),
+    0 4px 14px rgb(116 88 94 / 0.07);
+  --chorify-shadow-lift:
+    0 2px 6px rgb(116 88 94 / 0.08),
+    0 12px 32px rgb(116 88 94 / 0.12);
+  --chorify-shadow-glow: 0 8px 22px rgb(210 148 162 / 0.35);
 
-  --chorify-watermark-opacity: 0.05;
+  --chorify-gradient-page: linear-gradient(168deg, #fbf3f3 0%, #faf2f2 48%, #f5e5e6 100%);
+  --chorify-gradient-card: linear-gradient(170deg, #fffdfd 0%, #faf2f3 100%);
+  --chorify-gradient-primary: linear-gradient(170deg, #d8a2ae 0%, #cd8d9b 100%);
+  --chorify-gradient-accent: linear-gradient(170deg, #f4d7dc 0%, #ecc5cd 100%);
 
-  --chorify-wash-bg: #f2dde0;
-  --chorify-wash-ink: #4e2c33;
-}
+  --chorify-watermark-opacity: 0.06;
 
-/* Buna — the Ethiopian coffee ceremony: warm latte canvas, deep coffee
- * primary, golden honey FAB. Grounded, hospitable, home. */
-[data-theme='buna'] {
-  --chorify-bg: #f6f1e8;
-  --chorify-surface: #fffdf9;
-  --chorify-ink: #2e241a;
-  --chorify-muted: #8a7a64;
-  --chorify-line: #e5d8c2;
-  --chorify-primary: #8a5a33;
-  --chorify-primary-ink: #fff9f0;
-  --chorify-secondary: #7a8b6f;
-  --chorify-accent: #d9a441;
-  --chorify-danger: #c75b5b;
-  --chorify-info: #5b9bd5;
-
-  --chorify-fab: #c98a1b;
-  --chorify-fab-ink: #2e241a;
-
-  --chorify-shadow-soft: 0 2px 12px rgb(46 36 26 / 0.08);
-  --chorify-shadow-lift: 0 8px 28px rgb(46 36 26 / 0.14);
-
-  --chorify-gradient-dawn: linear-gradient(135deg, #f6f1e8 0%, #eddfc7 55%, #e2cba4 100%);
-  --chorify-gradient-ember: linear-gradient(135deg, #8a5a33 0%, #684322 100%);
-
-  --chorify-watermark-opacity: 0.05;
-
-  --chorify-wash-bg: #e9dcc2;
-  --chorify-wash-ink: #42321c;
-}
-
-/* Olive — quiet grove: warm stone canvas, deep olive primary, baked
- * terracotta FAB. Steady, rooted, timeless. */
-[data-theme='olive'] {
-  --chorify-bg: #f5f4ec;
-  --chorify-surface: #fffdf8;
-  --chorify-ink: #2c2e21;
-  --chorify-muted: #82816a;
-  --chorify-line: #e0decb;
-  --chorify-primary: #6f7d3a;
-  --chorify-primary-ink: #ffffff;
-  --chorify-secondary: #5f7052;
-  --chorify-accent: #d9a441;
-  --chorify-danger: #b03a3a;
-  --chorify-info: #5b9bd5;
-
-  --chorify-fab: #c96f4a;
-  --chorify-fab-ink: #fffdf9;
-
-  --chorify-shadow-soft: 0 2px 12px rgb(44 46 33 / 0.08);
-  --chorify-shadow-lift: 0 8px 28px rgb(44 46 33 / 0.14);
-
-  --chorify-gradient-dawn: linear-gradient(135deg, #f5f4ec 0%, #e9e7d2 55%, #dbd8b8 100%);
-  --chorify-gradient-ember: linear-gradient(135deg, #6f7d3a 0%, #545f2b 100%);
-
-  --chorify-watermark-opacity: 0.05;
-
-  --chorify-wash-bg: #e2e4c8;
-  --chorify-wash-ink: #34381e;
-}
-
-/* Meskel — golden festival light: sunlit cream, deep marigold primary,
- * bonfire ember FAB. Joyful, communal, celebratory. */
-[data-theme='meskel'] {
-  --chorify-bg: #fbf6e9;
-  --chorify-surface: #ffffff;
-  --chorify-ink: #33291a;
-  --chorify-muted: #94835f;
-  --chorify-line: #e9ddbe;
-  --chorify-primary: #a87b12;
-  --chorify-primary-ink: #ffffff;
-  --chorify-secondary: #7a8b6f;
-  --chorify-accent: #c65b2e;
-  --chorify-danger: #b03a3a;
-  --chorify-info: #5b9bd5;
-
-  --chorify-fab: #c65b2e;
-  --chorify-fab-ink: #ffffff;
-
-  --chorify-shadow-soft: 0 2px 12px rgb(51 41 26 / 0.08);
-  --chorify-shadow-lift: 0 8px 28px rgb(51 41 26 / 0.14);
-
-  --chorify-gradient-dawn: linear-gradient(135deg, #fbf6e9 0%, #f7ebcb 55%, #f2dda6 100%);
-  --chorify-gradient-ember: linear-gradient(135deg, #a87b12 0%, #7e5c0d 100%);
-
-  --chorify-watermark-opacity: 0.05;
-
-  --chorify-wash-bg: #f3e6be;
-  --chorify-wash-ink: #4a3a10;
+  --chorify-wash-bg: #f6e0e4;
+  --chorify-wash-ink: #5f3a42;
 }

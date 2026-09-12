@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { Button, Card, Field, useToast } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
 import { useLogout } from '@/features/auth';
-import { THEME_IDS, useTheme, type ThemeId } from '@/theme';
+import { THEME_IDS, THEME_SWATCHES, useTheme, type ThemeId } from '@/theme';
 import { LANGUAGE_STORAGE_KEY, LOCALES } from '@/i18n/dictionaries';
 import i18n from '@/i18n';
 import { readPasscodeGateState, setPasscodeGate, clearPasscodeGate, MemoryTierError, type PasscodeGateState } from '@/lib/device/passcodeGate';
@@ -15,18 +15,14 @@ import type { RootState } from '@/store';
 const CALENDAR_STORAGE_KEY = 'chorify-calendar';
 type CalendarPref = 'gregorian' | 'ethiopian' | 'both';
 
-/** Theme toggle labels resolve through i18n (EN+AM parity per the AM-parity law). */
-const THEME_DICT_KEYS: Record<ThemeId, 'settings.themeFamily' | 'settings.themeEmber' | 'settings.themeHighland' | 'settings.themeGlacier' | 'settings.themeHoney' | 'settings.themeGarden' | 'settings.themeRose' | 'settings.themeBuna' | 'settings.themeOlive' | 'settings.themeMeskel'> = {
-  family: 'settings.themeFamily',
-  ember: 'settings.themeEmber',
-  highland: 'settings.themeHighland',
-  glacier: 'settings.themeGlacier',
-  honey: 'settings.themeHoney',
-  garden: 'settings.themeGarden',
+/** Theme labels resolve through i18n (EN+AM parity per the AM-parity law). */
+const THEME_DICT_KEYS: Record<ThemeId, `settings.theme${Capitalize<ThemeId>}`> = {
+  sky: 'settings.themeSky',
+  peach: 'settings.themePeach',
+  caramel: 'settings.themeCaramel',
+  mint: 'settings.themeMint',
+  butter: 'settings.themeButter',
   rose: 'settings.themeRose',
-  buna: 'settings.themeBuna',
-  olive: 'settings.themeOlive',
-  meskel: 'settings.themeMeskel',
 };
 
 function readCalendar(): CalendarPref {
@@ -126,12 +122,37 @@ export default function SettingsPage() {
 
       <section aria-label={t('settings.theme')} className="mt-4">
         <h2 className="font-display text-lg">{t('settings.theme')}</h2>
-        <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label={t('settings.theme')}>
-          {THEME_IDS.map((id) => (
-            <Button key={id} tone={theme === id ? 'primary' : 'quiet'} onClick={() => setTheme(id)}>
-              {t(THEME_DICT_KEYS[id])}
-            </Button>
-          ))}
+        <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3" role="group" aria-label={t('settings.theme')}>
+          {THEME_IDS.map((id) => {
+            const swatch = THEME_SWATCHES[id];
+            const selected = theme === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setTheme(id)}
+                aria-pressed={selected}
+                className={`lift-hover bg-card-wash border-line rounded-md border p-2 text-left shadow-soft ${
+                  selected ? 'border-terracotta ring-terracotta/40 ring-2' : ''
+                }`}
+              >
+                <span
+                  className="border-line block h-12 w-full rounded-sm border"
+                  style={{ background: `linear-gradient(150deg, ${swatch.from}, ${swatch.to})` }}
+                >
+                  <span
+                    className="mt-7 ml-2 inline-block h-5 w-5 rounded-full shadow-soft"
+                    style={{ background: swatch.primary }}
+                  />
+                  <span
+                    className="ml-1 inline-block h-2.5 w-2.5 rounded-full"
+                    style={{ background: swatch.crayon }}
+                  />
+                </span>
+                <span className="mt-2 block px-0.5 text-sm font-semibold">{t(THEME_DICT_KEYS[id])}</span>
+              </button>
+            );
+          })}
         </div>
       </section>
 

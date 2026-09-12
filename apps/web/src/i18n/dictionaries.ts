@@ -362,16 +362,12 @@ export type Dict = {
     passcodeExplainSynced: string;
     passcodeExplainOffline: string;
     passcodeNeedsDurable: string;
-    themeFamily: string;
-    themeEmber: string;
-    themeHighland: string;
-    themeGlacier: string;
-    themeHoney: string;
-    themeGarden: string;
+    themeSky: string;
+    themePeach: string;
+    themeCaramel: string;
+    themeMint: string;
+    themeButter: string;
     themeRose: string;
-    themeBuna: string;
-    themeOlive: string;
-    themeMeskel: string;
   };
   print: {
     title: string;
@@ -790,16 +786,12 @@ export const en: Dict = {
       'Locks this app on this device. This household is offline-only — forgetting the passcode means resetting the app and losing data on this device.',
     passcodeNeedsDurable:
       'This browser session has no durable storage, so a passcode cannot be saved. Open the app in Chrome, Edge, Safari or Firefox.',
-    themeFamily: 'Family',
-    themeEmber: 'Ember',
-    themeHighland: 'Highland',
-    themeGlacier: 'Glacier',
-    themeHoney: 'Honey',
-    themeGarden: 'Garden',
+    themeSky: 'Sky',
+    themePeach: 'Peach',
+    themeCaramel: 'Caramel',
+    themeMint: 'Mint',
+    themeButter: 'Butter',
     themeRose: 'Rose',
-    themeBuna: 'Buna',
-    themeOlive: 'Olive',
-    themeMeskel: 'Meskel',
   },
   print: {
     title: 'Print week',
@@ -1212,16 +1204,12 @@ export const am: Dict = {
       'መቆለፊያው የሚሠራው በዚህ መሣሪያ ላይ ነው። ይህ ቤተሰብ መሣሪያውን ብቻ ይጠቀማል — ረስተዋል? መተግበሪያውን ማሳረስ ብቻ ነው፤ መረጃው ይጠፋል።',
     passcodeNeedsDurable:
       'በዚህ አሳሽ ክፍለ-ጊዜ ዘላቂ ማከማቻ የለም፤ ስለዚህ የይለፍ ቃል ሊቀመጥ አይችልም። መተግበሪያውን በChrome፣ Edge፣ Safari ወይም Firefox ይክፈቱ።',
-    themeFamily: 'ቤተሰብ',
-    themeEmber: 'እሳት',
-    themeHighland: 'ከፍታ',
-    themeGlacier: 'ግላሲየር',
-    themeHoney: 'ማር',
-    themeGarden: 'አትክልት',
+    themeSky: 'ሰማይ',
+    themePeach: 'ፑች',
+    themeCaramel: 'ካራመል',
+    themeMint: 'ሚንት',
+    themeButter: 'በተር',
     themeRose: 'ሮዝ',
-    themeBuna: 'ቡና',
-    themeOlive: 'ወይራ',
-    themeMeskel: 'መስቀል',
   },
   print: {
     title: 'ሳምንቱን አትም',

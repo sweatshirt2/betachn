@@ -9,6 +9,7 @@
 @theme inline {
   --color-cream: var(--chorify-bg);
   --color-surface: var(--chorify-surface);
+  --color-surface-alt: var(--chorify-surface-alt);
   --color-ink: var(--chorify-ink);
   --color-muted: var(--chorify-muted);
   --color-line: var(--chorify-line);
@@ -20,6 +21,10 @@
   --color-sky: var(--chorify-info);
   --color-fab: var(--chorify-fab);
   --color-fab-ink: var(--chorify-fab-ink);
+  --color-crayon-1: var(--chorify-crayon-1);
+  --color-crayon-2: var(--chorify-crayon-2);
+  --color-crayon-3: var(--chorify-crayon-3);
+  --color-crayon-4: var(--chorify-crayon-4);
 
   --radius-sm: var(--chorify-radius-sm);
   --radius-md: var(--chorify-radius-md);
@@ -27,13 +32,14 @@
 
   --shadow-soft: var(--chorify-shadow-soft);
   --shadow-lift: var(--chorify-shadow-lift);
+  --shadow-glow: var(--chorify-shadow-glow);
 
   --font-display: var(--chorify-font-display);
   --font-body: var(--chorify-font-body);
 }
 
 body {
-  background-color: var(--chorify-bg);
+  background: var(--chorify-gradient-page) fixed;
   color: var(--chorify-ink);
   font-family: var(--chorify-font-body);
 }
@@ -45,6 +51,89 @@ body {
   }
 }
 
+/* ─── Gradient wash helpers ─────────────────────────────────────────────
+ * Plain CSS classes (not utilities) because gradients are backgrounds-
+ * image values. All resolve to per-theme tokens in tokens.css.
+ */
+.bg-page-wash {
+  background: var(--chorify-gradient-page);
+}
+.bg-card-wash {
+  background: var(--chorify-gradient-card);
+}
+.bg-primary-wash {
+  background: var(--chorify-gradient-primary);
+  color: var(--chorify-primary-ink);
+}
+.bg-accent-wash {
+  background: var(--chorify-gradient-accent);
+}
+
+/* ─── Ambient room light (§5.3): two very soft crayon glows drifting
+ * behind the app. Fixed, GPU-cheap (transform only), sub-perceptual speed.
+ */
+.ambient::before,
+.ambient::after {
+  content: '';
+  position: fixed;
+  z-index: -1;
+  border-radius: 9999px;
+  filter: blur(60px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.ambient::before {
+  width: 44vmax;
+  height: 44vmax;
+  left: -12vmax;
+  top: -14vmax;
+  background: var(--chorify-crayon-1);
+  animation: chorify-drift-a 70s ease-in-out infinite alternate;
+}
+.ambient::after {
+  width: 38vmax;
+  height: 38vmax;
+  right: -10vmax;
+  bottom: -16vmax;
+  background: var(--chorify-crayon-2);
+  animation: chorify-drift-b 90s ease-in-out infinite alternate;
+}
+@keyframes chorify-drift-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(6vmax, 4vmax, 0) scale(1.08);
+  }
+}
+@keyframes chorify-drift-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-5vmax, -3vmax, 0) scale(1.06);
+  }
+}
+
+/* ─── Interaction lifts ──────────────────────────────────────────────── */
+.lift-hover {
+  transition:
+    transform var(--chorify-motion-base) var(--chorify-motion-spring),
+    box-shadow var(--chorify-motion-base) ease;
+}
+@media (hover: hover) {
+  .lift-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--chorify-shadow-lift);
+  }
+}
+.tap-spring {
+  transition: transform var(--chorify-motion-fast) var(--chorify-motion-spring);
+}
+.tap-spring:active {
+  transform: scale(0.92);
+}
+
 /* ─── §5.3 motion kit ───────────────────────────────────────────────────
  * Durations/easings resolve to --chorify-motion-* tokens; wash colors are
  * per-theme tokens in tokens.css. All animation is disabled under
@@ -54,7 +143,7 @@ body {
 @keyframes chorify-fade-slide-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -62,7 +151,7 @@ body {
   }
 }
 
-/** Page transitions: fade + 8px slide, 200ms (§5.3). */
+/** Page transitions: fade + 10px slide, 200ms (§5.3). */
 .page-enter {
   animation: chorify-fade-slide-in var(--chorify-motion-base) ease-out both;
 }
@@ -73,19 +162,36 @@ body {
   animation: chorify-fade-slide-in var(--chorify-motion-base) ease-out both;
 }
 
+/** Toast entrance: rise + fade from below the thumb. */
+@keyframes chorify-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.toast-in {
+  animation: chorify-toast-in var(--chorify-motion-base) var(--chorify-motion-spring) both;
+}
+
 /** One-tap completion check: spring pop + green wash when data-done flips. */
 .chore-check {
   transition:
     transform var(--chorify-motion-base) var(--chorify-motion-spring),
     background-color var(--chorify-motion-fast) ease,
     border-color var(--chorify-motion-fast) ease,
-    color var(--chorify-motion-fast) ease;
+    color var(--chorify-motion-fast) ease,
+    box-shadow var(--chorify-motion-fast) ease;
 }
 .chore-check[data-done='true'] {
-  transform: scale(1.15);
+  transform: scale(1.18);
   background-color: var(--chorify-wash-bg);
   border-color: var(--chorify-wash-bg);
   color: var(--chorify-wash-ink);
+  box-shadow: 0 4px 14px rgb(63 92 104 / 0.18);
 }
 
 /** Bottom sheets: pop in from below (drag-to-dismiss is opt-in via Sheet's
@@ -106,7 +212,13 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .page-enter,
-  .stagger-item {
+  .stagger-item,
+  .toast-in,
+  .sheet-panel {
+    animation: none;
+  }
+  .ambient::before,
+  .ambient::after {
     animation: none;
   }
   .chore-check {
@@ -115,7 +227,14 @@ body {
   .chore-check[data-done='true'] {
     transform: none;
   }
-  .sheet-panel {
-    animation: none;
+  .lift-hover,
+  .tap-spring {
+    transition: none;
+  }
+  .lift-hover:hover {
+    transform: none;
+  }
+  .tap-spring:active {
+    transform: none;
   }
 }
