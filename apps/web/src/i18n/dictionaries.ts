@@ -371,6 +371,7 @@ export type Dict = {
     themeRose: string;
     themeBuna: string;
     themeOlive: string;
+    themeMeskel: string;
   };
   print: {
     title: string;
@@ -798,6 +799,7 @@ export const en: Dict = {
     themeRose: 'Rose',
     themeBuna: 'Buna',
     themeOlive: 'Olive',
+    themeMeskel: 'Meskel',
   },
   print: {
     title: 'Print week',
@@ -1219,6 +1221,7 @@ export const am: Dict = {
     themeRose: 'ሮዝ',
     themeBuna: 'ቡና',
     themeOlive: 'ወይራ',
+    themeMeskel: 'መስቀል',
   },
   print: {
     title: 'ሳምንቱን አትም',

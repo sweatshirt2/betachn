@@ -294,3 +294,33 @@
   --chorify-wash-bg: #e2e4c8;
   --chorify-wash-ink: #34381e;
 }
+
+/* Meskel — golden festival light: sunlit cream, deep marigold primary,
+ * bonfire ember FAB. Joyful, communal, celebratory. */
+[data-theme='meskel'] {
+  --chorify-bg: #fbf6e9;
+  --chorify-surface: #ffffff;
+  --chorify-ink: #33291a;
+  --chorify-muted: #94835f;
+  --chorify-line: #e9ddbe;
+  --chorify-primary: #a87b12;
+  --chorify-primary-ink: #ffffff;
+  --chorify-secondary: #7a8b6f;
+  --chorify-accent: #c65b2e;
+  --chorify-danger: #b03a3a;
+  --chorify-info: #5b9bd5;
+
+  --chorify-fab: #c65b2e;
+  --chorify-fab-ink: #ffffff;
+
+  --chorify-shadow-soft: 0 2px 12px rgb(51 41 26 / 0.08);
+  --chorify-shadow-lift: 0 8px 28px rgb(51 41 26 / 0.14);
+
+  --chorify-gradient-dawn: linear-gradient(135deg, #fbf6e9 0%, #f7ebcb 55%, #f2dda6 100%);
+  --chorify-gradient-ember: linear-gradient(135deg, #a87b12 0%, #7e5c0d 100%);
+
+  --chorify-watermark-opacity: 0.05;
+
+  --chorify-wash-bg: #f3e6be;
+  --chorify-wash-ink: #4a3a10;
+}

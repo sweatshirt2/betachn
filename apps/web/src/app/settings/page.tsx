@@ -16,7 +16,7 @@ const CALENDAR_STORAGE_KEY = 'chorify-calendar';
 type CalendarPref = 'gregorian' | 'ethiopian' | 'both';
 
 /** Theme toggle labels resolve through i18n (EN+AM parity per the AM-parity law). */
-const THEME_DICT_KEYS: Record<ThemeId, 'settings.themeFamily' | 'settings.themeEmber' | 'settings.themeHighland' | 'settings.themeGlacier' | 'settings.themeHoney' | 'settings.themeGarden' | 'settings.themeRose' | 'settings.themeBuna' | 'settings.themeOlive'> = {
+const THEME_DICT_KEYS: Record<ThemeId, 'settings.themeFamily' | 'settings.themeEmber' | 'settings.themeHighland' | 'settings.themeGlacier' | 'settings.themeHoney' | 'settings.themeGarden' | 'settings.themeRose' | 'settings.themeBuna' | 'settings.themeOlive' | 'settings.themeMeskel'> = {
   family: 'settings.themeFamily',
   ember: 'settings.themeEmber',
   highland: 'settings.themeHighland',
@@ -26,6 +26,7 @@ const THEME_DICT_KEYS: Record<ThemeId, 'settings.themeFamily' | 'settings.themeE
   rose: 'settings.themeRose',
   buna: 'settings.themeBuna',
   olive: 'settings.themeOlive',
+  meskel: 'settings.themeMeskel',
 };
 
 function readCalendar(): CalendarPref {
