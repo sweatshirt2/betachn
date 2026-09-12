@@ -99,7 +99,7 @@ export default function NotificationsPage() {
           <h2 className="font-display text-lg">{t('notify.whatToReceive')}</h2>
           <div className="mt-2 flex flex-col gap-2">
             {Object.entries(categories).map(([category, on]) => (
-              <Card key={category} className="flex items-center gap-3 py-2">
+              <Card key={category} className="lift-hover flex items-center gap-3.5 py-3">
                 <p className="flex-1 text-sm font-semibold">{t(CATEGORY_KEYS[category as keyof typeof CATEGORY_KEYS] ?? 'notify.title')}</p>
                 <button
                   role="switch"

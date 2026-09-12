@@ -39,7 +39,7 @@ export default function SuppliesPage() {
       <h1 className="font-display text-2xl">{t('ops.supplies')}</h1>
       <div className="mt-3 flex flex-col gap-2">
         {supplies.data.supplies.map((s) => (
-          <Card key={s.id} className="flex items-center gap-3 py-2">
+          <Card key={s.id} className="lift-hover flex items-center gap-3.5 py-3">
             <p className="flex-1 text-sm font-semibold">{s.name}</p>
             <Chip tone={s.state === 'available' ? 'success' : s.state === 'low' ? 'warning' : 'danger'}>
               {s.state === 'available' ? t('ops.supplyAvailable') : s.state === 'low' ? t('ops.supplyLow') : t('ops.supplyOut')}

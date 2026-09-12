@@ -135,13 +135,13 @@ export default function TodayPage() {
           <h2 className="font-display text-xl">{t('today.attention')}</h2>
           <div className="mt-2 flex flex-col gap-2">
             {data.lowSupplies.map((s) => (
-              <Card key={s.id} className="flex items-center gap-3 py-2">
+              <Card key={s.id} className="lift-hover flex items-center gap-3.5 py-3">
                 <p className="flex-1 text-sm font-semibold">{s.name}</p>
                 <Chip tone="warning">{s.state === 'out' ? t('ops.supplyOut') : t('ops.supplyLow')}</Chip>
               </Card>
             ))}
             {data.maintenanceDue.map((m) => (
-              <Card key={m.assetId} className="flex items-center gap-3 py-2">
+              <Card key={m.assetId} className="lift-hover flex items-center gap-3.5 py-3">
                 <p className="flex-1 text-sm font-semibold">{m.assetName}</p>
                 <Chip tone="info">{t('ops.dueDate', { date: m.nextDue })}</Chip>
               </Card>

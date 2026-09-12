@@ -43,7 +43,7 @@ export default function RolesPage() {
       <h1 className="font-display mt-1 text-2xl">{t('household.familyRoles')}</h1>
       <div className="mt-3 flex flex-col gap-2">
         {roles.data.roles.map((r) => (
-          <Card key={r.id} className="flex items-center gap-3 py-2">
+          <Card key={r.id} className="lift-hover flex items-center gap-3.5 py-3">
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold">
                 {r.name} {r.isOwnerRole && <span aria-label={t('household.owner')}>●</span>}

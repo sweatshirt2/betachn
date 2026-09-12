@@ -71,7 +71,7 @@ export default function HomePage() {
         <h2 className="font-display text-lg">{t('ops.assets')}</h2>
         <div className="mt-2 flex flex-col gap-2">
           {assets.data.assets.map((a) => (
-            <Card key={a.id} className="flex items-center gap-3 py-2">
+            <Card key={a.id} className="lift-hover flex items-center gap-3.5 py-3">
               <span className="text-xl" aria-hidden>
                 {a.icon}
               </span>

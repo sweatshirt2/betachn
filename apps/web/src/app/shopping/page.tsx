@@ -40,7 +40,7 @@ export default function ShoppingPage() {
       <h1 className="font-display text-2xl">{t('ops.shopping')}</h1>
       <div className="mt-3 flex flex-col gap-2">
         {open.map((i) => (
-          <Card key={i.id} className="flex items-center gap-3 py-2">
+          <Card key={i.id} className="lift-hover flex items-center gap-3.5 py-3">
             <p className="flex-1 text-sm font-semibold">{i.name}</p>
             <Button tone="quiet" disabled={purchase.isPending} onClick={() => purchase.mutate({ id: i.id })} aria-label={t('ops.buyAria', { name: i.name })}>
               {t('ops.buy')}

@@ -37,14 +37,18 @@ export default function RoutinesPage() {
       <h1 className="font-display text-2xl">{t('ops.routines')}</h1>
       <p className="text-muted mt-1 text-sm">{t('ops.routinesHint')}</p>
       <div className="mt-3 flex flex-col gap-2">
-        {routines.data.routines.map((r) => (
-          <Card key={r.id} className="flex items-center gap-3 py-2">
-            <span className="text-xl" aria-hidden>
+        {routines.data.routines.map((r, index) => (
+          <Card key={r.id} className="lift-hover flex items-center gap-3.5 py-3">
+            <span
+              aria-hidden
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[34%] text-xl"
+              style={{ background: `var(--chorify-crayon-${(index % 4) + 1})` }}
+            >
               {r.icon}
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold">{r.name}</p>
-              <p className="text-muted text-xs">{r.timeBucket}</p>
+              <p className="truncate text-sm font-bold">{r.name}</p>
+              <p className="text-muted mt-0.5 text-xs font-semibold">{r.timeBucket}</p>
             </div>
             <Button tone="quiet" disabled={remove.isPending} onClick={() => remove.mutate({ id: r.id })}>
               {t('common.remove')}

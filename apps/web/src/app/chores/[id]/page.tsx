@@ -110,7 +110,7 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
           <h2 className="font-display text-lg">{t('chores.steps')}</h2>
           <div className="mt-2 flex flex-col gap-2">
             {subtasks.map((s) => (
-              <Card key={s.id} className="flex items-center gap-3 py-2">
+              <Card key={s.id} className="lift-hover flex items-center gap-3.5 py-3">
                 <p className="flex-1 text-sm font-semibold">{s.title}</p>
                 {s.assigneePersonId && (
                   <span className="text-muted text-xs">{names.get(s.assigneePersonId) ?? '…'}</span>
@@ -163,7 +163,7 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
             {related.map((o) => {
               const upForGrabs = o.personIds.length === 0;
               return (
-                <Card key={o.id} className="flex items-center gap-3 py-2">
+                <Card key={o.id} className="lift-hover flex items-center gap-3.5 py-3">
                   <p className="flex-1 text-sm">
                     {t('chores.due', { date: o.dueDate })} ·{' '}
                     {o.personIds.map((pid) => names.get(pid) ?? '…').join(', ') || t('today.upForGrabs')}
