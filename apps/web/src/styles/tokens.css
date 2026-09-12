@@ -204,3 +204,33 @@
   --chorify-wash-bg: #dfe9d2;
   --chorify-wash-ink: #33402c;
 }
+
+/* Rose — soft and caring: blush canvas, gentle rose primary, warm
+ * taupe FAB. Light, tender, never loud. */
+[data-theme='rose'] {
+  --chorify-bg: #fbf3f1;
+  --chorify-surface: #ffffff;
+  --chorify-ink: #3a2c28;
+  --chorify-muted: #9a8078;
+  --chorify-line: #eddad4;
+  --chorify-primary: #c26e7d;
+  --chorify-primary-ink: #ffffff;
+  --chorify-secondary: #7a8b6f;
+  --chorify-accent: #e3b23c;
+  --chorify-danger: #b03a3a;
+  --chorify-info: #5b9bd5;
+
+  --chorify-fab: #8a6f62;
+  --chorify-fab-ink: #ffffff;
+
+  --chorify-shadow-soft: 0 2px 12px rgb(58 44 40 / 0.08);
+  --chorify-shadow-lift: 0 8px 28px rgb(58 44 40 / 0.14);
+
+  --chorify-gradient-dawn: linear-gradient(135deg, #fbf3f1 0%, #f5e2dc 55%, #efd3cb 100%);
+  --chorify-gradient-ember: linear-gradient(135deg, #c26e7d 0%, #9e4f5d 100%);
+
+  --chorify-watermark-opacity: 0.05;
+
+  --chorify-wash-bg: #f2dde0;
+  --chorify-wash-ink: #4e2c33;
+}

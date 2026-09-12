@@ -1,4 +1,4 @@
-export const THEME_IDS = ['family', 'ember', 'highland', 'glacier', 'honey', 'garden'] as const;
+export const THEME_IDS = ['family', 'ember', 'highland', 'glacier', 'honey', 'garden', 'rose'] as const;
 
 export type ThemeId = (typeof THEME_IDS)[number];
 
@@ -9,10 +9,11 @@ export const THEME_LABELS: Record<ThemeId, string> = {
   glacier: 'Glacier blue',
   honey: 'Honey amber',
   garden: 'Garden green',
+  rose: 'Gentle rose',
 };
 
 export const THEME_STORAGE_KEY = 'chorify-theme';
 
 export function isThemeId(value: unknown): value is ThemeId {
-  return value === 'family' || value === 'ember' || value === 'highland' || value === 'glacier' || value === 'honey' || value === 'garden';
+  return value === 'family' || value === 'ember' || value === 'highland' || value === 'glacier' || value === 'honey' || value === 'garden' || value === 'rose';
 }
