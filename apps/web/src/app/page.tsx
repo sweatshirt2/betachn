@@ -64,6 +64,12 @@ export default function TodayPage() {
     return o.personIds.map((id) => names.get(id) ?? '…').join(', ');
   };
 
+  const assigneePeople = (o: TitledOccurrence) =>
+    o.personIds.map((id) => {
+      const name = names.get(id) ?? '?';
+      return { initial: name.trim().charAt(0).toUpperCase() || '?', label: name };
+    });
+
   return (
     <div className="page-enter relative">
       <SectionWatermark variant="leaves" />
@@ -81,6 +87,7 @@ export default function TodayPage() {
                   accent={crayon(index)}
                   title={o.title}
                   meta={assigneeLabel(o)}
+                  people={assigneePeople(o)}
                   action={
                     <ChoreCheck
                       done={o.status === 'completed'}

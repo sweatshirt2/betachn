@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Chip, ChoreCheck, EmptyState, SectionWatermark, Skeleton, SwipeCard, crayon } from '@/components/ui';
+import { Button, ChoreCheck, EmptyState, SectionWatermark, Skeleton, SwipeCard, TaskCard } from '@/components/ui';
 import { useOccurrenceAct, useOccurrences, usePeopleMap, type TitledOccurrence } from '@/features/chores';
 import { hasSession, type RootState } from '@/store';
 import { formatDate } from '@/lib/dates';
@@ -70,6 +70,18 @@ export default function ChoresPage() {
   const label = (o: TitledOccurrence) =>
     o.personIds.length === 0 ? t('today.upForGrabs') : o.personIds.map((id) => names.get(id) ?? '…').join(', ');
 
+  const peopleOf = (o: TitledOccurrence) =>
+    o.personIds.map((id) => {
+      const name = names.get(id) ?? '?';
+      return { initial: name.trim().charAt(0).toUpperCase() || '?', label: name };
+    });
+
+  const dueLabelOf = (o: TitledOccurrence) => {
+    if (o.dueDate < from) return t('household.missed');
+    if (o.dueDate === from) return t('today.today');
+    return formatDate(o.dueDate);
+  };
+
   return (
     <div className="page-enter relative">
       <SectionWatermark variant="bubbles" />
@@ -97,32 +109,29 @@ export default function ChoresPage() {
       {visible.length === 0 ? (
         <EmptyState emoji="✨" title={t('chores.allClear')} hint={t('chores.allClearHint')} />
       ) : (
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {visible.map((o, index) => (
             <SwipeCard key={o.id} onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}>
-              <Card
-                className="stagger-item flex items-center gap-3 py-2.5"
+              <TaskCard
+                className="stagger-item"
                 style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}
-              >
-                <span
-                  className="h-9 w-1.5 shrink-0 rounded-full"
-                  style={{ background: crayon(index) }}
-                  aria-hidden
-                />
-                <Link href={`/chores/${o.responsibilityId}`} className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold">{o.title}</p>
-                  <p className="text-muted mt-0.5 truncate text-xs">
-                    {formatDate(o.dueDate)} · {label(o)}
-                  </p>
-                </Link>
-                {o.status === 'pending' && o.dueDate < from && <Chip tone="danger">{t('household.missed')}</Chip>}
-                <ChoreCheck
-                  done={o.status === 'completed'}
-                  disabled={act.isPending}
-                  onClick={() => act.mutate({ id: o.id, action: 'complete' })}
-                  label={t('chores.completeAria', { title: o.title })}
-                />
-              </Card>
+                title={o.title}
+                meta={label(o)}
+                dueLabel={dueLabelOf(o)}
+                overdue={o.dueDate < from}
+                emoji="🧺"
+                crayonIndex={index}
+                people={peopleOf(o)}
+                href={`/chores/${o.responsibilityId}`}
+                action={
+                  <ChoreCheck
+                    done={false}
+                    disabled={act.isPending}
+                    onClick={() => act.mutate({ id: o.id, action: 'complete' })}
+                    label={t('chores.completeAria', { title: o.title })}
+                  />
+                }
+              />
             </SwipeCard>
           ))}
         </div>

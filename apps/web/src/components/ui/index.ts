@@ -6,7 +6,7 @@ export { EmptyState, Skeleton } from './EmptyState';
 export { Field } from './Field';
 export { Sheet } from './Sheet';
 export { SwipeCard } from './SwipeCard';
-export { TaskActionRow, TaskDoneRow, TaskUpcomingRow, crayon } from './TaskRow';
+export { TaskActionRow, TaskCard, TaskDoneRow, TaskUpcomingRow, crayon } from './TaskRow';
 export { PersonAvatar } from './PersonAvatar';
 export { TickNumber } from './TickNumber';
 export { ToastProvider, useToast } from './Toast';
