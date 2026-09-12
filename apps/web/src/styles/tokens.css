@@ -234,3 +234,33 @@
   --chorify-wash-bg: #f2dde0;
   --chorify-wash-ink: #4e2c33;
 }
+
+/* Buna — the Ethiopian coffee ceremony: warm latte canvas, deep coffee
+ * primary, golden honey FAB. Grounded, hospitable, home. */
+[data-theme='buna'] {
+  --chorify-bg: #f6f1e8;
+  --chorify-surface: #fffdf9;
+  --chorify-ink: #2e241a;
+  --chorify-muted: #8a7a64;
+  --chorify-line: #e5d8c2;
+  --chorify-primary: #8a5a33;
+  --chorify-primary-ink: #fff9f0;
+  --chorify-secondary: #7a8b6f;
+  --chorify-accent: #d9a441;
+  --chorify-danger: #c75b5b;
+  --chorify-info: #5b9bd5;
+
+  --chorify-fab: #c98a1b;
+  --chorify-fab-ink: #2e241a;
+
+  --chorify-shadow-soft: 0 2px 12px rgb(46 36 26 / 0.08);
+  --chorify-shadow-lift: 0 8px 28px rgb(46 36 26 / 0.14);
+
+  --chorify-gradient-dawn: linear-gradient(135deg, #f6f1e8 0%, #eddfc7 55%, #e2cba4 100%);
+  --chorify-gradient-ember: linear-gradient(135deg, #8a5a33 0%, #684322 100%);
+
+  --chorify-watermark-opacity: 0.05;
+
+  --chorify-wash-bg: #e9dcc2;
+  --chorify-wash-ink: #42321c;
+}
