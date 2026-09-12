@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { PERMISSION_CATALOG, type PermKey } from '@chorify/core/permissions';
-import { Button, Card, Field, Sheet } from '@/components/ui';
+import { Button, Card, CountStat, Field, Sheet } from '@/components/ui';
 import { clearApiCache, useApiQuery } from '@/lib/api';
 import { deviceOccurrences } from '@/lib/device/reads';
 import { enterViewAs, type RootState } from '@/store';
@@ -49,6 +49,11 @@ export function PersonSheet({
   const remove = useDeletePerson();
   const roles = useRoles();
   const [name, setName] = useState(person?.name ?? '');
+  // Identity facts (§5.5) — birthday preferred, loose age is the fallback
+  // for when the date is unknown (§6.9).
+  const [sex, setSex] = useState<'male' | 'female' | null>(person?.sex ?? null);
+  const [birthDate, setBirthDate] = useState(person?.birthDate ?? '');
+  const [ageText, setAgeText] = useState(person?.age != null ? String(person.age) : '');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [permissionsOpen, setPermissionsOpen] = useState(false);
 
@@ -126,6 +131,14 @@ export function PersonSheet({
     await update.mutateAsync({ id: person!.id, name: name.trim() });
   }
 
+  async function saveFacts(next: {
+    sex?: 'male' | 'female' | null;
+    birthDate?: string | null;
+    age?: number | null;
+  }) {
+    await update.mutateAsync({ id: person!.id, ...next });
+  }
+
   async function destroy() {
     await remove.mutateAsync({ id: person!.id, name: person!.name });
     onClose();
@@ -140,23 +153,12 @@ export function PersonSheet({
           <p className="text-sm">
             <span className="text-muted">{t('household.roleLabel')}:</span> {roleName}
           </p>
-          <div className="mt-3 grid grid-cols-2 gap-3 text-center">
-            <div className="rounded-md bg-cream p-2">
-              <p className="font-display text-xl">{finishedWeek}</p>
-              <p className="text-muted text-xs">{t('household.finishedWeek')}</p>
-            </div>
-            <div className="rounded-md bg-cream p-2">
-              <p className="font-display text-xl">{finishedMonth}</p>
-              <p className="text-muted text-xs">{t('household.finishedMonth')}</p>
-            </div>
-            <div>
-              <p className="font-display text-2xl">{completedRows.length}</p>
-              <p className="text-muted text-xs">{t('household.finished')}</p>
-            </div>
-            <div>
-              <p className="font-display text-2xl">{missed}</p>
-              <p className="text-muted text-xs">{t('household.missed')}</p>
-            </div>
+          {/* Facts strip: one grid, one baseline — no mixed cell styles. */}
+          <div className="border-line/70 bg-surface-alt/70 mt-3 grid grid-cols-2 overflow-hidden rounded-md border">
+            <CountStat className="border-line/70 border-b px-2 py-2.5" value={finishedWeek} label={t('household.finishedWeek')} />
+            <CountStat className="border-line/70 border-b border-l px-2 py-2.5" value={finishedMonth} label={t('household.finishedMonth')} />
+            <CountStat className="px-2 py-2.5" value={completedRows.length} label={t('household.finished')} />
+            <CountStat className="border-line/70 border-l px-2 py-2.5" value={missed} label={t('household.missed')} />
           </div>
           <svg viewBox="0 0 100 30" className="text-olive mt-3 h-8 w-full" preserveAspectRatio="none" aria-hidden>
             <polyline points={sparkPoints} fill="none" stroke="currentColor" strokeWidth="2" vectorEffect="non-scaling-stroke" />
@@ -206,6 +208,74 @@ export function PersonSheet({
                 ))}
               </select>
             </label>
+
+            {/* Identity facts editor — same card, composed block (§5.5). */}
+            <div className="mt-3">
+              <p className="text-muted text-xs font-semibold uppercase">{t('facts.title')}</p>
+              <div className="mt-1.5 flex items-center gap-2" role="group" aria-label={t('facts.sex')}>
+                {(['male', 'female'] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    disabled={update.isPending}
+                    onClick={() => {
+                      const next = sex === s ? null : s;
+                      setSex(next);
+                      void saveFacts({ sex: next });
+                    }}
+                    className={`tap-spring rounded-full border px-3 py-1 text-xs font-bold transition-colors ${
+                      sex === s
+                        ? 'bg-accent-wash border-line text-ink shadow-soft'
+                        : 'border-line/70 bg-surface-alt/60 text-muted'
+                    }`}
+                    aria-pressed={sex === s}
+                  >
+                    {s === 'male' ? t('facts.male') : t('facts.female')}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-2 flex items-end gap-2">
+                <label className="flex-1">
+                  <span className="text-muted text-xs font-semibold">{t('facts.birthDate')}</span>
+                  <input
+                    type="date"
+                    value={birthDate}
+                    disabled={update.isPending}
+                    onChange={(e) => setBirthDate(e.target.value)}
+                    onBlur={() => {
+                      const next = birthDate === '' ? null : birthDate;
+                      if (next === (person?.birthDate ?? null)) return;
+                      setAgeText('');
+                      void saveFacts({ birthDate: next, age: null });
+                    }}
+                    className="border-line bg-surface text-ink mt-1 w-full rounded-md border px-3 py-2 text-sm"
+                  />
+                </label>
+                <label className="w-24">
+                  <span className="text-muted text-xs font-semibold">{t('facts.age')}</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={120}
+                    value={ageText}
+                    disabled={update.isPending || birthDate !== ''}
+                    onChange={(e) => setAgeText(e.target.value)}
+                    onBlur={() => {
+                      if (ageText === '') {
+                        if (person?.age != null) void saveFacts({ age: null });
+                        return;
+                      }
+                      const parsed = Math.max(0, Math.min(120, Math.round(Number(ageText))));
+                      if (!Number.isFinite(parsed) || parsed === person?.age) return;
+                      void saveFacts({ age: parsed });
+                    }}
+                    placeholder={t('facts.agePlaceholder')}
+                    className="border-line bg-surface text-ink mt-1 w-full rounded-md border px-3 py-2 text-sm disabled:opacity-50"
+                  />
+                </label>
+              </div>
+              <p className="text-muted mt-1.5 text-[11px]">{t('facts.ageHint')}</p>
+            </div>
 
             <p className="text-muted mt-3 text-xs">{t('household.boundarySentence', { name: person.name, role: roleName })}</p>
 
