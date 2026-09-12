@@ -6,10 +6,10 @@ import { Card } from '@/components/ui';
 import { NavIcon, type NavIconName } from '@/components/icons';
 
 const LINKS: Array<{ href: string; key: string; icon: NavIconName; crayon: number }> = [
-  { href: '/activity', key: 'activity', icon: 'activity', crayon: 1 },
-  { href: '/notifications', key: 'notifications', icon: 'notifications', crayon: 2 },
-  { href: '/supplies', key: 'supplies', icon: 'supplies', crayon: 3 },
-  { href: '/shopping', key: 'shopping', icon: 'shopping', crayon: 4 },
+  { href: '/household', key: 'household', icon: 'household', crayon: 1 },
+  { href: '/activity', key: 'activity', icon: 'activity', crayon: 2 },
+  { href: '/notifications', key: 'notifications', icon: 'notifications', crayon: 3 },
+  { href: '/pantry', key: 'pantry', icon: 'supplies', crayon: 4 },
   { href: '/home', key: 'home', icon: 'home', crayon: 1 },
   { href: '/routines', key: 'routines', icon: 'routines', crayon: 2 },
   { href: '/print', key: 'printWeek', icon: 'activity', crayon: 3 },
