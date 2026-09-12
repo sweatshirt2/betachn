@@ -101,7 +101,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
   if (gateState === 'checking') {
-    return <div className="bg-cream min-h-screen" aria-busy="true" />;
+    return <div className="bg-page-wash min-h-screen" aria-busy="true" />;
   }
   if (gateState === 'locked') {
     return (
@@ -119,15 +119,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="bg-cream text-ink min-h-screen lg:flex">
-      <aside className="border-line bg-surface hidden w-56 shrink-0 flex-col gap-1 border-r p-4 lg:flex" data-no-print>
+    <div className="ambient bg-page-wash text-ink min-h-screen lg:flex">
+      <aside
+        className="border-line/70 bg-surface/80 hidden w-56 shrink-0 flex-col gap-1 border-r p-4 backdrop-blur-sm lg:flex"
+        data-no-print
+      >
         <p className="font-display px-2 text-xl">Chorify</p>
         <nav className="mt-2 flex flex-col gap-1" aria-label={t('nav.primary')}>
           {RAIL.map((item) => (
             <Link
               key={`${item.href}-${item.key}`}
               href={item.href}
-              className={`rounded-md px-3 py-2 text-sm font-semibold ${pathname === item.href ? 'bg-cream' : ''}`}
+              className={`tap-spring flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
+                pathname === item.href ? 'bg-accent-wash text-ink shadow-soft' : 'text-muted hover:bg-surface-alt'
+              }`}
               aria-current={pathname === item.href ? 'page' : undefined}
             >
               <span aria-hidden>{item.icon}</span> {t(`nav.${item.key}`)}
@@ -137,13 +142,16 @@ export function Shell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="bg-cream flex items-center justify-between gap-2 px-4 pt-4">
+        <header className="flex items-center justify-between gap-2 px-4 pt-4">
           <p className="font-display text-2xl">
             {t(greetingKey())}, {activePerson?.name ?? t('nav.family')}
           </p>
           <div className="flex items-center gap-2">
             {mode === 'server' && hasToken && (
-              <span className="border-line bg-surface rounded-sm border px-2 py-0.5 text-xs" role="status">
+              <span
+                className="border-line bg-surface/80 shadow-soft rounded-full border px-2.5 py-0.5 text-xs"
+                role="status"
+              >
                 {t('nav.upToDate')}
               </span>
             )}
@@ -158,7 +166,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             )}
             {activePerson && (
               <button
-                className="bg-surface border-line rounded-md border px-2 py-1 text-sm"
+                className="bg-surface/80 border-line shadow-soft tap-spring rounded-full border px-2.5 py-1 text-sm"
                 onClick={() => setProfilesOpen(true)}
                 aria-label={t('auth.switchProfileAria', { name: activePerson.name })}
               >
@@ -204,7 +212,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-2 lg:pb-12">{children}</main>
 
         <button
-          className="bg-fab text-fab-ink fixed bottom-20 right-4 z-40 h-14 w-14 rounded-full text-2xl shadow-lift lg:bottom-8 lg:right-8"
+          className="bg-fab text-fab-ink tap-spring fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full text-2xl shadow-lift transition-transform duration-200 hover:scale-105 hover:shadow-glow lg:bottom-8 lg:right-8"
           onClick={() => setCreateOpen(true)}
           aria-label={t('nav.create')}
         >
@@ -212,7 +220,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </button>
 
         <nav
-          className="border-line bg-surface fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t px-2 pb-[env(safe-area-inset-bottom)] lg:hidden"
+          className="border-line/70 bg-surface/90 fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
           aria-label={t('nav.primary')}
           data-no-print
         >
@@ -274,7 +282,7 @@ function SyncChip(props: {
       ? props.freshLabel
       : props.pendingLabel;
   return (
-    <span className="border-line bg-surface rounded-sm border px-2 py-0.5 text-xs" role="status">
+    <span className="border-line bg-surface/80 shadow-soft rounded-full border px-2.5 py-0.5 text-xs" role="status">
       {label}
     </span>
   );
@@ -296,7 +304,9 @@ function Tab({
   return (
     <Link
       href={href}
-      className={`relative flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-semibold ${active ? 'text-terracotta' : 'text-muted'}`}
+      className={`tap-spring relative flex flex-1 flex-col items-center gap-0.5 rounded-md py-2 text-xs font-semibold transition-colors ${
+        active ? 'bg-accent-wash text-ink' : 'text-muted'
+      }`}
       aria-current={active ? 'page' : undefined}
     >
       <span className="text-xl" aria-hidden>
