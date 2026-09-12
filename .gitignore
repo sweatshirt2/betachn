@@ -11,3 +11,5 @@ coverage/
 *.log
 # Generated sqlite-wasm runtime assets (run `pnpm --filter @chorify/web wasm`)
 apps/web/public/sqlite3-wasm/
+
+**/tmp/
