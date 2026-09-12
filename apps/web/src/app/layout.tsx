@@ -32,7 +32,7 @@ export const viewport: Viewport = {
   themeColor: '#FAF6F0',
 };
 
-const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem('chorify-theme');if(t==='ember'||t==='highland'||t==='family'||t==='glacier'||t==='honey'||t==='garden'||t==='rose'||t==='buna'){document.documentElement.dataset.theme=t;}}catch(e){}})();`;
+const THEME_BOOT_SCRIPT = `(function(){try{var t=localStorage.getItem('chorify-theme');if(t==='ember'||t==='highland'||t==='family'||t==='glacier'||t==='honey'||t==='garden'||t==='rose'||t==='buna'||t==='olive'){document.documentElement.dataset.theme=t;}}catch(e){}})();`;
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

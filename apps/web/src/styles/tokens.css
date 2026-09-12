@@ -264,3 +264,33 @@
   --chorify-wash-bg: #e9dcc2;
   --chorify-wash-ink: #42321c;
 }
+
+/* Olive — quiet grove: warm stone canvas, deep olive primary, baked
+ * terracotta FAB. Steady, rooted, timeless. */
+[data-theme='olive'] {
+  --chorify-bg: #f5f4ec;
+  --chorify-surface: #fffdf8;
+  --chorify-ink: #2c2e21;
+  --chorify-muted: #82816a;
+  --chorify-line: #e0decb;
+  --chorify-primary: #6f7d3a;
+  --chorify-primary-ink: #ffffff;
+  --chorify-secondary: #5f7052;
+  --chorify-accent: #d9a441;
+  --chorify-danger: #b03a3a;
+  --chorify-info: #5b9bd5;
+
+  --chorify-fab: #c96f4a;
+  --chorify-fab-ink: #fffdf9;
+
+  --chorify-shadow-soft: 0 2px 12px rgb(44 46 33 / 0.08);
+  --chorify-shadow-lift: 0 8px 28px rgb(44 46 33 / 0.14);
+
+  --chorify-gradient-dawn: linear-gradient(135deg, #f5f4ec 0%, #e9e7d2 55%, #dbd8b8 100%);
+  --chorify-gradient-ember: linear-gradient(135deg, #6f7d3a 0%, #545f2b 100%);
+
+  --chorify-watermark-opacity: 0.05;
+
+  --chorify-wash-bg: #e2e4c8;
+  --chorify-wash-ink: #34381e;
+}
