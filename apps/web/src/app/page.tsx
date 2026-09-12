@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Chip, ChoreCheck, EmptyState, SectionWatermark, Skeleton, SwipeCard, TaskActionRow, TaskDoneRow, TaskUpcomingRow, crayon, TickNumber } from '@/components/ui';
+import { Button, Card, Chip, ChoreCheck, CountStat, EmptyState, SectionWatermark, Skeleton, SwipeCard, TaskActionRow, TaskDoneRow, TaskUpcomingRow, crayon, TickNumber } from '@/components/ui';
 import { useOccurrenceAct, useToday, usePeopleMap, type TitledOccurrence } from '@/features/chores';
 import { hasSession, type RootState } from '@/store';
 import { formatDate } from '@/lib/dates';
@@ -167,9 +167,15 @@ export default function TodayPage() {
         </section>
       )}
 
-      <p className="text-muted mt-6 text-center text-sm">
-        <TickNumber value={data.completedThisWeek} /> {t('today.completedWeek')}
-      </p>
+      {/* Weekly tally — a crafted stat card, centered; the count-up keeps it playful. */}
+      <div className="mt-6 flex justify-center">
+        <CountStat
+          emphasis="tall"
+          className="w-44"
+          value={<TickNumber value={data.completedThisWeek} />}
+          label={t('today.completedWeek')}
+        />
+      </div>
     </div>
   );
 }

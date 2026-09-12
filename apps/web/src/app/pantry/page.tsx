@@ -217,13 +217,22 @@ export default function PantryPage() {
           <p className="text-muted mt-2 text-sm">{t('pantry.noSupplies')}</p>
         ) : (
           <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {stocked.map((s) => (
+            {/* Stocked tiles: emoji tile + name + state pill — balanced
+                columns, not number dumps. */}
+            {stocked.map((s, index) => (
               <Card key={s.id} className="lift-hover py-3">
-                <p className="truncate text-center text-sm font-bold">{s.name}</p>
-                <div className="mt-1.5 flex justify-center">
+                <div className="flex flex-col items-center gap-1.5">
+                  <span
+                    aria-hidden
+                    className="flex h-9 w-9 items-center justify-center rounded-[34%] text-lg leading-none"
+                    style={{ background: crayon(index) }}
+                  >
+                    🧺
+                  </span>
+                  <p className="w-full truncate text-center text-sm font-bold">{s.name}</p>
                   <span
                     role="status"
-                    className="text-muted bg-surface-alt border-line text-[10px] font-bold rounded-full border px-2 py-0.5"
+                    className="text-muted bg-surface-alt border-line rounded-full border px-2 py-0.5 text-[10px] font-bold"
                   >
                     {t('ops.supplyAvailable')}
                   </span>
@@ -237,7 +246,7 @@ export default function PantryPage() {
           <div className="mt-5">
             <div className="flex items-center gap-2">
               <h2 className="font-display text-lg">{t('pantry.deadlines')}</h2>
-              <span className="bg-clay-red text-cream rounded-full px-2 py-0.5 text-[10px] font-bold">
+              <span className="bg-clay-red/20 text-ink rounded-full px-2 py-0.5 text-[10px] font-bold">
                 {today.data?.maintenanceDue.length}
               </span>
             </div>
