@@ -90,11 +90,20 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
       <Link href="/chores" className="text-terracotta text-sm font-semibold">
         {t('chores.title')}
       </Link>
-      <h1 className="font-display mt-1 text-2xl">
-        {responsibility.icon} {responsibility.title}
-      </h1>
-      {responsibility.notes && <p className="text-muted mt-1 text-sm">{responsibility.notes}</p>}
-      {readout && <p className="text-muted mt-1 text-sm">↻ {readout}</p>}
+      <div className="bg-card-wash border-line shadow-soft mt-2 flex items-center gap-4 rounded-lg border p-4">
+        <span
+          aria-hidden
+          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[34%] text-2xl"
+          style={{ background: 'var(--chorify-crayon-2)' }}
+        >
+          {responsibility.icon}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display truncate text-2xl">{responsibility.title}</h1>
+          {readout && <p className="text-muted mt-0.5 truncate text-sm">↻ {readout}</p>}
+        </div>
+      </div>
+      {responsibility.notes && <p className="text-muted mt-2 text-sm">{responsibility.notes}</p>}
 
       {/* Assign again (CN micro-29): prefill composer with a one-time rule tomorrow. */}
       <div className="mt-3 flex gap-2">
