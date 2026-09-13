@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -18,6 +19,8 @@ import { NavIcon } from '@/components/icons';
 import { useToday } from '@/features/chores';
 import { useCreateShoppingItem, usePurchaseItem, useShoppingItems } from '@/features/shopping';
 import { useCreateSupply, useCycleSupply, useSupplies, type SupplyState } from '@/features/supplies';
+import { hasSession, type RootState } from '@/store';
+import { useSelector } from 'react-redux';
 
 const NEXT: Record<SupplyState, SupplyState> = { available: 'low', low: 'out', out: 'available' };
 
@@ -37,8 +40,30 @@ export default function PantryPage() {
   const purchase = usePurchaseItem();
   const [supplyName, setSupplyName] = useState('');
   const [itemName, setItemName] = useState('');
+  const hasAuth = useSelector(hasSession);
 
   const pendingAny = createSupply.isPending || cycle.isPending || createItem.isPending || purchase.isPending;
+
+  // Signed-out visitors get a friendly door, not raw error UI.
+  if (!hasAuth) {
+    return (
+      <EmptyState
+        emoji="🏠"
+        title={t('common.appName')}
+        hint={t('auth.signInSubtitle')}
+        action={
+          <div className="flex gap-2">
+            <Link href="/login">
+              <Button>{t('auth.signIn')}</Button>
+            </Link>
+            <Link href="/onboarding">
+              <Button tone="quiet">{t('auth.setupHousehold')}</Button>
+            </Link>
+          </div>
+        }
+      />
+    );
+  }
 
   if (supplies.isPending || items.isPending) {
     return (
