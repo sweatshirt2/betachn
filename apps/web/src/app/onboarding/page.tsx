@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { ParseKeys } from 'i18next';
 import { useDispatch } from 'react-redux';
 import { setDeviceSession } from '@/store';
 import { Button, Card, Field, AuthArt } from '@/components/ui';
@@ -170,7 +171,7 @@ export default function OnboardingPage() {
                 >
                   {ROLE_OPTIONS.map((key) => (
                     <option key={key} value={key}>
-                      {t(`onboarding.role${key.charAt(0).toUpperCase()}${key.slice(1).replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())}`)}
+                      {t(`onboarding.role${key.charAt(0).toUpperCase()}${key.slice(1).replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())}` as ParseKeys<'translation'>)}
                     </option>
                   ))}
                 </select>

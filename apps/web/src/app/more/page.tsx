@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui';
+import type { Dict } from '@/i18n/dictionaries';
 import { NavIcon, type NavIconName } from '@/components/icons';
 
-const LINKS: Array<{ href: string; key: string; icon: NavIconName; crayon: number }> = [
+const LINKS: Array<{ href: string; key: keyof Dict['nav']; icon: NavIconName; crayon: number }> = [
   { href: '/household', key: 'household', icon: 'household', crayon: 1 },
   { href: '/activity', key: 'activity', icon: 'activity', crayon: 2 },
   { href: '/notifications', key: 'notifications', icon: 'notifications', crayon: 3 },

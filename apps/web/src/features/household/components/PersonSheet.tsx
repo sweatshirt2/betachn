@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
+import type { ParseKeys } from 'i18next';
 import { PERMISSION_CATALOG, type PermKey } from '@chorify/core/permissions';
 import { Button, Card, CountStat, Field, Sheet } from '@/components/ui';
 import { clearApiCache, useApiQuery } from '@/lib/api';
@@ -382,7 +383,7 @@ function PermissionCustomizer({
       <div className="mt-3 flex max-h-96 flex-col gap-4 overflow-y-auto pr-1">
         {domains.map(([domain, keys]) => (
           <fieldset key={domain}>
-            <legend className="text-sm font-semibold">{t(`perms.domains.${domain}`)}</legend>
+            <legend className="text-sm font-semibold">{t(`perms.domains.${domain}` as ParseKeys<'translation'>)}</legend>
             <div className="mt-1 flex flex-col gap-1.5">
               {keys.map((action) => {
                 const key = `${domain}.${action}` as PermKey;
@@ -391,7 +392,7 @@ function PermissionCustomizer({
                 return (
                   <label key={key} className="flex items-center justify-between gap-2 rounded-sm px-2 py-1 text-sm odd:bg-cream">
                     <span className={isOverride ? 'font-semibold text-terracotta' : ''}>
-                      {t(`perms.${domain}.${action}`)}
+                      {t(`perms.${domain}.${action}` as ParseKeys<'translation'>)}
                       {isOverride ? ' ●' : ''}
                     </span>
                     <input

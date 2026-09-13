@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/ui';
+import type { ParseKeys } from 'i18next';
 
-const LINKS: Array<{ href: string; emoji: string; key: string; hintKey?: string }> = [
+const LINKS: Array<{ href: string; emoji: string; key: ParseKeys<'translation'>; hintKey?: string }> = [
   { href: '/household', emoji: '👨‍👩‍👧', key: 'nav.household' },
   { href: '/setup/roles', emoji: '🎭', key: 'household.roles' },
   { href: '/chores', emoji: '🧺', key: 'nav.chores' },

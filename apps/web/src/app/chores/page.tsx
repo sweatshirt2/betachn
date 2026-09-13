@@ -102,7 +102,9 @@ export default function ChoresPage() {
               tab === tabOption ? 'bg-accent-wash text-ink shadow-soft' : 'bg-surface text-muted border-line border'
             }`}
           >
-            {tab === 'mine' ? t('chores.mine') : tab === 'everyone' ? t('chores.everyone') : `${t('chores.overdue')}${overdue.length > 0 ? ` · ${overdue.length}` : ''}`}
+            {/* Label comes from the ITERATED option, not the selection — each
+                chip always states its own name (Mine · Everyone · Overdue). */}
+            {tabOption === 'mine' ? t('chores.mine') : tabOption === 'everyone' ? t('chores.everyone') : `${t('chores.overdue')}${overdue.length > 0 ? ` · ${overdue.length}` : ''}`}
           </button>
         ))}
       </div>

@@ -5,6 +5,7 @@
  * (§6.9 "stored only when birthDate unknown") is shown. Returns null when
  * the person carries nothing — cards simply omit the tag.
  */
+import type { TFunction } from 'i18next';
 
 export function personAge(person: { birthDate: string | null; age: number | null }): number | null {
   if (person.birthDate) {
@@ -24,7 +25,7 @@ export function personAge(person: { birthDate: string | null; age: number | null
 
 export function personFactsTag(
   person: { birthDate: string | null; age: number | null; sex: 'male' | 'female' | null },
-  t: (key: string) => string,
+  t: TFunction<'translation'>,
 ): string | null {
   const age = personAge(person);
   const gender = person.sex === 'female' ? t('facts.female') : person.sex === 'male' ? t('facts.male') : null;

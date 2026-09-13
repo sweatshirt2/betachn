@@ -21,6 +21,7 @@ import { useCreateShoppingItem, usePurchaseItem, useShoppingItems } from '@/feat
 import { useCreateSupply, useCycleSupply, useSupplies, type SupplyState } from '@/features/supplies';
 import { hasSession, type RootState } from '@/store';
 import { useSelector } from 'react-redux';
+import { formatDate } from '@/lib/dates';
 
 const NEXT: Record<SupplyState, SupplyState> = { available: 'low', low: 'out', out: 'available' };
 
@@ -286,7 +287,7 @@ export default function PantryPage() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-bold">{m.assetName}</p>
-                    <p className="text-muted mt-0.5 text-xs font-semibold">{t('ops.dueDate', { date: m.nextDue })}</p>
+                    <p className="text-muted mt-0.5 text-xs font-semibold">{t('ops.dueDate', { date: formatDate(m.nextDue) })}</p>
                   </div>
                   <Chip tone="warning">{t('pantry.upcoming')}</Chip>
                 </Card>

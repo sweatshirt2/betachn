@@ -143,7 +143,7 @@ export default function TodayPage() {
             {data.maintenanceDue.map((m) => (
               <Card key={m.assetId} className="lift-hover flex items-center gap-3.5 py-3">
                 <p className="flex-1 text-sm font-semibold">{m.assetName}</p>
-                <Chip tone="info">{t('ops.dueDate', { date: m.nextDue })}</Chip>
+                <Chip tone="info">{t('ops.dueDate', { date: formatDate(m.nextDue) })}</Chip>
               </Card>
             ))}
           </div>
