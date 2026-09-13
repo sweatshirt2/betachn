@@ -22,13 +22,14 @@
 apps/
   web/        Next.js: UI + ALL business REST under app/api/v1 (thin controllers)
   worker/     Express + pg-boss: cronjobs/queue ONLY (+ /health, /admin/* guarded by WORKER_ADMIN_TOKEN)
+  trigger/    Trigger.dev tasks: external keep-alive heartbeat pinging worker /health (D100); own package.json, config dirs ./src/trigger, runs via `pnpm --filter @chorify/trigger dev:trigger` (local) or `deploy:trigger`
 packages/
   core/       Pure domain: zod contracts, services, rules, errors, permissions, schedule, calendar, txt, notify
   local-db/   Device-side SQLite (WASM/OPFS): table mirrors, pending_ops queue, sync engine
   db/         Drizzle pg models (per-domain files), client, withTransaction, migrations, seed.ts
 ```
 
-Dev: `pnpm dev` runs web :3000 + worker :4001 concurrently. Env: `DATABASE_URL` (both apps), `WORKER_ADMIN_TOKEN` (worker). Zod-validated at boot, fail-fast.
+Dev: `pnpm dev` runs web :3000 + worker :4001 concurrently. Env: `DATABASE_URL` (both apps), `WORKER_ADMIN_TOKEN` (worker). Zod-validated at boot, fail-fast. Cron cadences sit on boundary minutes (generate-occurrences every 4h, hourly sweeps — D99); `apps/trigger` heartbeats `/health` at :50 before each boundary so the Render free worker is awake for its ticks (D100).
 
 ## 2. Backend module anatomy (`packages/core/src/modules/<domain>/`)
 
