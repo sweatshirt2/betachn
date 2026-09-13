@@ -31,6 +31,9 @@
   --chorify-line: #e3edf5;
   --chorify-primary: #7fb5d8;
   --chorify-primary-ink: #ffffff;
+  /* Ink painted ON pastel primary washes (buttons) — the pastel fill is too
+   * light for white text; use the theme ink instead (contrast fix). */
+  --chorify-primary-ink-on: #46525e;
   --chorify-primary-soft: #dceef8;
   --chorify-secondary: #e8bfaf;
   --chorify-accent: #cca075;
@@ -93,6 +96,7 @@
   --chorify-line: #f2e3d8;
   --chorify-primary: #e2a184;
   --chorify-primary-ink: #ffffff;
+  --chorify-primary-ink-on: #5c5049;
   --chorify-primary-soft: #fbe7da;
   --chorify-secondary: #a3c9d9;
   --chorify-accent: #cca075;
@@ -138,6 +142,7 @@
   --chorify-line: #eee0c8;
   --chorify-primary: #c89a68;
   --chorify-primary-ink: #ffffff;
+  --chorify-primary-ink-on: #574a38;
   --chorify-primary-soft: #f3e3cc;
   --chorify-secondary: #e8bfaf;
   --chorify-accent: #d9a441;
@@ -183,6 +188,7 @@
   --chorify-line: #dfecdf;
   --chorify-primary: #8fbc9f;
   --chorify-primary-ink: #ffffff;
+  --chorify-primary-ink-on: #475747;
   --chorify-primary-soft: #ddf0e3;
   --chorify-secondary: #f2d8c8;
   --chorify-accent: #cca075;
@@ -228,6 +234,7 @@
   --chorify-line: #f1e8cd;
   --chorify-primary: #dfb878;
   --chorify-primary-ink: #ffffff;
+  --chorify-primary-ink-on: #5c5340;
   --chorify-primary-soft: #f9ecd2;
   --chorify-secondary: #a3c9d9;
   --chorify-accent: #d9a441;
@@ -273,6 +280,7 @@
   --chorify-line: #f2e1e2;
   --chorify-primary: #d294a2;
   --chorify-primary-ink: #ffffff;
+  --chorify-primary-ink-on: #5e4c50;
   --chorify-primary-soft: #f7e0e5;
   --chorify-secondary: #a9cede;
   --chorify-accent: #cca075;

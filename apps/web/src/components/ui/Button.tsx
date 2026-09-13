@@ -8,15 +8,18 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const TONES: Record<ButtonTone, string> = {
-  primary: 'bg-primary-wash shadow-soft hover:shadow-glow',
+  primary: 'bg-primary-wash text-primary-ink-on shadow-soft hover:shadow-glow',
   quiet: 'bg-surface-alt text-ink border-line shadow-soft hover:shadow-glow border',
 };
 
-/** Buttons press with a spring and glow on hover — playful, never heavy. */
+/** Buttons press with a spring and glow on hover — playful, never heavy.
+ * Primary tone paints ink per surface: the pastel primary wash reads best
+ * with dark ink; solid `bg-fab`-style surfaces keep white via their own
+ * -ink token (the FAB does this). */
 export function Button({ tone = 'primary', children, className = '', ...rest }: ButtonProps) {
   return (
     <button
-      className={`tap-spring border-line text-terracotta-ink rounded-md border border-transparent px-4 py-2 font-body text-sm font-semibold ${TONES[tone]} ${className}`}
+      className={`tap-spring border-line rounded-md border border-transparent px-4 py-2 font-body text-sm font-semibold ${TONES[tone]} ${className}`}
       {...rest}
     >
       {children}
