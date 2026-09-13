@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { setDeviceSession } from '@/store';
-import { Button, Card, Field } from '@/components/ui';
+import { Button, Card, Field, AuthArt } from '@/components/ui';
 import { LANGUAGE_STORAGE_KEY, LOCALES, type Locale } from '@/i18n/dictionaries';
 import {
   addLocalPerson,
@@ -104,36 +104,44 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-[70vh] w-full max-w-sm flex-col justify-center px-4">
+    <main className="bg-page-wash ambient mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center px-4 py-10">
       {step === 0 && (
-        <Card>
-          <h1 className="font-display text-2xl">{t('onboarding.languageTitle')}</h1>
-          <div className="mt-4 flex gap-2">
-            {LOCALES.map((locale) => (
-              <Button key={locale} tone="quiet" onClick={() => setLocale(locale)}>
-                {locale === 'en' ? 'English' : 'አማርኛ'}
-              </Button>
-            ))}
-          </div>
-        </Card>
+        <div className="page-enter flex flex-col">
+          <AuthArt variant="language" />
+          <Card className="mt-5">
+            <h1 className="font-display text-2xl">{t('onboarding.languageTitle')}</h1>
+            <div className="mt-4 flex gap-2">
+              {LOCALES.map((locale) => (
+                <Button key={locale} tone="quiet" onClick={() => setLocale(locale)}>
+                  {locale === 'en' ? 'English' : 'አማርኛ'}
+                </Button>
+              ))}
+            </div>
+          </Card>
+        </div>
       )}
 
       {step === 1 && (
-        <Card>
-          <h1 className="font-display text-2xl">{t('onboarding.householdTitle')}</h1>
-          <p className="text-muted mt-1 text-sm">{t('onboarding.changeLater')}</p>
-          <div className="mt-4 flex flex-col gap-3">
-            <Field label={t('onboarding.householdName')} value={householdName} onChange={(e) => setHouseholdName(e.target.value)} placeholder={t('onboarding.householdPlaceholder')} />
-            <Field label={t('onboarding.yourName')} value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder={t('onboarding.ownerPlaceholder')} />
-            <Button disabled={householdName.trim().length === 0 || ownerName.trim().length === 0} onClick={() => setStep(2)}>
-              {t('onboarding.continue')}
-            </Button>
-          </div>
-        </Card>
+        <div className="page-enter flex flex-col">
+          <AuthArt variant="household" />
+          <Card className="mt-5">
+            <h1 className="font-display text-2xl">{t('onboarding.householdTitle')}</h1>
+            <p className="text-muted mt-1 text-sm">{t('onboarding.changeLater')}</p>
+            <div className="mt-4 flex flex-col gap-3">
+              <Field label={t('onboarding.householdName')} value={householdName} onChange={(e) => setHouseholdName(e.target.value)} placeholder={t('onboarding.householdPlaceholder')} />
+              <Field label={t('onboarding.yourName')} value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder={t('onboarding.ownerPlaceholder')} />
+              <Button disabled={householdName.trim().length === 0 || ownerName.trim().length === 0} onClick={() => setStep(2)}>
+                {t('onboarding.continue')}
+              </Button>
+            </div>
+          </Card>
+        </div>
       )}
 
       {step === 2 && (
-        <Card>
+        <div className="page-enter flex flex-col">
+          <AuthArt variant="people" />
+          <Card className="mt-5">
           <h1 className="font-display text-2xl">{t('onboarding.addPeople')}</h1>
           <p className="text-muted mt-1 text-sm">{t('onboarding.addPeopleHint')}</p>
           <div className="mt-4 flex flex-col gap-3">
@@ -180,7 +188,8 @@ export default function OnboardingPage() {
               {busy ? t('onboarding.settingUp') : t('onboarding.start')}
             </Button>
           </div>
-        </Card>
+          </Card>
+        </div>
       )}
     </main>
   );

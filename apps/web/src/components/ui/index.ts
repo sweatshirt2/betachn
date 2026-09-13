@@ -1,5 +1,7 @@
 export { AccountSwitcherCard } from './AccountSwitcherCard';
 export type { AccountSwitcherStatus } from './AccountSwitcherCard';
+export { AuthArt } from './AuthArt';
+export type { AuthArtVariant } from './AuthArt';
 export { Button } from './Button';
 export { Card } from './Card';
 export { CountStat } from './CountStat';
