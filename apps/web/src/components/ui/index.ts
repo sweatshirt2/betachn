@@ -10,6 +10,7 @@ export type { MemberFacts } from './MemberCard';
 export { Chip } from './Chip';
 export { ChoreCheck } from './ChoreCheck';
 export { EmptyState, Skeleton } from './EmptyState';
+export { Switch } from './Switch';
 export { Field } from './Field';
 export { Sheet } from './Sheet';
 export { SwipeCard } from './SwipeCard';

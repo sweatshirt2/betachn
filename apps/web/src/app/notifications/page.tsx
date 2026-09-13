@@ -3,7 +3,7 @@
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import type { TFunction } from 'i18next';
-import { Button, Card, EmptyState, Skeleton } from '@/components/ui';
+import { Button, Card, EmptyState, Skeleton, Switch } from '@/components/ui';
 import {
   useMarkRead,
   useNotificationPrefs,
@@ -101,15 +101,12 @@ export default function NotificationsPage() {
             {Object.entries(categories).map(([category, on]) => (
               <Card key={category} className="lift-hover flex items-center gap-3.5 py-3">
                 <p className="flex-1 text-sm font-semibold">{t(CATEGORY_KEYS[category as keyof typeof CATEGORY_KEYS] ?? 'notify.title')}</p>
-                <button
-                  role="switch"
-                  aria-checked={on}
-                  aria-label={t('notify.categoryAria', { category: t(CATEGORY_KEYS[category as keyof typeof CATEGORY_KEYS] ?? 'notify.title') })}
-                  onClick={() => savePrefs.mutate({ categories: { ...categories, [category]: !on } })}
-                  className={`tap-spring rounded-full px-3 py-1 text-sm font-bold transition-colors ${on ? 'bg-accent-wash text-ink shadow-soft' : 'bg-surface text-muted border-line border'}`}
-                >
-                  {on ? t('notify.on') : t('notify.off')}
-                </button>
+                <Switch
+                  checked={on}
+                  disabled={savePrefs.isPending}
+                  label={t('notify.categoryAria', { category: t(CATEGORY_KEYS[category as keyof typeof CATEGORY_KEYS] ?? 'notify.title') })}
+                  onToggle={() => savePrefs.mutate({ categories: { ...categories, [category]: !on } })}
+                />
               </Card>
             ))}
           </div>
