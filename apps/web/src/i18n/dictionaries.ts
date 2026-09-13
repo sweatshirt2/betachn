@@ -338,6 +338,8 @@ export type Dict = {
   settings: {
     title: string;
     language: string;
+    security: string;
+    securityHint: string;
     theme: string;
     calendar: string;
     household: string;
@@ -830,6 +832,8 @@ export const en: Dict = {
   settings: {
     title: 'Settings',
     language: 'Language',
+    security: 'Security & privacy',
+    securityHint: 'Passcode lock and privacy controls for this device.',
     theme: 'Theme',
     calendar: 'Calendar',
     household: 'Household',
@@ -1326,6 +1330,8 @@ export const am: Dict = {
   settings: {
     title: 'ቅንብሮች',
     language: 'ቋንቋ',
+    security: 'ደህንነትና ግላዊነት',
+    securityHint: 'የመሣሪያ መቆለፊያና የግላዊነት መቆጣጠሪያዎች።',
     theme: 'ገጽታ',
     calendar: 'የቀን መቁጠሪያ',
     household: 'ቤተሰብ',

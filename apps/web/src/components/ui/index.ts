@@ -1,3 +1,4 @@
+export { Accordion } from './Accordion';
 export { AccountSwitcherCard } from './AccountSwitcherCard';
 export type { AccountSwitcherStatus } from './AccountSwitcherCard';
 export { AuthArt } from './AuthArt';

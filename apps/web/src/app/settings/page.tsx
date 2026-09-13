@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
-import { Button, Card, Field, useToast } from '@/components/ui';
+import { Accordion, Button, Card, Field, useToast } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
 import { useLogout } from '@/features/auth';
 import { THEME_IDS, THEME_SWATCHES, useTheme, type ThemeId } from '@/theme';
@@ -96,7 +96,13 @@ export default function SettingsPage() {
     <div>
       <h1 className="font-display text-2xl">{t('settings.title')}</h1>
 
-      <PasscodeSection />
+      {/* Security & privacy (UI/UX iteration 1): passcode + future privacy
+          controls grouped under one accordion so the page stays scannable. */}
+      <div className="mt-4">
+        <Accordion title={t('settings.security')} hint={t('settings.securityHint')} glyph="shield">
+          <PasscodeSection />
+        </Accordion>
+      </div>
 
       <section aria-label={t('settings.language')} className="mt-4">
         <h2 className="font-display text-lg">{t('settings.language')} / ቋንቋ</h2>
@@ -280,7 +286,7 @@ function PasscodeSection() {
   const locked = state !== 'checking' && state.status === 'gate';
 
   return (
-    <section aria-label={t('settings.passcode')} className="mt-4">
+    <section aria-label={t('settings.passcode')}>
       <h2 className="font-display text-lg">{t('settings.passcode')}</h2>
       <Card className="mt-2 flex flex-col gap-2">
         <p className="text-muted text-xs">
