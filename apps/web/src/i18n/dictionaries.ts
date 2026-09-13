@@ -395,6 +395,19 @@ export type Dict = {
     inUse: string;
     hasPin: string;
   };
+  role: {
+    father: string;
+    mother: string;
+    grandfather: string;
+    grandmother: string;
+    guardian: string;
+    adult: string;
+    teenager: string;
+    responsible_child: string;
+    child: string;
+    supervised_child: string;
+    family_member: string;
+  };
   pantry: {
     title: string;
     subtitle: string;
@@ -870,6 +883,21 @@ export const en: Dict = {
     inUse: 'In use',
     hasPin: 'PIN',
   },
+  // Built-in role display names — keyed by the wire contract's builtinKey
+  // (roles.rules.ts: "clients localize by builtinKey, never by stored text").
+  role: {
+    father: 'Father',
+    mother: 'Mother',
+    grandfather: 'Grandfather',
+    grandmother: 'Grandmother',
+    guardian: 'Guardian',
+    adult: 'Adult',
+    teenager: 'Teenager',
+    responsible_child: 'Responsible Child',
+    child: 'Child',
+    supervised_child: 'Supervised Child',
+    family_member: 'Family Member',
+  },
   pantry: {
     title: 'Pantry',
     subtitle: 'What is running out, what to buy next, and dates to remember.',
@@ -1338,6 +1366,19 @@ export const am: Dict = {
   switcher: {
     inUse: 'እየተጠቀመ ነው',
     hasPin: 'ኮድ',
+  },
+  role: {
+    father: 'አባት',
+    mother: 'እናት',
+    grandfather: 'አያት (ወንድ)',
+    grandmother: 'አያት (ሴት)',
+    guardian: 'አስጠኚ',
+    adult: 'አዋቂ',
+    teenager: 'ወጣት',
+    responsible_child: 'ኃላፊነት የሚሰማው ልጅ',
+    child: 'ልጅ',
+    supervised_child: 'ቁጥጥር የሚደረግበት ልጅ',
+    family_member: 'የቤተሰብ አባል',
   },
   pantry: {
     title: 'ማከማቻ',

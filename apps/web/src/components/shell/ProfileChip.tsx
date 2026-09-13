@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { PersonAvatar } from '@/components/ui';
 import { NavIcon } from '@/components/icons';
-import { usePeople, useRoles } from '@/features/household';
+import { roleDisplayName, usePeople, useRoles } from '@/features/household';
 import { personFactsTag } from '@/lib/facts';
 import type { RootState } from '@/store';
 
@@ -23,7 +23,7 @@ export function ProfileChip({ onOpen }: { onOpen: () => void }) {
 
   const me = people.data?.people.find((p) => p.id === activePerson.id) ?? null;
   const role = roles.data?.roles.find((r) => r.id === me?.roleId) ?? null;
-  const roleLine = role ? `${role.isOwnerRole ? '★ ' : ''}${role.name}` : t('household.noRole');
+  const roleLine = role ? `${role.isOwnerRole ? '★ ' : ''}${roleDisplayName(role, t)}` : t('household.noRole');
   const factsTag = me !== null ? personFactsTag(me, t) : null;
 
   return (

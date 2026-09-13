@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, EmptyState, MemberCard, SectionWatermark, Skeleton } from '@/components/ui';
-import { PersonSheet, usePeople, useRoles, type PersonPayload } from '@/features/household';
+import { PersonSheet, roleDisplayName, usePeople, useRoles, type PersonPayload } from '@/features/household';
 import { personFactsTag } from '@/lib/facts';
 
 export default function HouseholdPage() {
@@ -51,7 +51,7 @@ export default function HouseholdPage() {
               emoji={p.avatarEmoji}
               name={p.name}
               owner={role?.isOwnerRole === true}
-              role={role?.name ?? t('household.noRole')}
+              role={roleDisplayName(role, t)}
               factsTag={personFactsTag(p, t)}
               onOpen={() => setSelected(p)}
             />

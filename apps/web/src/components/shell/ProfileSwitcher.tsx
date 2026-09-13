@@ -7,7 +7,7 @@ import { ApiError } from '@/lib/api';
 import { personFactsTag } from '@/lib/facts';
 import { AccountSwitcherCard, Sheet } from '@/components/ui';
 import { useSwitchProfile } from '@/features/auth';
-import { usePeople, useRoles } from '@/features/household';
+import { roleDisplayName, usePeople, useRoles } from '@/features/household';
 import { type RootState } from '@/store';
 
 /**
@@ -71,10 +71,10 @@ export function ProfileSwitcher({ open, onClose }: { open: boolean; onClose: () 
       <div className="flex flex-col gap-2.5">
         {(people.data?.people ?? []).map((p, index) => {
           const active = switchMut.variables?.personId === p.id && switchMut.isPending;
-          const roleName = roles.data?.roles.find((r) => r.id === p.roleId)?.name ?? null;
-          const isOwner = roles.data?.roles.find((r) => r.id === p.roleId)?.isOwnerRole === true;
+          const role = roles.data?.roles.find((r) => r.id === p.roleId) ?? null;
+          const roleName = roleDisplayName(role, t);
           const who = [
-            isOwner ? `★ ${roleName ?? ''}` : roleName,
+            role?.isOwnerRole === true ? `★ ${roleName}` : roleName,
             p.phone !== null ? t('switcher.hasPin') : null,
           ]
             .filter(Boolean)

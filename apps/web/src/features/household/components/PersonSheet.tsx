@@ -11,6 +11,7 @@ import { clearApiCache, useApiQuery } from '@/lib/api';
 import { deviceOccurrences } from '@/lib/device/reads';
 import { enterViewAs, type RootState } from '@/store';
 import {
+  roleDisplayName,
   useDeletePerson,
   useRoles,
   useUpdatePerson,
@@ -145,7 +146,7 @@ export function PersonSheet({
     onClose();
   }
 
-  const roleName = role?.name ?? t('household.noRole');
+  const roleName = roleDisplayName(role, t);
 
   return (
     <Sheet open onClose={onClose} title={`${person.avatarEmoji} ${person.name}`}>

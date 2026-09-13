@@ -6,7 +6,7 @@ export type {
   RolePayload,
   UpdatePersonBody,
 } from './household.types';
-export { usePeople, useRoles } from './api/household.queries';
+export { usePeople, useRoles, roleDisplayName } from './api/household.queries';
 export {
   useCreatePerson,
   useCreateRole,

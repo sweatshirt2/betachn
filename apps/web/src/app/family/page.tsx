@@ -15,7 +15,7 @@ import {
   crayon,
 } from '@/components/ui';
 import { useOccurrences, type TitledOccurrence } from '@/features/chores';
-import { usePeople, useRoles } from '@/features/household';
+import { roleDisplayName, usePeople, useRoles } from '@/features/household';
 import { hasSession, type RootState } from '@/store';
 import { usePermission } from '@/lib/permissions';
 import { formatDate } from '@/lib/dates';
@@ -153,7 +153,7 @@ export default function FamilyPage() {
               emoji={p.avatarEmoji}
               name={p.name}
               owner={role?.isOwnerRole === true}
-              role={role?.name ?? t('household.noRole')}
+              role={roleDisplayName(role, t)}
               factsTag={personFactsTag(p, t)}
               interactive={false}
               chevron={false}
