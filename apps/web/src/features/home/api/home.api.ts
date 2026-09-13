@@ -44,12 +44,13 @@ export function useAsset(id: string) {
 export function useCreateRoom() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const mode = useSelector((state: RootState) => state.auth.mode);
 
   const onSuccess = ({ room }: { room: RoomPayload }) => {
     void queryClient.invalidateQueries({ queryKey: ['rooms'] });
     void queryClient.invalidateQueries({ queryKey: queryKeys.today() });
-    toast(`${room.name} added.`);
+    toast(t('ops.roomAdded', { name: room.name }), { kind: 'success' });
   };
 
   const server = useApiMutation<{ room: RoomPayload }, { name: string }>({
@@ -67,12 +68,13 @@ export function useCreateRoom() {
 export function useCreateAsset() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const mode = useSelector((state: RootState) => state.auth.mode);
 
   const onSuccess = ({ asset }: { asset: AssetPayload }) => {
     void queryClient.invalidateQueries({ queryKey: ['assets'] });
     void queryClient.invalidateQueries({ queryKey: queryKeys.today() });
-    toast(`${asset.name} added.`);
+    toast(t('ops.assetAdded', { name: asset.name }), { kind: 'success' });
   };
 
   const server = useApiMutation<{ asset: AssetPayload }, { name: string; roomId?: string | null }>({

@@ -2,6 +2,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { queryKeys, useApiMutation, useApiQuery, useDeviceMutation } from '@/lib/api';
 import { useToast } from '@/components/ui';
 import { deviceCreateSupply, deviceCycleSupply } from '@/lib/device/writes';
@@ -27,12 +28,13 @@ export function useSupplies() {
 export function useCreateSupply() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const mode = useSelector((state: RootState) => state.auth.mode);
 
   const onSuccess = ({ supply }: { supply: SupplyPayload }) => {
     void queryClient.invalidateQueries({ queryKey: ['supplies'] });
     void queryClient.invalidateQueries({ queryKey: queryKeys.today() });
-    toast(`${supply.name} added.`);
+    toast(t('ops.supplyAdded', { name: supply.name }), { kind: 'success' });
   };
 
   const server = useApiMutation<{ supply: SupplyPayload }, { name: string }>({

@@ -63,9 +63,9 @@ export default function SettingsPage() {
       a.download = `My-Household-${new Date().toISOString().slice(0, 10)}.txt`;
       a.click();
       URL.revokeObjectURL(url);
-      toast(t('settings.exportSaved'));
+      toast(t('settings.exportSaved'), { kind: 'success' });
     } catch {
-      toast(t('settings.exportFailed'));
+      toast(t('settings.exportFailed'), { kind: 'error' });
     } finally {
       setBusy(false);
     }
@@ -76,16 +76,16 @@ export default function SettingsPage() {
     try {
       const text = await file.text();
       await api.post('/import', text, { headers: { 'content-type': 'text/plain' } });
-      toast(t('settings.importOpened'));
+      toast(t('settings.importOpened'), { kind: 'success' });
     } catch (err) {
       // micro-67: conflict-class failures get their verbatim copy; the device
       // twin (local import) surfaces its own message.
       if (err instanceof ApiError && err.code === 'IMPORT_CONFLICT') {
-        toast(t('settings.importConflict'));
+        toast(t('settings.importConflict'), { kind: 'error' });
       } else if (err instanceof ApiError && err.code === 'IMPORT_TOO_NEW') {
-        toast(t('settings.importTooNew'));
+        toast(t('settings.importTooNew'), { kind: 'error' });
       } else {
-        toast(t('settings.importBlocked'));
+        toast(t('settings.importBlocked'), { kind: 'error' });
       }
     } finally {
       setBusy(false);
@@ -225,6 +225,9 @@ function PasscodeSection() {
   const [hint, setHint] = useState('');
   const [busy, setBusy] = useState(false);
   const [removing, setRemoving] = useState(false);
+  // Per-field errors (UI/UX iteration 1): validation speaks under the input
+  // it belongs to, not in a toast far from the cause.
+  const [errors, setErrors] = useState<{ passcode?: string; confirm?: string }>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -241,25 +244,22 @@ function PasscodeSection() {
   }, []);
 
   async function save() {
-    if (passcode.length < 4) {
-      toast(t('settings.passcodeTooShort'));
-      return;
-    }
-    if (passcode !== confirm) {
-      toast(t('settings.passcodeMismatch'));
-      return;
-    }
+    const next: { passcode?: string; confirm?: string } = {};
+    if (passcode.length < 4) next.passcode = t('settings.passcodeTooShort');
+    if (passcode.length >= 4 && passcode !== confirm) next.confirm = t('settings.passcodeMismatch');
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
     setBusy(true);
     try {
       await setPasscodeGate(passcode, hint.trim() || null);
-      toast(t('settings.passcodeSaved'));
+      toast(t('settings.passcodeSaved'), { kind: 'success' });
       setPasscode('');
       setConfirm('');
       setHint('');
       setState({ status: 'gate', hint: hint.trim() || null });
     } catch (err) {
       console.error('passcode save failed', err);
-      toast(err instanceof MemoryTierError ? t('settings.passcodeNeedsDurable') : t('common.loadError'));
+      toast(err instanceof MemoryTierError ? t('settings.passcodeNeedsDurable') : t('common.loadError'), { kind: 'error' });
     } finally {
       setBusy(false);
     }
@@ -269,7 +269,7 @@ function PasscodeSection() {
     setBusy(true);
     try {
       await clearPasscodeGate();
-      toast(t('settings.passcodeRemoved'));
+      toast(t('settings.passcodeRemoved'), { kind: 'success' });
       setState({ status: 'none' });
       setRemoving(false);
     } finally {
@@ -310,14 +310,22 @@ function PasscodeSection() {
               label={t('settings.passcodeNew')}
               type="password"
               value={passcode}
-              onChange={(e) => setPasscode(e.target.value)}
+              onChange={(e) => {
+                setPasscode(e.target.value);
+                if (errors.passcode) setErrors((cur) => ({ ...cur, passcode: undefined }));
+              }}
+              error={errors.passcode}
               autoComplete="new-password"
             />
             <Field
               label={t('settings.passcodeConfirm')}
               type="password"
               value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
+              onChange={(e) => {
+                setConfirm(e.target.value);
+                if (errors.confirm) setErrors((cur) => ({ ...cur, confirm: undefined }));
+              }}
+              error={errors.confirm}
               autoComplete="new-password"
             />
             <Field label={t('settings.passcodeHint')} value={hint} onChange={(e) => setHint(e.target.value)} />

@@ -2,6 +2,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { useApiMutation, useApiQuery, useDeviceMutation } from '@/lib/api';
 import { useToast } from '@/components/ui';
 import { deviceCreateRoutine, deviceDeleteRoutine } from '@/lib/device/writes';
@@ -27,11 +28,12 @@ export function useRoutines() {
 export function useCreateRoutine() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const mode = useSelector((state: RootState) => state.auth.mode);
 
   const onSuccess = ({ routine }: { routine: RoutinePayload }) => {
     void queryClient.invalidateQueries({ queryKey: ['routines'] });
-    toast(`${routine.name} added.`);
+    toast(t('ops.routineAdded', { name: routine.name }), { kind: 'success' });
   };
 
   const server = useApiMutation<{ routine: RoutinePayload }, { name: string }>({

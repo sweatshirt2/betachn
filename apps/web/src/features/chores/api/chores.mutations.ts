@@ -50,12 +50,26 @@ export function useOccurrenceAct() {
       // moment everywhere (lists drop completed rows on refetch).
       buzz();
       celebrateChore();
-      toast(t('activity.occurrenceCompleted', { title: occurrence.title }), {
-        label: t('common.undo'),
-        run: () => (mode === 'device' ? reopenDevice.mutate({ id: occurrence.id }) : reopen.mutate({ id: occurrence.id })),
+      // Title can be missing on some payloads (screenshot showed bare
+      // "completed.") — degrade to the generic line, never bare prose.
+      const title = typeof occurrence.title === 'string' ? occurrence.title.trim() : '';
+      const message =
+        title.length > 0
+          ? t('activity.occurrenceCompleted', { title })
+          : t('ops.taskCompletedFallback');
+      toast(message, {
+        kind: 'success',
+        action: {
+          label: t('common.undo'),
+          run: () => (mode === 'device' ? reopenDevice.mutate({ id: occurrence.id }) : reopen.mutate({ id: occurrence.id })),
+        },
       });
     } else {
-      toast(t('chores.updatedToast', { title: occurrence.title }));
+      const title = typeof occurrence.title === 'string' ? occurrence.title.trim() : '';
+      toast(
+        title.length > 0 ? t('chores.updatedToast', { title }) : t('ops.taskCompletedFallback'),
+        { kind: 'info' },
+      );
     }
   };
   const onError = (error: ApiError) => {
@@ -81,12 +95,13 @@ export function useOccurrenceAct() {
 export function useCreateResponsibility() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const mode = useSelector((state: RootState) => state.auth.mode);
 
   const onSuccess = ({ responsibility }: { responsibility: { id: string; title: string } }) => {
     void queryClient.invalidateQueries({ queryKey: queryKeys.today() });
     void queryClient.invalidateQueries({ queryKey: ['occurrences'] });
-    toast(`${responsibility.title} added.`);
+    toast(t('activity.responsibilityCreated', { title: responsibility.title }), { kind: 'success' });
   };
 
   const server = useApiMutation<{ responsibility: { id: string; title: string } }, CreateResponsibilityBody>({

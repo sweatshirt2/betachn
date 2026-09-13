@@ -2,6 +2,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import { queryKeys, useApiMutation, useApiQuery, useDeviceMutation } from '@/lib/api';
 import { useToast } from '@/components/ui';
 import { deviceCreateShoppingItem, devicePurchaseItem } from '@/lib/device/writes';
@@ -27,12 +28,13 @@ export function useShoppingItems() {
 export function useCreateShoppingItem() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const mode = useSelector((state: RootState) => state.auth.mode);
 
   const onSuccess = ({ item }: { item: ShoppingItemPayload }) => {
     void queryClient.invalidateQueries({ queryKey: ['shopping-items'] });
     void queryClient.invalidateQueries({ queryKey: queryKeys.today() });
-    toast(`${item.name} added to shopping.`);
+    toast(t('ops.shoppingItemAdded', { name: item.name }), { kind: 'success' });
   };
 
   const server = useApiMutation<{ item: ShoppingItemPayload }, { name: string }>({
@@ -51,13 +53,14 @@ export function useCreateShoppingItem() {
 export function usePurchaseItem() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const mode = useSelector((state: RootState) => state.auth.mode);
 
   const onSuccess = ({ item }: { item: ShoppingItemPayload }) => {
     void queryClient.invalidateQueries({ queryKey: ['shopping-items'] });
     void queryClient.invalidateQueries({ queryKey: ['supplies'] });
     void queryClient.invalidateQueries({ queryKey: queryKeys.today() });
-    toast(`Bought ${item.name} — supply refilled.`);
+    toast(t('ops.shoppingBought', { name: item.name }), { kind: 'success' });
   };
 
   const server = useApiMutation<{ item: ShoppingItemPayload }, { id: string }>({

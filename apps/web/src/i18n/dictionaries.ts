@@ -239,6 +239,13 @@ export type Dict = {
     supplies: string;
     shopping: string;
     listEmpty: string;
+    routineAdded: string;
+    shoppingItemAdded: string;
+    shoppingBought: string;
+    roomAdded: string;
+    assetAdded: string;
+    supplyAdded: string;
+    taskCompletedFallback: string;
     supplyAvailable: string;
     supplyLow: string;
     supplyOut: string;
@@ -724,6 +731,13 @@ export const en: Dict = {
     supplies: 'Supplies',
     shopping: 'Shopping',
     listEmpty: 'List is empty',
+    routineAdded: '{{name}} added.',
+    shoppingItemAdded: '{{name}} added to shopping.',
+    shoppingBought: 'Bought {{name}} — supply refilled.',
+    roomAdded: '{{name}} added.',
+    assetAdded: '{{name}} added.',
+    supplyAdded: '{{name}} added.',
+    taskCompletedFallback: 'Task completed.',
     supplyAvailable: 'Available',
     supplyLow: 'Running low',
     supplyOut: 'Out',
@@ -1213,6 +1227,13 @@ export const am: Dict = {
     supplies: 'ቁሳቁሶች',
     shopping: 'ግዢያ',
     listEmpty: 'ዝርዝሩ ባዶ ነው',
+    routineAdded: '{{name}} ተጨምሯል።',
+    shoppingItemAdded: '{{name}} ወደ ግዢያ ተጨምሯል።',
+    shoppingBought: '{{name}} ተገዝቷል — እቃው ተሞልቷል።',
+    roomAdded: '{{name}} ተጨምሯል።',
+    assetAdded: '{{name}} ተጨምሯል።',
+    supplyAdded: '{{name}} ተጨምሯል።',
+    taskCompletedFallback: 'ተግባሩ ተጠናቋል።',
     supplyAvailable: 'አለ',
     supplyLow: 'በመቀነስ ላይ',
     supplyOut: 'አልቋል',
