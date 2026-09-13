@@ -12,10 +12,11 @@ export function PersonAvatar({
 }: {
   emoji: string;
   index?: number;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'sm' | 'md' | 'lg';
   className?: string;
 }) {
   const sizes = {
+    xs: { box: 'h-6 w-6 text-[11px] rounded-full leading-none', n: 4 },
     sm: { box: 'h-8 w-8 text-lg rounded-[30%]', n: 4 },
     md: { box: 'h-14 w-14 text-3xl rounded-[34%]', n: 4 },
     lg: { box: 'h-20 w-20 text-4xl rounded-[36%]', n: 4 },

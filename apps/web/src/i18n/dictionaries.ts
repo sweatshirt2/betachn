@@ -386,6 +386,8 @@ export type Dict = {
     sex: string;
     male: string;
     female: string;
+    maleAdult: string;
+    femaleAdult: string;
     birthDate: string;
     age: string;
     agePlaceholder: string;
@@ -874,6 +876,8 @@ export const en: Dict = {
     sex: 'Girl or boy',
     male: 'Boy',
     female: 'Girl',
+    maleAdult: 'Man',
+    femaleAdult: 'Woman',
     birthDate: 'Birthday',
     age: 'Age',
     agePlaceholder: '—',
@@ -1358,6 +1362,8 @@ export const am: Dict = {
     sex: 'ልጅ ወይስ የወንድ',
     male: 'ወንድ',
     female: 'ሴት',
+    maleAdult: 'ወንድ',
+    femaleAdult: 'ሴት',
     birthDate: 'የልደት ቀን',
     age: 'እድሜ',
     agePlaceholder: '—',

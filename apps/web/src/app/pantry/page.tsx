@@ -153,7 +153,7 @@ export default function PantryPage() {
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1.5">
                   <Button
-                    tone="quiet"
+                    tone="on-wash"
                     disabled={pendingAny}
                     onClick={() => cycle.mutate({ id: s.id, state: NEXT[s.state] })}
                     aria-label={t('ops.markAria', { name: s.name, state: NEXT[s.state] })}
@@ -188,22 +188,29 @@ export default function PantryPage() {
           )}
         </div>
         <div className="mt-2 flex flex-col gap-2">
-          {openItems.map((i, index) => (
-            <TaskDoneRow
+          {openItems.map((i) => (
+            <div
               key={i.id}
-              className="lift-hover"
-              title={i.name}
-              action={
-                <Button
-                  tone="quiet"
-                  disabled={pendingAny}
-                  onClick={() => purchase.mutate({ id: i.id })}
-                  aria-label={t('ops.buyAria', { name: i.name })}
-                >
-                  {t('ops.buy')}
-                </Button>
-              }
-            />
+              className="bg-card-wash border-line shadow-soft lift-hover flex min-h-[3.25rem] items-center gap-3 rounded-xl border px-3 py-2"
+            >
+              {/* Cart tile, not a ✓ — a checkmark on a pending row read as
+                  "already done" (UI/UX iteration 1). */}
+              <span
+                aria-hidden
+                className="bg-surface-alt border-line text-ink flex h-8 w-8 shrink-0 items-center justify-center rounded-[30%] border"
+              >
+                <Glyph name="cart" className="h-4 w-4" />
+              </span>
+              <p className="min-w-0 flex-1 truncate text-[15px] font-bold">{i.name}</p>
+              <Button
+                tone="on-wash"
+                disabled={pendingAny}
+                onClick={() => purchase.mutate({ id: i.id })}
+                aria-label={t('ops.buyAria', { name: i.name })}
+              >
+                {t('ops.buy')}
+              </Button>
+            </div>
           ))}
           {openItems.length === 0 && (
             <p className="text-muted mt-1 text-sm">{t('ops.shoppingEmptyHint')}</p>

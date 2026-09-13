@@ -241,7 +241,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
         <ProfileSwitcher open={profilesOpen} onClose={() => setProfilesOpen(false)} />
 
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-2 sm:px-6 lg:pb-12 xl:max-w-4xl">{children}</main>
+        {/* Bottom padding clears the fixed FAB + navbar — cards/adders must
+            never sit underneath either (UI/UX iteration 1). */}
+        <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-2 sm:px-6 xl:max-w-4xl" style={{ paddingBottom: 'calc(7.5rem + env(safe-area-inset-bottom))' }}>{children}</main>
 
         <button
           className="bg-fab text-fab-ink tap-spring outline-surface shadow-lift hover:shadow-glow fixed bottom-[4.5rem] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full text-2xl outline-4 transition-all duration-200 hover:scale-105 sm:right-6 lg:bottom-8 lg:right-8"

@@ -28,7 +28,20 @@ export function personFactsTag(
   t: TFunction<'translation'>,
 ): string | null {
   const age = personAge(person);
-  const gender = person.sex === 'female' ? t('facts.female') : person.sex === 'male' ? t('facts.male') : null;
+  // Girl/Boy for minors, Woman/Man once adult — "· Girl" on a 24-year-old
+  // read wrong (UI/UX iteration 1). Without a known age the word stays
+  // neutral (facts.male/female) rather than guessing.
+  const minor = age !== null && age < 18;
+  const gender =
+    person.sex === 'female'
+      ? minor
+        ? t('facts.female')
+        : t('facts.femaleAdult')
+      : person.sex === 'male'
+        ? minor
+          ? t('facts.male')
+          : t('facts.maleAdult')
+        : null;
   if (age !== null && gender !== null) return `${age} · ${gender}`;
   if (age !== null) return String(age);
   return gender;

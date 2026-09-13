@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Chip, ChoreCheck, CountStat, EmptyState, SectionWatermark, Skeleton, SwipeCard, TaskActionRow, TaskDoneRow, TaskUpcomingRow, crayon, TickNumber } from '@/components/ui';
+import { Button, Card, Chip, ChoreCheck, EmptyState, SectionWatermark, Skeleton, SwipeCard, TaskActionRow, TaskUpcomingRow, crayon } from '@/components/ui';
 import { useOccurrenceAct, useToday, usePeopleMap, type TitledOccurrence } from '@/features/chores';
 import { hasSession, type RootState } from '@/store';
 import { formatDate } from '@/lib/dates';
@@ -16,6 +16,7 @@ export default function TodayPage() {
   const act = useOccurrenceAct();
   const people = usePeopleMap();
   const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
+  const emojis = new Map((people.data?.people ?? []).map((p) => [p.id, p.avatarEmoji ?? null] as const));
 
   if (!hasSession(auth)) {
     return (
@@ -67,7 +68,7 @@ export default function TodayPage() {
   const assigneePeople = (o: TitledOccurrence) =>
     o.personIds.map((id) => {
       const name = names.get(id) ?? '?';
-      return { initial: name.trim().charAt(0).toUpperCase() || '?', label: name };
+      return { initial: name.trim().charAt(0).toUpperCase() || '?', label: name, emoji: emojis.get(id) ?? null };
     });
 
   return (
@@ -108,13 +109,16 @@ export default function TodayPage() {
           <p className="text-muted text-sm">
             {t('today.missedRecently')} · <span className="text-clay-red font-bold">{data.missedInGrace.length}</span>
           </p>
-          <div className="mt-2 flex flex-col gap-2 opacity-80">            {data.missedInGrace.map((o, index) => (
+          <div className="mt-2 flex flex-col gap-2 opacity-80">
+            {data.missedInGrace.map((o, index) => (
               <SwipeCard key={o.id} onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}>
-                <TaskDoneRow
+                <TaskActionRow
                   className="stagger-item"
                   style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}
                   title={o.title}
                   meta={formatDate(o.dueDate)}
+                  overdue
+                  people={assigneePeople(o)}
                   action={
                     <ChoreCheck
                       done={o.status === 'completed'}
@@ -166,16 +170,6 @@ export default function TodayPage() {
           </div>
         </section>
       )}
-
-      {/* Weekly tally — a crafted stat card, centered; the count-up keeps it playful. */}
-      <div className="mt-6 flex justify-center">
-        <CountStat
-          emphasis="tall"
-          className="w-44"
-          value={<TickNumber value={data.completedThisWeek} />}
-          label={t('today.completedWeek')}
-        />
-      </div>
     </div>
   );
 }

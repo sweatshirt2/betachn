@@ -130,7 +130,7 @@ export default function FamilyPage() {
                 aria-selected={filter === f}
                 onClick={() => setFilter(f)}
                 className={`tap-spring rounded-full px-3 py-1 text-xs font-bold transition-colors ${
-                  filter === f ? 'bg-accent-wash text-ink shadow-soft' : 'text-muted'
+                  filter === f ? 'bg-accent-wash text-ink shadow-soft' : 'text-ink/70'
                 }`}
               >
                 {f === 'mine' ? t('family.filterMine') : t('family.filterAll')}

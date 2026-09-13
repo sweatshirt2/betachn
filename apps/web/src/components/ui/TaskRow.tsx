@@ -1,16 +1,24 @@
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
+import { PersonAvatar } from './PersonAvatar';
 import { Glyph, choreGlyph, type GlyphName } from './Glyph';
 
 /**
  * Scenario-specific task presentations (plan §5.1, §5.3) — the same task
  * wears different clothes depending on where it appears:
  *
- * - TaskActionRow: today's "up next" items — soft card with a crayon edge
- *   stripe and the one-tap check. Built for action.
+ * - TaskActionRow: today's "up next" items — soft card with a state rail
+ *   (overdue red / crayon accent), assignee emoji avatars and the one-tap
+ *   check. Built for action.
  * - TaskDoneRow: completed/missed reports — calm wash, no decoration,
  *   optionally still completable within grace.
+ * - TaskCard: management card (chores page) — category-glyph tile on a
+ *   crayon wash, due pill, assignee avatars.
  * - TaskUpcomingRow: future items — quiet surface rows, date only.
+ *
+ * List-card v2 anatomy (UI/UX iteration 1): glyph/identity tile, 15px bold
+ * title, muted meta line, ≥44px touch rows, rounded-xl hairline cards,
+ * shadow-soft → lift-hover. People avatars carry the person's emoji.
  */
 
 const CRAYON_COUNT = 4;
@@ -20,10 +28,50 @@ export function crayon(index: number): string {
   return `var(--chorify-crayon-${(index % CRAYON_COUNT) + 1})`;
 }
 
+export type RowPerson = { initial: string; label: string; emoji?: string | null };
+
+/** Stacked assignee avatars (≤3 + overflow) — family-warm, never initial dots. */
+function AvatarStack({ people, size }: { people: RowPerson[]; size: 'xs' | 'sm' }) {
+  const visible = people.slice(0, 3);
+  const extra = people.length - visible.length;
+  if (visible.length === 0) return null;
+  return (
+    <span className="flex -space-x-1.5">
+      {visible.map((p, i) =>
+        p.emoji ? (
+          <PersonAvatar key={`${p.label}-${i}`} emoji={p.emoji} index={i} size={size} className={size === 'xs' ? 'ring-surface ring-2' : ''} />
+        ) : (
+          <span
+            key={`${p.label}-${i}`}
+            title={p.label}
+            className={`bg-surface border-line shadow-soft flex items-center justify-center rounded-full border text-[10px] font-bold ${
+              size === 'xs' ? 'h-6 w-6' : 'h-7 w-7'
+            }`}
+          >
+            {p.initial}
+          </span>
+        ),
+      )}
+      {extra > 0 && (
+        <span
+          title={`+${extra}`}
+          className={`bg-surface border-line shadow-soft flex items-center justify-center rounded-full border text-[10px] font-bold ${
+            size === 'xs' ? 'h-6 w-6' : 'h-7 w-7'
+          }`}
+        >
+          +{extra}
+        </span>
+      )}
+    </span>
+  );
+}
+
 export function TaskActionRow({
   title,
   meta,
   accent,
+  overdue = false,
+  done = false,
   people = [],
   action,
   className = '',
@@ -31,43 +79,34 @@ export function TaskActionRow({
 }: {
   title: ReactNode;
   meta?: ReactNode;
+  /** Crayon rail color for the default state. */
   accent?: string;
-  people?: Array<{ initial: string; label: string }>;
+  /** Overdue items wear a red rail so urgency reads at a glance. */
+  overdue?: boolean;
+  /** Completed items calm down to a wash rail. */
+  done?: boolean;
+  people?: RowPerson[];
   action?: ReactNode;
   className?: string;
   style?: CSSProperties;
 }) {
-  const visible = people.slice(0, 3);
-  const extra = people.length - visible.length;
+  const rail = overdue
+    ? 'var(--chorify-danger)'
+    : done
+      ? 'var(--chorify-wash-bg)'
+      : (accent ?? crayon(0));
   return (
     <div
       style={style}
-      className={`bg-card-wash border-line shadow-soft lift-hover flex items-stretch overflow-hidden rounded-lg border ${className}`}
+      className={`bg-card-wash border-line shadow-soft lift-hover flex min-h-[3.25rem] items-stretch overflow-hidden rounded-xl border ${className}`}
     >
-      <span className="w-1.5 shrink-0" style={{ background: accent ?? 'var(--chorify-crayon-1)' }} aria-hidden />
+      <span className="w-1.5 shrink-0" style={{ background: rail }} aria-hidden />
       <div className="flex min-w-0 flex-1 items-center gap-3 py-3 pl-3 pr-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-bold">{title}</p>
-          {meta && <p className="text-muted mt-0.5 truncate text-xs">{meta}</p>}
+          <p className={`truncate text-[15px] leading-snug ${overdue ? 'font-extrabold' : 'font-bold'}`}>{title}</p>
+          {meta && <p className="text-muted mt-0.5 truncate text-xs font-semibold">{meta}</p>}
         </div>
-        {visible.length > 0 && (
-          <span className="flex -space-x-1.5">
-            {visible.map((p, i) => (
-              <span
-                key={`${p.label}-${i}`}
-                title={p.label}
-                className="bg-surface border-line shadow-soft flex h-7 w-7 items-center justify-center rounded-full border text-[10px] font-bold"
-              >
-                {p.initial}
-              </span>
-            ))}
-            {extra > 0 && (
-              <span className="bg-surface border-line shadow-soft flex h-7 w-7 items-center justify-center rounded-full border text-[10px] font-bold">
-                +{extra}
-              </span>
-            )}
-          </span>
-        )}
+        <AvatarStack people={people} size="xs" />
         {action}
       </div>
     </div>
@@ -90,7 +129,7 @@ export function TaskDoneRow({
   return (
     <div
       style={style}
-      className={`bg-wash border-line/60 flex items-center gap-3 rounded-lg border px-3 py-2 ${className}`}
+      className={`bg-wash border-line/60 flex min-h-[3.25rem] items-center gap-3 rounded-xl border px-3 py-2 ${className}`}
     >
       <span
         className="border-line/60 bg-surface flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-bold"
@@ -100,7 +139,7 @@ export function TaskDoneRow({
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">{title}</p>
-        {meta && <p className="text-muted mt-0.5 truncate text-xs">{meta}</p>}
+        {meta && <p className="text-wash-ink/80 mt-0.5 truncate text-xs">{meta}</p>}
       </div>
       {action}
     </div>
@@ -133,19 +172,17 @@ export function TaskCard({
   /** Category glyph; defaults to a keyword match on the string title. */
   glyph?: GlyphName;
   crayonIndex?: number;
-  people?: Array<{ initial: string; label: string }>;
+  people?: RowPerson[];
   href?: string;
   action?: ReactNode;
   className?: string;
   style?: CSSProperties;
 }) {
-  const visible = people.slice(0, 3);
-  const extra = people.length - visible.length;
   const resolvedGlyph = glyph ?? (typeof title === 'string' ? choreGlyph(title) : 'basket');
   return (
     <div
       style={style}
-      className={`bg-card-wash border-line shadow-soft lift-hover flex items-center gap-3.5 rounded-lg border p-3.5 ${className}`}
+      className={`bg-card-wash border-line shadow-soft lift-hover flex min-h-[4rem] items-center gap-3.5 rounded-xl border p-3.5 ${className}`}
     >
       <span
         aria-hidden
@@ -156,11 +193,11 @@ export function TaskCard({
       </span>
       {href ? (
         <Link href={href} className="min-w-0 flex-1">
-          <CardBody title={title} meta={meta} dueLabel={dueLabel} overdue={overdue} visible={visible} extra={extra} />
+          <CardBody title={title} meta={meta} dueLabel={dueLabel} overdue={overdue} people={people} />
         </Link>
       ) : (
         <div className="min-w-0 flex-1">
-          <CardBody title={title} meta={meta} dueLabel={dueLabel} overdue={overdue} visible={visible} extra={extra} />
+          <CardBody title={title} meta={meta} dueLabel={dueLabel} overdue={overdue} people={people} />
         </div>
       )}
       {action}
@@ -173,15 +210,13 @@ function CardBody({
   meta,
   dueLabel,
   overdue,
-  visible,
-  extra,
+  people,
 }: {
   title: ReactNode;
   meta?: ReactNode;
   dueLabel?: ReactNode;
   overdue: boolean;
-  visible: Array<{ initial: string; label: string }>;
-  extra: number;
+  people: RowPerson[];
 }) {
   return (
     <>
@@ -191,30 +226,13 @@ function CardBody({
         {dueLabel && (
           <span
             className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-              overdue ? 'bg-clay-red text-cream' : 'bg-surface-alt text-muted border-line border'
+              overdue ? 'bg-clay-red text-cream' : 'bg-surface-alt text-ink border-line border'
             }`}
           >
             {dueLabel}
           </span>
         )}
-        {visible.length > 0 && (
-          <span className="flex -space-x-1.5">
-            {visible.map((p, i) => (
-              <span
-                key={`${p.label}-${i}`}
-                title={p.label}
-                className="bg-surface border-line shadow-soft flex h-6 w-6 items-center justify-center rounded-full border text-[10px] font-bold"
-              >
-                {p.initial}
-              </span>
-            ))}
-            {extra > 0 && (
-              <span className="bg-surface border-line shadow-soft flex h-6 w-6 items-center justify-center rounded-full border text-[10px] font-bold">
-                +{extra}
-              </span>
-            )}
-          </span>
-        )}
+        <AvatarStack people={people} size="xs" />
       </div>
     </>
   );
@@ -234,7 +252,7 @@ export function TaskUpcomingRow({
   return (
     <div
       style={style}
-      className={`bg-surface-alt/70 border-line/60 text-ink flex items-center justify-between gap-3 rounded-lg border px-3 py-2 ${className}`}
+      className={`bg-surface-alt/70 border-line/60 text-ink flex min-h-[2.75rem] items-center justify-between gap-3 rounded-xl border px-3 py-2 ${className}`}
     >
       <p className="min-w-0 truncate text-sm font-semibold">{title}</p>
       {meta && <span className="text-muted shrink-0 text-xs">{meta}</span>}

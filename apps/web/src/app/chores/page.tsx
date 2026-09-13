@@ -27,6 +27,7 @@ export default function ChoresPage() {
   const occurrences = useOccurrences({ from, to });
   const people = usePeopleMap();
   const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
+  const emojis = new Map((people.data?.people ?? []).map((p) => [p.id, p.avatarEmoji ?? null] as const));
 
   if (!hasSession(auth)) {
     return (
@@ -73,7 +74,7 @@ export default function ChoresPage() {
   const peopleOf = (o: TitledOccurrence) =>
     o.personIds.map((id) => {
       const name = names.get(id) ?? '?';
-      return { initial: name.trim().charAt(0).toUpperCase() || '?', label: name };
+      return { initial: name.trim().charAt(0).toUpperCase() || '?', label: name, emoji: emojis.get(id) ?? null };
     });
 
   const dueLabelOf = (o: TitledOccurrence) => {
@@ -99,7 +100,7 @@ export default function ChoresPage() {
             aria-selected={tab === tabOption}
             onClick={() => setTab(tabOption)}
             className={`tap-spring rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-              tab === tabOption ? 'bg-accent-wash text-ink shadow-soft' : 'bg-surface text-muted border-line border'
+              tab === tabOption ? 'bg-accent-wash text-ink shadow-soft' : 'bg-surface text-ink/70 border-line border'
             }`}
           >
             {/* Label comes from the ITERATED option, not the selection — each

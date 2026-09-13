@@ -30,7 +30,7 @@ export function LanguageSwitcher() {
               }
             }}
             className={`tap-spring rounded-full px-2.5 py-1 text-xs font-bold transition-colors ${
-              active ? 'bg-accent-wash text-ink shadow-soft' : 'text-muted'
+              active ? 'bg-accent-wash text-ink shadow-soft' : 'text-ink/70'
             }`}
           >
             {locale === 'en' ? 'EN' : 'አማ'}

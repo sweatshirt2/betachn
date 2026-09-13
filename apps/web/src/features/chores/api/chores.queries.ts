@@ -70,7 +70,7 @@ export function useResponsibility(id: string) {
 /** People map shared by the chores pages — device twin of GET /profiles. */
 export function usePeopleMap() {
   const mode = useSelector((state: RootState) => state.auth.mode);
-  return useApiQuery<{ people: Array<{ id: string; name: string }> }>({
+  return useApiQuery<{ people: Array<{ id: string; name: string; avatarEmoji?: string | null }> }>({
     endpoint: { method: 'get', path: '/profiles' },
     key: queryKeys.profiles(),
     options: {
