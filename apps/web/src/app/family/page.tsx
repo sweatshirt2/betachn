@@ -16,7 +16,7 @@ import {
 } from '@/components/ui';
 import { useOccurrences, type TitledOccurrence } from '@/features/chores';
 import { roleDisplayName, usePeople, useRoles } from '@/features/household';
-import { hasSession, type RootState } from '@/store';
+import { type RootState } from '@/store';
 import { usePermission } from '@/lib/permissions';
 import { formatDate } from '@/lib/dates';
 import { personFactsTag } from '@/lib/facts';
@@ -44,20 +44,6 @@ export default function FamilyPage() {
   const to = new Date(Date.now() + 7 * 86_400_000).toISOString().slice(0, 10);
   const occurrences = useOccurrences({ from, to });
 
-  if (!hasSession(auth)) {
-    return (
-      <EmptyState
-        art="people"
-        title={t('family.title')}
-        hint={t('auth.signInSubtitle')}
-        action={
-          <Link href="/login">
-            <Button>{t('auth.signIn')}</Button>
-          </Link>
-        }
-      />
-    );
-  }
   if (people.isPending || occurrences.isPending) {
     return (
       <div className="flex flex-col gap-3 pt-2">

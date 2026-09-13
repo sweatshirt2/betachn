@@ -57,9 +57,6 @@ export default function PrintPage() {
     },
   });
 
-  if (!hasSession(auth)) {
-    return <EmptyState art="printer" title={t('print.signInToPrint')} hint={t('print.printHint')} />;
-  }
   if (people.isPending || occurrences.isPending) {
     return (
       <div className="flex flex-col gap-3 pt-2">

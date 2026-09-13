@@ -6,7 +6,7 @@ import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { Button, ChoreCheck, EmptyState, Glyph, choreGlyph, SectionWatermark, Skeleton, SwipeCard, TaskCard } from '@/components/ui';
 import { useOccurrenceAct, useOccurrences, usePeopleMap, type TitledOccurrence } from '@/features/chores';
-import { hasSession, type RootState } from '@/store';
+import { type RootState } from '@/store';
 import { formatDate } from '@/lib/dates';
 
 type Tab = 'mine' | 'everyone' | 'overdue';
@@ -28,21 +28,6 @@ export default function ChoresPage() {
   const people = usePeopleMap();
   const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
   const emojis = new Map((people.data?.people ?? []).map((p) => [p.id, p.avatarEmoji ?? null] as const));
-
-  if (!hasSession(auth)) {
-    return (
-      <EmptyState
-        art="basket"
-        title={t('chores.title')}
-        hint={t('today.empty')}
-        action={
-          <Link href="/login">
-            <Button>{t('auth.signIn')}</Button>
-          </Link>
-        }
-      />
-    );
-  }
 
   if (occurrences.isPending) {
     return (

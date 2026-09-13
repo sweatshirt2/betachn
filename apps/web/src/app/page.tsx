@@ -1,42 +1,17 @@
 'use client';
 
-import Link from 'next/link';
-import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, Chip, ChoreCheck, EmptyState, SectionWatermark, Skeleton, SwipeCard, TaskActionRow, TaskUpcomingRow, crayon } from '@/components/ui';
 import { useOccurrenceAct, useToday, usePeopleMap, type TitledOccurrence } from '@/features/chores';
-import { hasSession, type RootState } from '@/store';
 import { formatDate } from '@/lib/dates';
 
 export default function TodayPage() {
   const { t } = useTranslation();
-  const auth = useSelector((state: RootState) => state.auth);
-  const token = auth.token;
   const today = useToday();
   const act = useOccurrenceAct();
   const people = usePeopleMap();
   const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
   const emojis = new Map((people.data?.people ?? []).map((p) => [p.id, p.avatarEmoji ?? null] as const));
-
-  if (!hasSession(auth)) {
-    return (
-      <EmptyState
-        art="door"
-        title={t('common.appName')}
-        hint={t('auth.signInSubtitle')}
-        action={
-          <div className="flex gap-2">
-            <Link href="/login">
-              <Button>{t('auth.signIn')}</Button>
-            </Link>
-            <Link href="/onboarding">
-              <Button tone="quiet">{t('auth.setupHousehold')}</Button>
-            </Link>
-          </div>
-        }
-      />
-    );
-  }
 
   if (today.isPending) {
     return (

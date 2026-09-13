@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button, Glyph, Sheet } from '@/components/ui';
+import { AuthArt, Button, Glyph, Sheet } from '@/components/ui';
 import { NavIcon, type NavIconName } from '@/components/icons';
 import { clearApiCache, queryKeys, useApiQuery } from '@/lib/api';
 import { useSyncBoot, useSyncStatus } from '@/lib/sync/syncClient';
@@ -109,7 +109,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     },
   });
   const unreadCount = (notifications.data?.notifications ?? []).filter((n) => n.readAt === null).length;
-  useSelector(hasSession);
+  const signedIn = useSelector(hasSession);
 
   const chromeless = CHROMELESS.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
   if (chromeless) {
@@ -131,6 +131,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
         }}
       />
     );
+  }
+  // Signed-out visitors get the welcome door INSTEAD of the app chrome —
+  // no header, no navbar, no FAB, no create sheet on any route (UI/UX
+  // iteration 2). Device-mode households count as signed in (offline-first).
+  // PersistGate holds first paint until redux rehydrates, so this never
+  // flashes for signed-in users.
+  if (!signedIn) {
+    return <SignedOutDoor />;
   }
 
   return (
@@ -293,6 +301,29 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </Sheet>
       </div>
     </div>
+  );
+}
+
+/**
+ * The signed-out surface: a deliberate, warm welcome — the whole app is
+ * behind one of these two doors. Full-height, centered, chrome-free.
+ */
+function SignedOutDoor() {
+  const { t } = useTranslation();
+  return (
+    <main className="bg-page-wash ambient page-enter flex min-h-screen w-full flex-col items-center justify-center px-4 py-10">
+      <AuthArt variant="welcome" />
+      <h1 className="font-display mt-4 text-center text-3xl">{t('auth.welcomeBack')}</h1>
+      <p className="text-muted mt-1 text-center text-sm">{t('auth.signInSubtitle')}</p>
+      <div className="mt-6 flex gap-3">
+        <Link href="/login">
+          <Button>{t('auth.signIn')}</Button>
+        </Link>
+        <Link href="/onboarding">
+          <Button tone="quiet">{t('auth.setupHousehold')}</Button>
+        </Link>
+      </div>
+    </main>
   );
 }
 
