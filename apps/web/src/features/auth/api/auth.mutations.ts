@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useDispatch } from 'react-redux';
 import { clearApiCache, useApiMutation, useDeviceMutation } from '@/lib/api';
 import { resetSession, setSession, setDeviceSession, store } from '@/store';
+import { popReturnTo } from '@/lib/auth/returnTo';
 import { switchDeviceProfile, type DeviceSwitchResult } from '@/lib/device';
 import { authEndpoints } from '../auth.endpoints';
 import { toAuthState, type AuthContextPayload, type LoginResponse } from '../auth.types';
@@ -16,7 +17,7 @@ export function useLogin() {
     options: {
       onSuccess: ({ token, context }) => {
         dispatch(setSession(toAuthState(token, context)));
-        router.push('/');
+        router.push(popReturnTo() ?? '/');
       },
     },
   });
@@ -35,7 +36,7 @@ export function useGoogleLogin() {
     options: {
       onSuccess: ({ token, context }) => {
         dispatch(setSession(toAuthState(token, context)));
-        router.push('/');
+        router.push(popReturnTo() ?? '/');
       },
     },
   });

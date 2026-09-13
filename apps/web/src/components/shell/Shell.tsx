@@ -9,6 +9,7 @@ import { AuthArt, Button, Glyph, Sheet } from '@/components/ui';
 import { NavIcon, type NavIconName } from '@/components/icons';
 import { clearApiCache, queryKeys, useApiQuery } from '@/lib/api';
 import { useSyncBoot, useSyncStatus } from '@/lib/sync/syncClient';
+import { stashReturnTo } from '@/lib/auth/returnTo';
 import { exitViewAs, hasSession, type RootState } from '@/store';
 import { deviceNotifications } from '@/lib/device/reads';
 import { readPasscodeGateState } from '@/lib/device/passcodeGate';
@@ -138,6 +139,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
   // PersistGate holds first paint until redux rehydrates, so this never
   // flashes for signed-in users.
   if (!signedIn) {
+    // Return-to: remember where the visitor was headed so login lands them
+    // on the thing they tapped (deep links, PWA relaunch, bookmarks).
+    if (typeof window !== 'undefined') stashReturnTo(pathname, window.location.search);
     return <SignedOutDoor />;
   }
 
