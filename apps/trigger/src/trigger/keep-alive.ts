@@ -5,14 +5,19 @@ import { logger, schedules } from '@trigger.dev/sdk';
  *
  * Render's free tier spins the service down after 15 minutes without inbound
  * traffic, and pg-boss cron ticks skip entirely while the process is stopped
- * (no catch-up on wake — D99). This task pings `GET /health` shortly before
- * the worker's cron boundary minutes so the tick lands inside the fresh
- * wake window:
+ * (no catch-up on wake — D99). A single wake warms the worker for ~15 minutes,
+ * so one schedule anchors the whole system: every 4th hour at :50 (UTC) —
+ * pings at 03:50 / 07:50 / 11:50 / 15:50 / 19:50 / 23:50, giving six
+ * 15-minute windows that cover every worker cron minute:
  *
- *   `50 2 * * *`   02:50 UTC — wakes for 03:00 generate-occurrences (4h grid)
- *                  and 03:00 prune-changes; worker stays warm through the
- *                  07:00 Africa/Addis_Ababa (= 04:00 UTC) due-today digest.
- *   `50 * * * *`   hourly at :50 — covers the hourly sweep-missed at :00.
+ *   03:50 window → 04:00 generate-occurrences + prune-changes
+ *                  + 07:00 Africa/Addis_Ababa (= 04:00 UTC) due-today digest
+ *   15:50 window → 16:00 UTC backup-nudge (19:00 Addis, Sundays)
+ *   every window → hourly sweep-missed ticks that land inside it
+ *
+ * Sweeps between wakes are state-based (first tick converts everything
+ * pending-past-due), so missed-chore notifications may lag up to ~4h —
+ * inside the day-scale grace windows (§4.9).
  *
  * The fetch allows 90s so the ping itself absorbs a cold start if one ever
  * happens; a non-2xx response throws so the configured retries apply.

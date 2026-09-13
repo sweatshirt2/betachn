@@ -131,13 +131,13 @@ export const jobRegistry: Record<string, JobHandler> = {
 };
 
 /**
- * Cron cadences (D99): user actions materialize/regenerate occurrences
+ * Cron cadences (D99/D100): user actions materialize/regenerate occurrences
  * transactionally, so the generator cron is a backfill safety net, not the
- * delivery path — every 4h suffices. Hourly jobs sit on hour boundaries
- * (minute 0) so a keep-alive wake shortly before the hour leaves the full
- * 15-min window for the tick; off-boundary minutes would fire while the
- * worker can already be asleep again (pg-boss crons skip missed ticks —
- * no catch-up on wake).
+ * delivery path — every 4h suffices. Every scheduled job sits on a minute
+ * covered by the external 4-hourly keep-alive wake (:50 UTC grid — D100):
+ * generate + prune ride the 03:50→04:05 window (digest 04:00 UTC included),
+ * backup rides the 15:50→16:05 window. pg-boss crons skip missed ticks —
+ * no catch-up on wake — so uncovered minutes may silently skip.
  */
 export async function registerJobs(boss: PgBoss): Promise<void> {
   for (const [name, handler] of Object.entries(jobRegistry)) {
@@ -159,6 +159,6 @@ export async function registerJobs(boss: PgBoss): Promise<void> {
   await boss.schedule('due-today-reminders', '0 7 * * *', undefined, {
     tz: 'Africa/Addis_Ababa',
   });
-  await boss.schedule('backup-nudge', '0 18 * * 0', undefined, { tz: 'Africa/Addis_Ababa' });
-  await boss.schedule('prune-changes', '0 3 * * *');
+  await boss.schedule('backup-nudge', '0 19 * * 0', undefined, { tz: 'Africa/Addis_Ababa' });
+  await boss.schedule('prune-changes', '0 4 * * *');
 }
