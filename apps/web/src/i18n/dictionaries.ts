@@ -23,6 +23,8 @@ export type Dict = {
   nav: {
     today: string;
     chores: string;
+    duties: string;
+    pantry: string;
     household: string;
     more: string;
     routines: string;
@@ -488,6 +490,8 @@ export const en: Dict = {
   nav: {
     today: 'Today',
     chores: 'Chores',
+    duties: 'Duties',
+    pantry: 'Pantry',
     household: 'Household',
     more: 'More',
     routines: 'Routines',
@@ -506,7 +510,7 @@ export const en: Dict = {
     newShoppingItem: 'Shopping item',
     newPerson: 'Person',
     soon: 'soon',
-    family: 'family',
+    family: 'Family',
     expense: 'Expense',
     bill: 'Bill',
     upToDate: '✓ Up to date',
@@ -961,6 +965,8 @@ export const am: Dict = {
   nav: {
     today: 'ዛሬ',
     chores: 'ሥራዎች',
+    duties: 'ተጠያቂነቶች',
+    pantry: 'ማከማቻ',
     household: 'ቤተሰብ',
     more: 'ተጨማሪ',
     routines: 'ሥርዓቶች',
