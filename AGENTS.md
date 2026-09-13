@@ -87,6 +87,7 @@ index.ts                    # public barrel
 - argon2 hashes; sessions store sha256(token) only; login returns `{token, user, activePerson, household, permissionMap}`.
 - axios request interceptor injects `Authorization: Bearer` + optional `X-View-As-Person-Id`; response interceptor unwraps `{data}/{error:{code,…}}`, maps codes per plan §5.8, purges session on 401.
 - Identity state lives ONLY in the RTK authSlice {token,user,activePerson,household,permissionMap}, redux-persist → localStorage (Flutter: secure storage later). Server/device data lives ONLY in the local DB + TanStack Query cache.
+- Login UX is step-down (D101): code → face grid (additive `POST /auth/household-preview`) → password; the device remembers the household + last usernames across logout. D52/D53 server contract unchanged — `/auth/login` still takes the full triple.
 - Profile switch / view-as exit / logout ⇒ session update + `queryClient.clear()` + reset slice. Device passcode layer (gate vs encryption split) sits on top — plan §4.12/D63.
 - Owner-targeted account creation requires a phone number (R2); promoting a contactless person to owner is blocked; initial creator exempt. Recovery = Google button until SMS ships, then OTP for verified numbers only. View-as strictly read-only (`403 VIEW_AS_READONLY`). LAST_OWNER invariant intact (`409 LAST_OWNER`).
 
