@@ -58,7 +58,7 @@ export default function PrintPage() {
   });
 
   if (!hasSession(auth)) {
-    return <EmptyState emoji="🖨️" title={t('print.signInToPrint')} hint={t('print.printHint')} />;
+    return <EmptyState art="printer" title={t('print.signInToPrint')} hint={t('print.printHint')} />;
   }
   if (people.isPending || occurrences.isPending) {
     return (
@@ -68,7 +68,7 @@ export default function PrintPage() {
     );
   }
   if (people.isError || occurrences.isError) {
-    return <EmptyState emoji="😕" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => { people.refetch(); occurrences.refetch(); }}>{t('common.retry')}</Button>} />;
+    return <EmptyState art="cloud" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => { people.refetch(); occurrences.refetch(); }}>{t('common.retry')}</Button>} />;
   }
 
   const names = new Map(people.data.people.map((p) => [p.id, p.name] as const));

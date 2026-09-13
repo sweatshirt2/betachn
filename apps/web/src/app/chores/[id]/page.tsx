@@ -41,7 +41,7 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
   if (detail.isError) {
     return (
       <EmptyState
-        emoji="😕"
+        art="cloud"
         title={t('chores.notFound')}
         hint={t('chores.notFoundHint')}
         action={

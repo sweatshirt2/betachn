@@ -58,7 +58,7 @@ export default function NotificationsPage() {
   }
   if (inbox.isError) {
     return (
-      <EmptyState emoji="😕" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => inbox.refetch()}>{t('common.retry')}</Button>} />
+      <EmptyState art="cloud" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => inbox.refetch()}>{t('common.retry')}</Button>} />
     );
   }
 
@@ -91,7 +91,7 @@ export default function NotificationsPage() {
           </Card>
         ))}
         {inbox.data.notifications.length === 0 && (
-          <EmptyState emoji="🔔" title={t('notify.caughtUp')} hint={t('notify.caughtUpHint')} />
+          <EmptyState art="bell" title={t('notify.caughtUp')} hint={t('notify.caughtUpHint')} />
         )}
       </div>
       {Object.keys(categories).length > 0 && (

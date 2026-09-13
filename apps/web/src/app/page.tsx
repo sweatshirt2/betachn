@@ -20,7 +20,7 @@ export default function TodayPage() {
   if (!hasSession(auth)) {
     return (
       <EmptyState
-        emoji="🏠"
+        art="door"
         title={t('common.appName')}
         hint={t('auth.signInSubtitle')}
         action={
@@ -50,7 +50,7 @@ export default function TodayPage() {
   if (today.isError) {
     return (
       <EmptyState
-        emoji="😕"
+        art="cloud"
         title={t('common.loadError')}
         hint={t('common.checkConnection')}
         action={<Button onClick={() => today.refetch()}>{t('common.retry')}</Button>}

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { CSSProperties, ReactNode } from 'react';
+import { Glyph, choreGlyph, type GlyphName } from './Glyph';
 
 /**
  * Scenario-specific task presentations (plan §5.1, §5.3) — the same task
@@ -107,16 +108,17 @@ export function TaskDoneRow({
 }
 
 /**
- * Management task card (chores page): full-height decorated card with an
- * emoji tile on a crayon wash, title + meta, due-date pill, stacked assignee
- * dots and the one-tap check. The middle (title/meta) is the tap target.
+ * Management task card (chores page): full-height decorated card with a
+ * category-glyph tile on a crayon wash, title + meta, due-date pill, stacked
+ * assignee avatars and the one-tap check. The middle (title/meta) is the tap
+ * target. Glyph is derived from the title when not given explicitly.
  */
 export function TaskCard({
   title,
   meta,
   dueLabel,
   overdue = false,
-  emoji = '🧺',
+  glyph,
   crayonIndex = 0,
   people = [],
   href,
@@ -128,7 +130,8 @@ export function TaskCard({
   meta?: ReactNode;
   dueLabel?: ReactNode;
   overdue?: boolean;
-  emoji?: string;
+  /** Category glyph; defaults to a keyword match on the string title. */
+  glyph?: GlyphName;
   crayonIndex?: number;
   people?: Array<{ initial: string; label: string }>;
   href?: string;
@@ -138,6 +141,7 @@ export function TaskCard({
 }) {
   const visible = people.slice(0, 3);
   const extra = people.length - visible.length;
+  const resolvedGlyph = glyph ?? (typeof title === 'string' ? choreGlyph(title) : 'basket');
   return (
     <div
       style={style}
@@ -145,10 +149,10 @@ export function TaskCard({
     >
       <span
         aria-hidden
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[34%] text-xl"
+        className="text-ink flex h-11 w-11 shrink-0 items-center justify-center rounded-[34%]"
         style={{ background: crayon(crayonIndex) }}
       >
-        {emoji}
+        <Glyph name={resolvedGlyph} className="h-5.5 w-5.5" />
       </span>
       {href ? (
         <Link href={href} className="min-w-0 flex-1">

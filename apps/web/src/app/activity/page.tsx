@@ -42,7 +42,7 @@ export default function ActivityPage() {
   }
   if (feed.isError) {
     return (
-      <EmptyState emoji="😕" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => feed.refetch()}>{t('common.retry')}</Button>} />
+      <EmptyState art="cloud" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => feed.refetch()}>{t('common.retry')}</Button>} />
     );
   }
 
@@ -60,7 +60,7 @@ export default function ActivityPage() {
           </Card>
         ))}
         {feed.data.events.length === 0 && (
-          <EmptyState emoji="📜" title={t('activity.quiet')} hint={t('activity.quietHint')} />
+          <EmptyState art="scroll" title={t('activity.quiet')} hint={t('activity.quietHint')} />
         )}
       </div>
     </div>

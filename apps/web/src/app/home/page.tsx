@@ -23,7 +23,7 @@ export default function HomePage() {
     );
   }
   if (rooms.isError || assets.isError) {
-    return <EmptyState emoji="😕" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => { rooms.refetch(); assets.refetch(); }}>{t('common.retry')}</Button>} />;
+    return <EmptyState art="cloud" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => { rooms.refetch(); assets.refetch(); }}>{t('common.retry')}</Button>} />;
   }
 
   async function onCreateRoom(event: React.FormEvent) {

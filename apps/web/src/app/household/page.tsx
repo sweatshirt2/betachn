@@ -24,7 +24,7 @@ export default function HouseholdPage() {
   if (people.isError) {
     return (
       <EmptyState
-        emoji="😕"
+        art="cloud"
         title={t('common.loadError')}
         hint={t('common.checkConnection')}
         action={<Button onClick={() => people.refetch()}>{t('common.retry')}</Button>}

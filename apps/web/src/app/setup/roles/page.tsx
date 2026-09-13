@@ -24,7 +24,7 @@ export default function RolesPage() {
   }
   if (roles.isError) {
     return (
-      <EmptyState emoji="😕" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => roles.refetch()}>{t('common.retry')}</Button>} />
+      <EmptyState art="cloud" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => roles.refetch()}>{t('common.retry')}</Button>} />
     );
   }
 

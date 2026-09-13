@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button, Sheet } from '@/components/ui';
+import { Button, Glyph, Sheet } from '@/components/ui';
 import { NavIcon, type NavIconName } from '@/components/icons';
 import { clearApiCache, queryKeys, useApiQuery } from '@/lib/api';
 import { useSyncBoot, useSyncStatus } from '@/lib/sync/syncClient';
@@ -269,12 +269,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
         <Sheet open={createOpen} onClose={() => setCreateOpen(false)} title={t('nav.create')}>
           <div className="flex flex-col gap-2">
-            <Button onClick={() => setCreateOpen(false)}>🧺 {t('nav.newResponsibility')}</Button>
-            <Button tone="quiet" onClick={() => setCreateOpen(false)}>
-              🛒 {t('nav.newShoppingItem')}
+            <Button onClick={() => setCreateOpen(false)} className="flex items-center justify-center gap-2">
+              <Glyph name="basket" className="h-4.5 w-4.5" aria-hidden />
+              {t('nav.newResponsibility')}
             </Button>
-            <Button tone="quiet" onClick={() => setCreateOpen(false)}>
-              🙂 {t('nav.newPerson')}
+            <Button tone="quiet" onClick={() => setCreateOpen(false)} className="flex items-center justify-center gap-2">
+              <Glyph name="cart" className="h-4.5 w-4.5" aria-hidden />
+              {t('nav.newShoppingItem')}
+            </Button>
+            <Button tone="quiet" onClick={() => setCreateOpen(false)} className="flex items-center justify-center gap-2">
+              <Glyph name="people" className="h-4.5 w-4.5" aria-hidden />
+              {t('nav.newPerson')}
             </Button>
             <Button tone="quiet" disabled>
               {t('nav.expense')} — {t('nav.soon')}

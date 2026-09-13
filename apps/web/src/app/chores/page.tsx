@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { Button, ChoreCheck, EmptyState, SectionWatermark, Skeleton, SwipeCard, TaskCard } from '@/components/ui';
+import { Button, ChoreCheck, EmptyState, Glyph, choreGlyph, SectionWatermark, Skeleton, SwipeCard, TaskCard } from '@/components/ui';
 import { useOccurrenceAct, useOccurrences, usePeopleMap, type TitledOccurrence } from '@/features/chores';
 import { hasSession, type RootState } from '@/store';
 import { formatDate } from '@/lib/dates';
@@ -31,7 +31,7 @@ export default function ChoresPage() {
   if (!hasSession(auth)) {
     return (
       <EmptyState
-        emoji="🧺"
+        art="basket"
         title={t('chores.title')}
         hint={t('today.empty')}
         action={
@@ -54,7 +54,7 @@ export default function ChoresPage() {
 
   if (occurrences.isError) {
     return (
-      <EmptyState emoji="😕" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => occurrences.refetch()}>{t('common.retry')}</Button>} />
+      <EmptyState art="cloud" title={t('common.loadError')} hint={t('common.checkConnection')} action={<Button onClick={() => occurrences.refetch()}>{t('common.retry')}</Button>} />
     );
   }
 
@@ -109,7 +109,7 @@ export default function ChoresPage() {
         ))}
       </div>
       {visible.length === 0 ? (
-        <EmptyState emoji="✨" title={t('chores.allClear')} hint={t('chores.allClearHint')} />
+        <EmptyState art="sparkle" title={t('chores.allClear')} hint={t('chores.allClearHint')} />
       ) : (
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           {visible.map((o, index) => (
@@ -121,7 +121,6 @@ export default function ChoresPage() {
                 meta={label(o)}
                 dueLabel={dueLabelOf(o)}
                 overdue={o.dueDate < from}
-                emoji="🧺"
                 crayonIndex={index}
                 people={peopleOf(o)}
                 href={`/chores/${o.responsibilityId}`}

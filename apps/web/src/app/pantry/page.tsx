@@ -9,8 +9,10 @@ import {
   Chip,
   EmptyState,
   Field,
+  Glyph,
   SectionWatermark,
   Skeleton,
+  supplyGlyph,
   TaskDoneRow,
   TaskUpcomingRow,
   crayon,
@@ -49,7 +51,7 @@ export default function PantryPage() {
   if (!hasAuth) {
     return (
       <EmptyState
-        emoji="🏠"
+        art="door"
         title={t('common.appName')}
         hint={t('auth.signInSubtitle')}
         action={
@@ -77,7 +79,7 @@ export default function PantryPage() {
   if (supplies.isError || items.isError) {
     return (
       <EmptyState
-        emoji="😕"
+        art="cloud"
         title={t('common.loadError')}
         hint={t('common.checkConnection')}
         action={<Button onClick={() => { supplies.refetch(); items.refetch(); }}>{t('common.retry')}</Button>}
@@ -140,10 +142,10 @@ export default function PantryPage() {
               <Card key={s.id} className="lift-hover flex items-center gap-3.5 py-3.5">
                 <span
                   aria-hidden
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[34%] text-xl"
+                  className="text-ink flex h-11 w-11 shrink-0 items-center justify-center rounded-[34%]"
                   style={{ background: crayon(index) }}
                 >
-                  🧴
+                  <Glyph name={supplyGlyph(s.name)} className="h-5.5 w-5.5" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold">{s.name}</p>
@@ -250,10 +252,10 @@ export default function PantryPage() {
                 <div className="flex flex-col items-center gap-1.5">
                   <span
                     aria-hidden
-                    className="flex h-9 w-9 items-center justify-center rounded-[34%] text-lg leading-none"
+                    className="text-ink flex h-9 w-9 items-center justify-center rounded-[34%]"
                     style={{ background: crayon(index) }}
                   >
-                    🧺
+                    <Glyph name={supplyGlyph(s.name)} className="h-4.5 w-4.5" />
                   </span>
                   <p className="w-full truncate text-center text-sm font-bold">{s.name}</p>
                   <span

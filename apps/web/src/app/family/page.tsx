@@ -47,7 +47,7 @@ export default function FamilyPage() {
   if (!hasSession(auth)) {
     return (
       <EmptyState
-        emoji="👨‍👩‍👧"
+        art="people"
         title={t('family.title')}
         hint={t('auth.signInSubtitle')}
         action={
@@ -69,7 +69,7 @@ export default function FamilyPage() {
   if (people.isError || occurrences.isError) {
     return (
       <EmptyState
-        emoji="😕"
+        art="cloud"
         title={t('common.loadError')}
         hint={t('common.checkConnection')}
         action={
