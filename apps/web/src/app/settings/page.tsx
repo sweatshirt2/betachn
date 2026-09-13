@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
-import { Accordion, Button, Card, Field, useToast } from '@/components/ui';
+import { Accordion, Button, Card, Field, Glyph, ThemeSwatch, useToast } from '@/components/ui';
 import { api, ApiError } from '@/lib/api';
 import { useLogout } from '@/features/auth';
-import { THEME_IDS, THEME_SWATCHES, useTheme, type ThemeId } from '@/theme';
+import { THEME_IDS, useTheme, type ThemeId } from '@/theme';
 import { LANGUAGE_STORAGE_KEY, LOCALES } from '@/i18n/dictionaries';
 import i18n from '@/i18n';
 import { readPasscodeGateState, setPasscodeGate, clearPasscodeGate, MemoryTierError, type PasscodeGateState } from '@/lib/device/passcodeGate';
@@ -128,9 +128,11 @@ export default function SettingsPage() {
 
       <section aria-label={t('settings.theme')} className="mt-4">
         <h2 className="font-display text-lg">{t('settings.theme')}</h2>
-        <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3" role="group" aria-label={t('settings.theme')}>
+        {/* Live-token previews (UI/UX iteration 2): each card is a miniature
+            of the app scoped via data-theme — no hardcoded hexes, so the
+            picker can never drift from the real UI. */}
+        <div className="mt-2 grid grid-cols-3 gap-2.5 sm:grid-cols-6" role="group" aria-label={t('settings.theme')}>
           {THEME_IDS.map((id) => {
-            const swatch = THEME_SWATCHES[id];
             const selected = theme === id;
             return (
               <button
@@ -138,24 +140,21 @@ export default function SettingsPage() {
                 type="button"
                 onClick={() => setTheme(id)}
                 aria-pressed={selected}
-                className={`lift-hover bg-card-wash border-line rounded-md border p-2 text-left shadow-soft ${
-                  selected ? 'border-terracotta ring-terracotta/40 ring-2' : ''
+                className={`lift-hover bg-card-wash rounded-md border p-1.5 text-left ${
+                  selected
+                    ? 'border-terracotta ring-terracotta/40 shadow-soft ring-2'
+                    : 'border-line hover:shadow-soft'
                 }`}
               >
+                <ThemeSwatch theme={id} />
                 <span
-                  className="border-line block h-12 w-full rounded-sm border"
-                  style={{ background: `linear-gradient(150deg, ${swatch.from}, ${swatch.to})` }}
+                  className={`mt-1 flex items-center justify-between px-0.5 text-xs font-bold ${
+                    selected ? 'text-ink' : 'text-muted'
+                  }`}
                 >
-                  <span
-                    className="mt-7 ml-2 inline-block h-5 w-5 rounded-full shadow-soft"
-                    style={{ background: swatch.primary }}
-                  />
-                  <span
-                    className="ml-1 inline-block h-2.5 w-2.5 rounded-full"
-                    style={{ background: swatch.crayon }}
-                  />
+                  {t(THEME_DICT_KEYS[id])}
+                  {selected && <Glyph name="check-circle" className="text-terracotta h-3.5 w-3.5" aria-hidden />}
                 </span>
-                <span className="mt-2 block px-0.5 text-sm font-semibold">{t(THEME_DICT_KEYS[id])}</span>
               </button>
             );
           })}

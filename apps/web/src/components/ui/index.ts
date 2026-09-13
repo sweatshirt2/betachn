@@ -21,5 +21,6 @@ export { TickNumber } from './TickNumber';
 export { ToastProvider, useToast } from './Toast';
 export { SectionWatermark } from './Watermark';
 export type { WatermarkVariant } from './Watermark';
+export { ThemeSwatch } from './ThemeSwatch';
 export { Glyph, choreGlyph, supplyGlyph } from './Glyph';
 export type { GlyphName } from './Glyph';

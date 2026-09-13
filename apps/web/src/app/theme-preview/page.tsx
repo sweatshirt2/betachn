@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Chip, ChoreCheck, TaskActionRow, TaskDoneRow, TaskUpcomingRow, crayon } from '@/components/ui';
-import { THEME_IDS, THEME_LABELS, THEME_SWATCHES, useTheme } from '@/theme';
+import { Button, Card, Chip, ChoreCheck, TaskActionRow, TaskDoneRow, TaskUpcomingRow, ThemeSwatch, crayon } from '@/components/ui';
+import { THEME_IDS, THEME_LABELS, useTheme } from '@/theme';
 
 /**
  * Living styleguide (§5.2): every primitive against the live theme, plus
@@ -19,33 +19,24 @@ export default function ThemePreviewPage() {
       <p className="text-muted mt-1 text-sm">{t('themePreview.subtitle')}</p>
 
       <section aria-label={t('themePreview.themes')} className="mt-5">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {THEME_IDS.map((id) => {
-            const swatch = THEME_SWATCHES[id];
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setTheme(id)}
-                aria-pressed={theme === id}
-                className={`lift-hover bg-card-wash border-line shadow-soft rounded-md border p-2 text-left ${
-                  theme === id ? 'border-terracotta ring-terracotta/40 ring-2' : ''
-                }`}
-              >
-                <span
-                  className="border-line block h-12 w-full rounded-sm border"
-                  style={{ background: `linear-gradient(150deg, ${swatch.from}, ${swatch.to})` }}
-                >
-                  <span
-                    className="mt-7 ml-2 inline-block h-5 w-5 rounded-full shadow-soft"
-                    style={{ background: swatch.primary }}
-                  />
-                  <span className="ml-1 inline-block h-2.5 w-2.5 rounded-full" style={{ background: swatch.crayon }} />
-                </span>
-                <span className="mt-2 block px-0.5 text-sm font-semibold">{THEME_LABELS[id]}</span>
-              </button>
-            );
-          })}
+        <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-6">
+          {THEME_IDS.map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTheme(id)}
+              aria-pressed={theme === id}
+              className={`lift-hover bg-card-wash rounded-md border p-1.5 text-left ${
+                theme === id ? 'border-terracotta ring-terracotta/40 shadow-soft ring-2' : 'border-line hover:shadow-soft'
+              }`
+              }
+            >
+              <ThemeSwatch theme={id} />
+              <span className={`mt-1 block px-0.5 text-xs font-bold ${theme === id ? 'text-ink' : 'text-muted'}`}>
+                {THEME_LABELS[id]}
+              </span>
+            </button>
+          ))}
         </div>
       </section>
 
