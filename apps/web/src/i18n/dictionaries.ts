@@ -19,6 +19,8 @@ export type Dict = {
     undo: string;
     loadError: string;
     checkConnection: string;
+    days: string;
+    weeks: string;
   };
   nav: {
     today: string;
@@ -432,6 +434,9 @@ export type Dict = {
     noSupplies: string;
     deadlines: string;
     upcoming: string;
+    cycleFacts: string;
+    outFacts: string;
+    noFactsYet: string;
   };
   family: {
     title: string;
@@ -510,6 +515,8 @@ export const en: Dict = {
     undo: 'Undo',
     loadError: 'Something failed to load',
     checkConnection: 'Check your connection and try again.',
+    days: 'days',
+    weeks: 'weeks',
   },
   nav: {
     today: 'Today',
@@ -933,6 +940,9 @@ export const en: Dict = {
     noSupplies: 'No supplies yet — add the first one below.',
     deadlines: 'Dates to remember',
     upcoming: 'Upcoming',
+    cycleFacts: 'Usually lasts about {{days}} · ran low {{cycles}}×',
+    outFacts: 'Ran out {{out30}}× in the last month · {{out90}}× in 3 months',
+    noFactsYet: 'Facts appear as you track it over time.',
   },
   family: {
     title: 'Family',
@@ -1011,6 +1021,8 @@ export const am: Dict = {
     undo: 'ተመልስ',
     loadError: 'የሆነ ነገር መጫን አልተሳካም',
     checkConnection: 'ግንኙነትዎን ያረጋግጡ እና እንደገና ይሞክሩ።',
+    days: 'ቀናት',
+    weeks: 'ሳምንታት',
   },
   nav: {
     today: 'ዛሬ',
@@ -1426,6 +1438,9 @@ export const am: Dict = {
     noSupplies: 'እስካሁን ምንም እቃ አልታከለም — ከታች የመጀመሪያውን ይጨምሩ።',
     deadlines: 'መታሠቢያ ቀኖች',
     upcoming: 'ቅርብ',
+    cycleFacts: 'በአሂዝ ወደ {{days}} ይቆያል · {{cycles}} ጊዜ አልቧል',
+    outFacts: 'ባለፈው ወር {{out30}} ጊዜ · በ3 ወር ውስጥ {{out90}} ጊዜ አልቧል',
+    noFactsYet: 'በጊዜ ሂደት ስትከታተሉት መረጃዎች ይታያሉ።',
   },
   family: {
     title: 'ቤተሰብ',

@@ -19,7 +19,13 @@ import {
 import { NavIcon } from '@/components/icons';
 import { useToday } from '@/features/chores';
 import { useCreateShoppingItem, usePurchaseItem, useShoppingItems } from '@/features/shopping';
-import { useCreateSupply, useCycleSupply, useSupplies, type SupplyState } from '@/features/supplies';
+import {
+  useCreateSupply,
+  useCycleSupply,
+  useSupplies,
+  SupplyFactsSubline,
+  type SupplyState,
+} from '@/features/supplies';
 import { formatDate } from '@/lib/dates';
 
 const NEXT: Record<SupplyState, SupplyState> = { available: 'low', low: 'out', out: 'available' };
@@ -125,6 +131,7 @@ export default function PantryPage() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold">{s.name}</p>
                   <div className="mt-1">{stateChip(s.state)}</div>
+                  <SupplyFactsSubline supply={s} />
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1.5">
                   <Button
