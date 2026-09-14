@@ -29,6 +29,7 @@ const DOMAIN_BY_ENTITY: Record<string, keyof typeof DOMAIN_VIEW_KEY> = {
   assets: 'home',
   service_records: 'home',
   supplies: 'resources',
+  supply_events: 'resources',
   shopping_items: 'resources',
   activity_events: 'household',
   notifications: 'household',
@@ -104,6 +105,7 @@ function camelOf(entity: string): string {
   const map: Record<string, string> = {
     assignment_rules: 'assignmentRules',
     service_records: 'serviceRecords',
+    supply_events: 'supplyEvents',
     shopping_items: 'shoppingItems',
     activity_events: 'activityEvents',
     notification_prefs: 'notificationPrefs',

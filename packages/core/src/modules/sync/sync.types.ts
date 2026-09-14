@@ -23,6 +23,7 @@ export const SYNC_ENTITIES = [
   'assets',
   'service_records',
   'supplies',
+  'supply_events',
   'shopping_items',
   'activity_events',
   'notifications',

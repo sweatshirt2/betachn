@@ -22,6 +22,7 @@ const DB_EXPORT_BY_ENTITY: Record<string, string> = {
   assets: 'assets',
   service_records: 'serviceRecords',
   supplies: 'supplies',
+  supply_events: 'supplyEvents',
   shopping_items: 'shoppingItems',
   activity_events: 'activityEvents',
   notifications: 'notifications',

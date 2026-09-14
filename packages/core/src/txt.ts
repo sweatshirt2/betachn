@@ -27,6 +27,7 @@ export const EXPORT_SECTIONS = [
   'assets',
   'service_records',
   'supplies',
+  'supply_events',
   'shopping_items',
   'activity_events',
   'notifications',

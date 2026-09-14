@@ -18,6 +18,7 @@ import {
   serviceRecords,
   subtasks,
   supplies,
+  supplyEvents,
   users,
 } from '../schema';
 import { shoppingItems as shoppingItemsRef } from '../schema';
@@ -41,6 +42,7 @@ export const ENTITY_TABLES: Record<string, AnySqliteTable> = {
   assets,
   service_records: serviceRecords,
   supplies,
+  supply_events: supplyEvents,
   shopping_items: shoppingItemsRef,
   activity_events: activityEvents,
   notifications: notificationsTable,

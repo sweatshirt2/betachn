@@ -22,6 +22,13 @@
       "when": 1789063125930,
       "tag": "0002_yellow_brother_voodoo",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1789375192396,
+      "tag": "0003_red_spyke",
+      "breakpoints": true
     }
   ]
 }
