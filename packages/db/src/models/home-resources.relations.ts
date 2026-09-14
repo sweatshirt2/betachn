@@ -1,7 +1,7 @@
 import { relations } from 'drizzle-orm';
 import { assets, rooms, serviceRecords } from './home.model';
 import { households } from './households.model';
-import { shoppingItems, supplies } from './resources.model';
+import { shoppingItems, supplyEvents, supplies } from './resources.model';
 
 export const roomsRelations = relations(rooms, ({ one, many }) => ({
   household: one(households, { fields: [rooms.householdId], references: [households.id] }),
@@ -18,8 +18,14 @@ export const serviceRecordsRelations = relations(serviceRecords, ({ one }) => ({
   asset: one(assets, { fields: [serviceRecords.assetId], references: [assets.id] }),
 }));
 
-export const suppliesRelations = relations(supplies, ({ one }) => ({
+export const suppliesRelations = relations(supplies, ({ one, many }) => ({
   household: one(households, { fields: [supplies.householdId], references: [households.id] }),
+  events: many(supplyEvents),
+}));
+
+export const supplyEventsRelations = relations(supplyEvents, ({ one }) => ({
+  household: one(households, { fields: [supplyEvents.householdId], references: [households.id] }),
+  supply: one(supplies, { fields: [supplyEvents.supplyId], references: [supplies.id] }),
 }));
 
 export const shoppingItemsRelations = relations(shoppingItems, ({ one }) => ({

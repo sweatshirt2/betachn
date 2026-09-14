@@ -1,19 +1,26 @@
-import { eq } from 'drizzle-orm';
-import { activityEvents, shoppingItems, supplies } from '@chorify/db';
+import { and, desc, eq } from 'drizzle-orm';
+import { activityEvents, shoppingItems, supplies, supplyEvents } from '@chorify/db';
 import { buildActivity } from '../../activity';
 import type { Executor, UnitOfWork } from '../../db';
 import { AppError } from '../../errors';
 import type { Clock } from '../../ports';
 import type {
   CreateShoppingItemInput,
+  CreateSupplyEventInput,
   CreateSupplyInput,
   ShoppingItemRecord,
+  SupplyEventRecord,
   SupplyRecord,
   UpdateShoppingItemInput,
+  UpdateSupplyEventInput,
   UpdateSupplyInput,
 } from './resources.schema';
-import { shoppingItemRowSchema, supplyRowSchema } from './resources.schema';
-import { purchaseGuard, supplyActivityType } from './resources.rules';
+import { shoppingItemRowSchema, supplyEventRowSchema, supplyRowSchema } from './resources.schema';
+import {
+  purchaseGuard,
+  supplyActivityType,
+  supplyEventTypeForTransition,
+} from './resources.rules';
 
 /**
  * Supplies + shopping list (§2.5 / §6.11–12). State changes emit activity
@@ -51,6 +58,16 @@ export class ResourcesService {
       actorPersonId,
       ...buildActivity('supply.added', { name: row?.name ?? input.name }),
     });
+    // D102: creation anchors cycle 0 in the event log.
+    await this.insertSupplyEvent(this.uow.exec, {
+      householdId,
+      supplyId: String(row!.id),
+      actorPersonId,
+      type: 'created',
+      source: 'manual',
+      quantityText: null,
+      note: null,
+    });
     return supplyRowSchema.parse(row);
   }
 
@@ -80,6 +97,17 @@ export class ResourcesService {
           ...buildActivity(type, { name: updated.name }),
         });
       }
+      // D102: EVERY transition lands in the event log — including restocks
+      // (X→available closes the consumption cycle).
+      await this.insertSupplyEvent(this.uow.exec, {
+        householdId,
+        supplyId,
+        actorPersonId,
+        type: supplyEventTypeForTransition(input.state),
+        source: 'manual',
+        quantityText: input.quantityText ?? null,
+        note: null,
+      });
     }
     return supplyRowSchema.parse(updated);
   }
@@ -148,9 +176,28 @@ export class ResourcesService {
         .returning();
       if (!updated) throw new AppError('NOT_FOUND', 'Shopping item not found');
       if (item.sourceSupplyId) {
-        await tx.update(supplies)
-          .set({ state: 'available' })
-          .where(eq(supplies.id, item.sourceSupplyId));
+        const supply = await tx.query.supplies!.findFirst({
+          where: eq(supplies.id, item.sourceSupplyId),
+        });
+        if (supply && supply.householdId === householdId) {
+          await tx.update(supplies)
+            .set({ state: 'available' })
+            .where(eq(supplies.id, item.sourceSupplyId));
+          // D102: purchase-driven restock lands in the event log (source
+          // 'purchase') so consumption cycles track real buying, not just
+          // manual state edits. §6.11 silence for activity unchanged.
+          if (supply.state !== 'available') {
+            await this.insertSupplyEvent(tx, {
+              householdId,
+              supplyId: String(supply.id),
+              actorPersonId,
+              type: 'restocked',
+              source: 'purchase',
+              quantityText: null,
+              note: null,
+            });
+          }
+        }
       }
       await tx.insert(activityEvents).values({
         householdId,
@@ -165,6 +212,112 @@ export class ResourcesService {
   async removeShoppingItem(actorPersonId: string | null, householdId: string, itemId: string): Promise<void> {
     await this.shoppingItemRow(this.uow.exec, householdId, itemId);
     await this.uow.exec.delete(shoppingItems).where(eq(shoppingItems.id, itemId));
+  }
+
+  // — supply event log (§4A.1 / D102) —
+
+  async listSupplyEvents(
+    householdId: string,
+    supplyId: string,
+    limit = 100,
+  ): Promise<SupplyEventRecord[]> {
+    const supply = await this.uow.exec.query.supplies!.findFirst({
+      where: eq(supplies.id, supplyId),
+    });
+    if (!supply || supply.householdId !== householdId) {
+      throw new AppError('NOT_FOUND', 'Supply not found');
+    }
+    const rows = await this.uow.exec.query.supplyEvents!.findMany({
+      where: and(eq(supplyEvents.householdId, householdId), eq(supplyEvents.supplyId, supplyId)),
+      orderBy: [desc(supplyEvents.occurredAt)],
+      limit,
+    });
+    return rows.map((row) => supplyEventRowSchema.parse(row));
+  }
+
+  /** D102: the optional restock quantity stays editable after the fact. */
+  async updateSupplyEvent(
+    actorPersonId: string | null,
+    householdId: string,
+    eventId: string,
+    input: UpdateSupplyEventInput,
+  ): Promise<SupplyEventRecord> {
+    const row = await this.uow.exec.query.supplyEvents!.findFirst({
+      where: eq(supplyEvents.id, eventId),
+    });
+    if (!row || row.householdId !== householdId) {
+      throw new AppError('NOT_FOUND', 'Supply event not found');
+    }
+    const [updated] = await this.uow.exec.update(supplyEvents).set({
+      ...(input.quantityText !== undefined ? { quantityText: input.quantityText ?? null } : {}),
+      ...(input.note !== undefined ? { note: input.note ?? null } : {}),
+    }).where(eq(supplyEvents.id, eventId)).returning();
+    if (!updated) throw new AppError('NOT_FOUND', 'Supply event not found');
+    void actorPersonId;
+    return supplyEventRowSchema.parse(updated);
+  }
+
+  /**
+   * Manual event creation — the idempotent sync path (client uuid = the
+   * idempotency key). Server-made transitions use the private inserter.
+   */
+  async createSupplyEvent(
+    actorPersonId: string | null,
+    householdId: string,
+    supplyId: string,
+    clientUuid: string,
+    input: CreateSupplyEventInput,
+  ): Promise<SupplyEventRecord> {
+    const supply = await this.uow.exec.query.supplies!.findFirst({
+      where: eq(supplies.id, supplyId),
+    });
+    if (!supply || supply.householdId !== householdId) {
+      throw new AppError('NOT_FOUND', 'Supply not found');
+    }
+    const existing = clientUuid
+      ? await this.uow.exec.query.supplyEvents!.findFirst({
+          where: eq(supplyEvents.clientUuid, clientUuid),
+        })
+      : undefined;
+    if (existing) return supplyEventRowSchema.parse(existing);
+    const [row] = await this.uow.exec.insert(supplyEvents).values({
+      householdId,
+      supplyId,
+      actorPersonId,
+      type: input.type,
+      source: input.source,
+      quantityText: input.quantityText ?? null,
+      note: input.note ?? null,
+      clientUuid,
+      ...(input.occurredAt !== undefined ? { occurredAt: input.occurredAt } : {}),
+    }).returning();
+    return supplyEventRowSchema.parse(row);
+  }
+
+  /** Shared event inserter — server-side transitions carry no client uuid. */
+  private async insertSupplyEvent(
+    exec: Executor,
+    value: {
+      householdId: string;
+      supplyId: string;
+      actorPersonId: string | null;
+      type: 'created' | 'restocked' | 'marked_low' | 'marked_out';
+      source: 'manual' | 'purchase';
+      quantityText: string | null;
+      note: string | null;
+    },
+  ): Promise<void> {
+    await exec.insert(supplyEvents).values({
+      householdId: value.householdId,
+      supplyId: value.supplyId,
+      actorPersonId: value.actorPersonId,
+      type: value.type,
+      source: value.source,
+      quantityText: value.quantityText,
+      note: value.note,
+      clientUuid: null,
+      occurredAt: this.clock.now(),
+    });
   }
 
   /** Household-scoped fetch; cross-household ids read as NOT_FOUND (§5.8). */

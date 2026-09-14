@@ -18,6 +18,7 @@ import {
   occurrences,
   people,
   responsibilities,
+  supplyEvents,
   roles,
   rooms,
   serviceRecords,
@@ -49,7 +50,7 @@ async function main(): Promise<void> {
   await db.execute(sql`
     TRUNCATE households, users, sessions, people, roles, routines, responsibilities,
       subtasks, assignment_rules, occurrences, rooms, assets, service_records,
-      supplies, shopping_items, activity_events, notifications, notification_prefs,
+      supplies, supply_events, shopping_items, activity_events, notifications, notification_prefs,
       jobs_audit, oauth_accounts, household_changes RESTART IDENTITY CASCADE
   `);
 
@@ -312,6 +313,24 @@ async function main(): Promise<void> {
     ])
     .returning();
   const detergent = supplyRows.find((s) => s.name === 'Detergent');
+  const rice = supplyRows.find((s) => s.name === 'Rice');
+
+  // ── Supply event log (§4A.1 / D102) — demo consumption history ───────────
+  // Detergent: ~3-week cycles, ran out twice recently. Rice: one calm cycle.
+  if (detergent && rice) {
+    const at = (daysBack: number) => new Date(`${addDays(today, -daysBack)}T10:00:00Z`);
+    await db.insert(supplyEvents).values([
+      { householdId: household.id, supplyId: detergent.id, actorPersonId: hana.id, type: 'created', source: 'manual', occurredAt: at(66) },
+      { householdId: household.id, supplyId: detergent.id, actorPersonId: hana.id, type: 'marked_out', source: 'manual', occurredAt: at(35) },
+      { householdId: household.id, supplyId: detergent.id, actorPersonId: hana.id, type: 'restocked', source: 'purchase', quantityText: '1 bottle', occurredAt: at(34) },
+      { householdId: household.id, supplyId: detergent.id, actorPersonId: abebe.id, type: 'marked_out', source: 'manual', occurredAt: at(6) },
+      { householdId: household.id, supplyId: detergent.id, actorPersonId: hana.id, type: 'restocked', source: 'purchase', quantityText: '1 bottle', occurredAt: at(5) },
+      { householdId: household.id, supplyId: detergent.id, actorPersonId: hana.id, type: 'marked_low', source: 'manual', occurredAt: at(1) },
+      { householdId: household.id, supplyId: rice.id, actorPersonId: hana.id, type: 'created', source: 'manual', occurredAt: at(40) },
+      { householdId: household.id, supplyId: rice.id, actorPersonId: hana.id, type: 'marked_low', source: 'manual', occurredAt: at(12) },
+      { householdId: household.id, supplyId: rice.id, actorPersonId: hana.id, type: 'restocked', source: 'purchase', quantityText: '5 kg', occurredAt: at(11) },
+    ]);
+  }
 
   await db.insert(shoppingItems).values([
     {
