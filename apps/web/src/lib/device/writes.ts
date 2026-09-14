@@ -393,11 +393,45 @@ export async function deviceCreateSupply(input: {
     createdAt: now,
   });
   await emitActivity(db, input.householdId, input.actorPersonId, 'supply.added', { name: input.name });
+  // D102: creation anchors cycle 0 — device twin of the server inserter.
+  const createEventId = randomId();
+  await db.insert(schema.supplyEvents).values({
+    id: createEventId,
+    householdId: input.householdId,
+    supplyId: id,
+    actorPersonId: input.actorPersonId,
+    type: 'created',
+    source: 'manual',
+    quantityText: null,
+    note: null,
+    clientUuid: null,
+    occurredAt: now,
+    createdAt: now,
+  });
   enqueue(db, input.householdId, {
     entity: 'supplies',
     entityId: id,
     op: 'create',
     payload: { id, householdId: input.householdId, name: input.name, state: 'available', note: null, createdAt: now },
+    domain: 'resources',
+  });
+  enqueue(db, input.householdId, {
+    entity: 'supply_events',
+    entityId: createEventId,
+    op: 'create',
+    payload: {
+      id: createEventId,
+      householdId: input.householdId,
+      supplyId: id,
+      actorPersonId: input.actorPersonId,
+      type: 'created',
+      source: 'manual',
+      quantityText: null,
+      note: null,
+      clientUuid: null,
+      occurredAt: now,
+      createdAt: now,
+    },
     domain: 'resources',
   });
   return { id, name: input.name, state: 'available' };
@@ -436,6 +470,43 @@ export async function deviceCycleSupply(input: {
         },
       );
     }
+    // D102: EVERY transition lands in the event log — restocks close cycles.
+    const eventId = randomId();
+    const nowIso = new Date().toISOString();
+    const eventType =
+      input.state === 'low' ? 'marked_low' : input.state === 'out' ? 'marked_out' : 'restocked';
+    await db.insert(schema.supplyEvents).values({
+      id: eventId,
+      householdId: input.householdId,
+      supplyId: input.supplyId,
+      actorPersonId: input.actorPersonId,
+      type: eventType,
+      source: 'manual',
+      quantityText: null,
+      note: null,
+      clientUuid: null,
+      occurredAt: nowIso,
+      createdAt: nowIso,
+    });
+    enqueue(db, input.householdId, {
+      entity: 'supply_events',
+      entityId: eventId,
+      op: 'create',
+      payload: {
+        id: eventId,
+        householdId: input.householdId,
+        supplyId: input.supplyId,
+        actorPersonId: input.actorPersonId,
+        type: eventType,
+        source: 'manual',
+        quantityText: null,
+        note: null,
+        clientUuid: null,
+        occurredAt: nowIso,
+        createdAt: nowIso,
+      },
+      domain: 'resources',
+    });
   }
   enqueue(db, input.householdId, {
     entity: 'supplies',
@@ -503,10 +574,49 @@ export async function devicePurchaseItem(input: {
     .set({ purchasedAt: nowIso })
     .where(eq(schema.shoppingItems.id, input.itemId));
   if (item.sourceSupplyId) {
-    await db
-      .update(schema.supplies)
-      .set({ state: 'available' })
-      .where(eq(schema.supplies.id, item.sourceSupplyId));
+    const supply = await db.query.supplies!.findFirst({
+      where: eq(schema.supplies.id, item.sourceSupplyId),
+    });
+    if (supply && supply.householdId === input.householdId && supply.state !== 'available') {
+      await db
+        .update(schema.supplies)
+        .set({ state: 'available' })
+        .where(eq(schema.supplies.id, item.sourceSupplyId));
+      // D102: purchase-driven restock enters the event log (source 'purchase').
+      const restockEventId = randomId();
+      await db.insert(schema.supplyEvents).values({
+        id: restockEventId,
+        householdId: input.householdId,
+        supplyId: supply.id,
+        actorPersonId: input.actorPersonId,
+        type: 'restocked',
+        source: 'purchase',
+        quantityText: null,
+        note: null,
+        clientUuid: null,
+        occurredAt: nowIso,
+        createdAt: nowIso,
+      });
+      enqueue(db, input.householdId, {
+        entity: 'supply_events',
+        entityId: restockEventId,
+        op: 'create',
+        payload: {
+          id: restockEventId,
+          householdId: input.householdId,
+          supplyId: supply.id,
+          actorPersonId: input.actorPersonId,
+          type: 'restocked',
+          source: 'purchase',
+          quantityText: null,
+          note: null,
+          clientUuid: null,
+          occurredAt: nowIso,
+          createdAt: nowIso,
+        },
+        domain: 'resources',
+      });
+    }
   }
   await emitActivity(db, input.householdId, input.actorPersonId, 'shopping_item.purchased', { name: item.name });
   enqueue(db, input.householdId, {

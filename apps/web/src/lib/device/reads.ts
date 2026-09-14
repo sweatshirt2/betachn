@@ -1,5 +1,6 @@
 import { and, eq, gte, lt } from 'drizzle-orm';
 import { aggregateToday } from '@chorify/core/today';
+import { computeSupplyCycleStats } from '@chorify/core/resources-rules';
 import { expandRule, type ExpandableRule, type SchedulePattern } from '@chorify/core/schedule';
 import { openBrowserDevice } from './openDevice';
 import * as schema from '@chorify/local-db/schema';
@@ -445,6 +446,39 @@ export async function deviceSupplies(): Promise<{ supplies: DeviceSupplyPayload[
   return {
     supplies: rows.map((s) => ({ id: s.id, name: s.name, state: s.state as DeviceSupplyState })),
   };
+}
+
+/** Device twin of GET /supplies/:id/events — events + pure-rule stats (D102). */
+export async function deviceSupplyEvents(supplyId: string): Promise<{
+  events: Array<{ id: string; type: string; source: string; quantityText: string | null; occurredAt: string }>;
+  stats: {
+    cycleCount: number;
+    avgCycleDays: number | null;
+    lastCycleDays: number | null;
+    outCount30d: number;
+    outCount90d: number;
+    lowCount90d: number;
+  };
+}> {
+  const db = await deviceContext();
+  const rows = await db
+    .select()
+    .from(schema.supplyEvents)
+    .where(eq(schema.supplyEvents.supplyId, supplyId));
+  const events = rows
+    .map((r) => ({
+      id: r.id,
+      type: r.type as string,
+      source: r.source as string,
+      quantityText: r.quantityText,
+      occurredAt: r.occurredAt,
+    }))
+    .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
+  const stats = computeSupplyCycleStats(
+    events.map((e) => ({ type: e.type as never, occurredAt: new Date(e.occurredAt) })),
+    new Date(),
+  );
+  return { events, stats };
 }
 
 export async function deviceShoppingItems(): Promise<{ items: DeviceShoppingPayload[] }> {
