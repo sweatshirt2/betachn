@@ -64,12 +64,17 @@ export const ruleRowSchema = z.object({
   active: z.boolean(),
 });
 
+export const proofModeSchema = z.enum(['optional', 'required']);
+export type ProofMode = z.infer<typeof proofModeSchema>;
+
 export const createResponsibilitySchema = z.object({
   title: z.string().trim().min(1).max(140),
   notes: z.string().max(2000).nullish(),
   routineId: z.string().uuid().nullish(),
   roomId: z.string().uuid().nullish(),
   icon: z.string().max(8).optional(),
+  /** §4A.2/D107 — required ⇒ completion blocks until ≥1 proof photo. */
+  proofMode: proofModeSchema.default('optional'),
   subtasks: z.array(subtaskInputSchema).default([]),
   rules: z.array(ruleInputSchema).min(1),
 });
@@ -84,6 +89,7 @@ export const updateResponsibilitySchema = z.object({
   routineId: z.string().uuid().nullable().optional(),
   roomId: z.string().uuid().nullable().optional(),
   icon: z.string().max(8).optional(),
+  proofMode: proofModeSchema.optional(),
   archived: z.boolean().optional(),
   subtasks: z.array(subtaskInputSchema).optional(),
   rules: z.array(ruleInputSchema).optional(),
@@ -99,6 +105,7 @@ export const responsibilityRowSchema = z.object({
   archivedAt: z.date().nullable(),
   createdByPersonId: z.string().uuid().nullable(),
   icon: z.string(),
+  proofMode: proofModeSchema,
   createdAt: z.date(),
 });
 

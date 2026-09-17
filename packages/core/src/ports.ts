@@ -40,3 +40,16 @@ export interface SecureTokens {
 export interface TokenDigester {
   sha256(value: string): string;
 }
+
+/**
+ * Binary object storage (§4A.2 / D104): proof-photo blobs. Keys are
+ * household-scoped paths (`hh/{householdId}/proof/{occurrenceId}/{uuid}.jpg`);
+ * bytes are already-compressed JPEGs from the client. Serving is ALWAYS
+ * through the auth-checked API proxy route — never presigned URLs (CSP
+ * stays 'self', §8).
+ */
+export interface StoragePort {
+  put(key: string, bytes: Uint8Array, contentType: string): Promise<void>;
+  get(key: string): Promise<{ bytes: Uint8Array; contentType: string } | null>;
+  remove(key: string): Promise<void>;
+}

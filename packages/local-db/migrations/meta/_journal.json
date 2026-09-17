@@ -29,6 +29,27 @@
       "when": 1789375192396,
       "tag": "0003_red_spyke",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1789652212596,
+      "tag": "0004_opposite_risque",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1789667823227,
+      "tag": "0005_sleepy_landau",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1789670021209,
+      "tag": "0006_daffy_rage",
+      "breakpoints": true
     }
   ]
 }

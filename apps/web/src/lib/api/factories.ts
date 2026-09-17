@@ -4,6 +4,8 @@ import {
   type UseMutationOptions,
   type UseQueryOptions,
 } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
+import { hasSession, type RootState } from '@/store';
 import { ApiError, api } from './client';
 
 export type Endpoint = {
@@ -32,6 +34,17 @@ type QueryConfig<TData> = {
   options?: Omit<UseQueryOptions<TData, ApiError>, 'queryKey'>;
 };
 
+/**
+ * True only when a session exists AND has been validated this boot (§6
+ * stale-token guard): a rehydrated Bearer the server no longer recognizes
+ * must not fire the app's query swarm — /auth/me settles it first, and the
+ * 401 path evicts. Device sessions validate at device rehydrate; signed-out
+ * is settled too (queries stay disabled behind the SignedOutDoor).
+ */
+export function useSessionReady(): boolean {
+  return useSelector((state: RootState) => hasSession(state.auth) && state.auth.sessionValidated);
+}
+
 /** Generic GET wrapper — feature hooks compose it with registry entries. */
 export function useApiQuery<TData>(config: QueryConfig<TData>) {
   // Device-mode hooks pass `queryFn: mode === 'device' ? deviceFn : undefined`.
@@ -39,6 +52,10 @@ export function useApiQuery<TData>(config: QueryConfig<TData>) {
   // leaving server-mode queries with no fetcher (eternal skeleton) — so the
   // override is destructured out and only applied when actually defined.
   const { queryFn: deviceQueryFn, ...restOptions } = config.options ?? {};
+  // Central session gate: no query fires until the boot-time /auth/me check
+  // has settled (or the session is device-mode/rehydrated). Callers can
+  // further restrict with their own `enabled`, never widen it.
+  const sessionReady = useSessionReady();
   return useQuery<TData, ApiError>({
     queryKey: config.key,
     queryFn:
@@ -50,6 +67,7 @@ export function useApiQuery<TData>(config: QueryConfig<TData>) {
         return res as unknown as TData;
       }),
     ...restOptions,
+    enabled: sessionReady && (restOptions.enabled ?? true),
   });
 }
 

@@ -5,6 +5,7 @@ import { useDispatch } from 'react-redux';
 import { clearApiCache, useApiMutation, useDeviceMutation } from '@/lib/api';
 import { resetSession, setSession, setDeviceSession, store } from '@/store';
 import { popReturnTo } from '@/lib/auth/returnTo';
+import { purgeSessionArtifacts } from '@/lib/auth/evictSession';
 import { clearPasscodeGate } from '@/lib/device/passcodeGate';
 import { switchDeviceProfile, type DeviceSwitchResult } from '@/lib/device';
 import { authEndpoints } from '../auth.endpoints';
@@ -79,6 +80,10 @@ export function useLogout() {
       onSettled: () => {
         dispatch(resetSession());
         clearApiCache();
+        // Deep-purge (same path as a 401 eviction): a surviving service worker
+        // would keep serving the old cached shell against the dead session.
+        // Best-effort — the router.push below must never be blocked by it.
+        void purgeSessionArtifacts();
         router.push('/login');
       },
     },

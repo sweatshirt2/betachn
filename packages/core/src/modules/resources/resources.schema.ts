@@ -95,3 +95,46 @@ export type CreateShoppingItemInput = z.infer<typeof createShoppingItemSchema>;
 export type UpdateShoppingItemInput = z.infer<typeof updateShoppingItemSchema>;
 export type SupplyRecord = z.infer<typeof supplyRowSchema>;
 export type ShoppingItemRecord = z.infer<typeof shoppingItemRowSchema>;
+
+/**
+ * Recurring buy reminders (§4A.3 / D108–D110): REMINDERS ONLY — never an
+ * assumed purchase. Anchor advances solely on a recorded purchase/restock.
+ * Cadence is day-interval only; due = lastPurchaseAt + intervalDays.
+ */
+export const recurringStateSchema = z.enum(['active', 'paused']);
+export const createRecurringItemSchema = z.object({
+  name: z.string().trim().min(1).max(140),
+  supplyId: z.string().uuid().nullish(),
+  intervalDays: z.number().int().min(3).max(365),
+  quantityText: z.string().max(100).nullish(),
+  note: z.string().max(500).nullish(),
+  lastBoughtOn: z.date().nullish(),
+});
+export const updateRecurringItemSchema = z.object({
+  name: z.string().trim().min(1).max(140).optional(),
+  intervalDays: z.number().int().min(3).max(365).optional(),
+  quantityText: z.string().max(100).nullable().optional(),
+  note: z.string().max(500).nullable().optional(),
+  state: recurringStateSchema.optional(),
+});
+export const snoozeRecurringItemSchema = z.object({ days: z.number().int().min(1).max(30).default(3) });
+export const recurringItemRowSchema = z.object({
+  id: z.string().uuid(),
+  householdId: z.string().uuid(),
+  name: z.string(),
+  supplyId: z.string().uuid().nullable(),
+  intervalDays: z.number().int().min(3).max(365),
+  quantityText: z.string().nullable(),
+  note: z.string().nullable(),
+  lastPurchaseAt: z.date().nullable(),
+  snoozedUntil: z.date().nullable(),
+  state: recurringStateSchema,
+  archivedAt: z.date().nullable(),
+  createdByPersonId: z.string().uuid().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+export type RecurringState = z.infer<typeof recurringStateSchema>;
+export type CreateRecurringItemInput = z.infer<typeof createRecurringItemSchema>;
+export type UpdateRecurringItemInput = z.infer<typeof updateRecurringItemSchema>;
+export type RecurringItemRecord = z.infer<typeof recurringItemRowSchema>;

@@ -8,9 +8,16 @@ import { PersistGate } from 'redux-persist/integration/react';
 import i18n from '@/i18n';
 import { ToastProvider } from '@/components/ui';
 import { setQueryClientForApi } from '@/lib/api';
+import { useSessionValidation } from '@/lib/auth/useSessionValidation';
 import { rehydrateDeviceSession } from '@/store';
 import { persistor, store } from '@/store';
 import type { AppDispatch, RootState } from '@/store';
+
+/** Boot-time /auth/me validation for persisted server tokens (stale-token guard). */
+function SessionValidator() {
+  useSessionValidation();
+  return null;
+}
 
 /** Device-mode sessions re-resolve their permissionMap from live role rows on boot. */
 function DeviceSessionRehydrator() {
@@ -59,6 +66,7 @@ export function Providers({ children }: { children: ReactNode }) {
           <I18nextProvider i18n={i18n}>
             <ToastProvider>
               <DeviceSessionRehydrator />
+              <SessionValidator />
               {children}
             </ToastProvider>
           </I18nextProvider>

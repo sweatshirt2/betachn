@@ -21,7 +21,7 @@ import {
   supplyEvents,
   users,
 } from '../schema';
-import { shoppingItems as shoppingItemsRef } from '../schema';
+import { recurringShoppingItems, shoppingItems as shoppingItemsRef } from '../schema';
 import type { PullChangeWire } from './transport';
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- generic row applier keyed by wire registry */
@@ -44,6 +44,7 @@ export const ENTITY_TABLES: Record<string, AnySqliteTable> = {
   supplies,
   supply_events: supplyEvents,
   shopping_items: shoppingItemsRef,
+  recurring_shopping_items: recurringShoppingItems,
   activity_events: activityEvents,
   notifications: notificationsTable,
   notification_prefs: notificationPrefs,

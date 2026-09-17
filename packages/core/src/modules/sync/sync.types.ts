@@ -25,6 +25,7 @@ export const SYNC_ENTITIES = [
   'supplies',
   'supply_events',
   'shopping_items',
+  'recurring_shopping_items',
   'activity_events',
   'notifications',
   'notification_prefs',

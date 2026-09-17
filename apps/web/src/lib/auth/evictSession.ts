@@ -24,6 +24,9 @@
 import { resetSession, store } from '@/store';
 import { isAuthPath, stashReturnTo } from './returnTo';
 
+/** How long the redirect waits for the async SW/cache purge before going anyway. */
+const PURGE_REDIRECT_GRACE_MS = 1500;
+
 /** Same marker Shell.tsx sets when the D63 entry gate is satisfied. */
 export const ENTRY_OK_KEY = 'chorify-entry-ok';
 
@@ -36,13 +39,27 @@ export function evictSession(): void {
   if (typeof window === 'undefined') return;
   if (store.getState().auth.token === null && store.getState().auth.mode !== 'device') return; // already signed out
   store.dispatch(resetSession());
-  purgeBrowserSessionArtifacts();
   if (queryClientClear !== null) queryClientClear();
   const { pathname, search } = window.location;
-  if (!isAuthPath(pathname)) stashReturnTo(pathname, search);
-  if (!isAuthPath(pathname)) {
-    if (evicting) return;
-    evicting = true;
+  const onAuth = isAuthPath(pathname);
+  if (!onAuth) stashReturnTo(pathname, search);
+  else return; // already on an auth surface — purge still ran, nothing to redirect
+  // NAVIGATE ONLY AFTER the async SW/cache purge settles (bounded): the page
+  // unload of an immediate location.assign() CANCELS the pending
+  // caches.delete/unregister promises, and the surviving service worker would
+  // keep serving the old (pre-fix) cached shell — resurrecting the very 401
+  // loop this purge exists to end. 401s arriving in a tight swarm re-enter
+  // here; the evicting flag keeps exactly one bounded wait + redirect alive.
+  if (evicting) return;
+  evicting = true;
+  void purgeAndRedirect();
+}
+
+async function purgeAndRedirect(): Promise<void> {
+  const timeout = new Promise<void>((resolve) => setTimeout(resolve, PURGE_REDIRECT_GRACE_MS));
+  try {
+    await Promise.race([purgeBrowserSessionArtifacts(), timeout]);
+  } finally {
     window.location.assign('/login');
     setTimeout(() => {
       evicting = false;
@@ -53,9 +70,10 @@ export function evictSession(): void {
 /**
  * Wipe every persistence layer a dead session could hide in. Best-effort by
  * design: storage access can throw (private mode, quota, SW unavailable) and
- * the eviction redirect must never be blocked by cleanup failures.
+ * the eviction redirect must never be blocked by cleanup failures. Returns
+ * the SW/cache purge promise so the caller can await it before navigating.
  */
-function purgeBrowserSessionArtifacts(): void {
+export function purgeSessionArtifacts(): Promise<void> {
   try {
     localStorage.removeItem(PERSIST_AUTH_KEY);
   } catch {
@@ -66,8 +84,10 @@ function purgeBrowserSessionArtifacts(): void {
   } catch {
     // as above
   }
-  void purgeServiceWorkerArtifacts();
+  return purgeServiceWorkerArtifacts();
 }
+
+const purgeBrowserSessionArtifacts = purgeSessionArtifacts;
 
 /** Drop every app cache + unregister the SW; rebuilt on the next boot. */
 async function purgeServiceWorkerArtifacts(): Promise<void> {

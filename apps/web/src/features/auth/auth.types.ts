@@ -29,6 +29,8 @@ export type HouseholdPreviewResponse = {
 };
 
 /** Maps the wire context onto the RTK auth slice (identity state only). */
+export type MeResponse = { context: AuthContextPayload };
+
 export function toAuthState(token: string, context: AuthContextPayload) {
   return {
     token,

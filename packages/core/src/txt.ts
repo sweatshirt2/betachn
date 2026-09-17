@@ -29,6 +29,7 @@ export const EXPORT_SECTIONS = [
   'supplies',
   'supply_events',
   'shopping_items',
+  'recurring_shopping_items',
   'activity_events',
   'notifications',
   'notification_prefs',

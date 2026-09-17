@@ -64,6 +64,7 @@ export default function NewChorePage() {
 
   const [title, setTitle] = useState(prefillTitle);
   const [icon, setIcon] = useState<string>(prefillIcon);
+  const [proofMode, setProofMode] = useState<'optional' | 'required'>('optional');
   const [subtasks, setSubtasks] = useState<string[]>([]);
   const [rule, setRule] = useState<ComposerRule>(() => ({
     ...defaultRule(todayIso()),
@@ -130,6 +131,7 @@ export default function NewChorePage() {
       await create.mutateAsync({
         title: title.trim(),
         icon,
+        proofMode,
         subtasks: subtasks
           .map((s) => s.trim())
           .filter((s) => s.length > 0)
@@ -169,6 +171,24 @@ export default function NewChorePage() {
                   className={`tap-spring rounded-md px-2 py-1 text-xl transition-colors ${icon === emoji ? 'border-terracotta bg-accent-wash shadow-soft border' : 'border-line bg-surface border'}`}
                 >
                   {emoji}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend className="text-sm font-semibold">{t('chores.proofMode')}</legend>
+            <p className="text-muted mt-0.5 text-xs">{t('chores.proofModeHint')}</p>
+            <div className="mt-1 flex gap-1">
+              {(['optional', 'required'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setProofMode(mode)}
+                  aria-pressed={proofMode === mode}
+                  className={`tap-spring rounded-md border px-3 py-1 text-sm font-semibold transition-colors ${proofMode === mode ? 'border-terracotta bg-accent-wash text-ink shadow-soft' : 'border-line bg-surface text-muted'}`}
+                >
+                  {t(mode === 'required' ? 'chores.proofRequired' : 'chores.proofOptional')}
                 </button>
               ))}
             </div>

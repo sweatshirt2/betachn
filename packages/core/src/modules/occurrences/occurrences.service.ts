@@ -5,6 +5,7 @@ import {
   households,
   notifications,
   notificationPrefs,
+  occurrenceProofs,
   occurrences,
   responsibilities,
 } from '@chorify/db';
@@ -18,6 +19,7 @@ import { KIND_CATEGORY, filterByPrefs, resolveRecipients, type NotifyKind } from
 import { ownerHolderPersonIds } from '../people';
 import { applyCompletion, applyReopen, applySkip, requirePending } from './occurrences.rules';
 import {
+  occurrenceProofRowSchema,
   occurrenceRowSchema,
   titledOccurrenceSchema,
   type OccurrenceAction,
@@ -225,6 +227,89 @@ export class OccurrencesService {
   }
 
   /** Hourly sweeper (§4.9): pending ∧ dueDate < today(household tz) → missed. */
+  /**
+   * Proof photos (§4A.2 / D104–D107). Bind = upload + completer permission;
+   * the blob was already stored by POST /uploads — this persists the binding
+   * row. Binding is allowed while the occurrence is pending OR terminal for
+   * the COMPLETER (after-completion edits ride D107: the completer may edit
+   * photos any time; status immutability is untouched — photos are not
+   * status). Non-completers can bind only while pending with complete
+   * permission (pre-completion attach).
+   */
+  async bindProof(
+    householdId: string,
+    occurrenceId: string,
+    actorPersonId: string,
+    canComplete: boolean,
+    key: string,
+    clientUuid?: string,
+  ): Promise<unknown> {
+    return this.uow.transact(async (tx) => {
+      const row = await this.findRow(tx, householdId, occurrenceId);
+      const isCompleter = row.completedByPersonId === actorPersonId;
+      if (row.status !== 'pending' && !isCompleter) {
+        throw new AppError('FORBIDDEN', 'Only the member who completed this can edit its photos');
+      }
+      if (!canComplete) {
+        throw new AppError('FORBIDDEN', 'You do not have permission for this', {
+          missingPermission: 'responsibilities.complete',
+        });
+      }
+      // Idempotent replay (D71, house pattern): resolve by clientUuid first.
+      if (clientUuid !== undefined && clientUuid !== '') {
+        const existing = await tx.query.occurrenceProofs!.findFirst({
+          where: eq(occurrenceProofs.clientUuid, clientUuid),
+        });
+        if (existing) return occurrenceProofRowSchema.parse(existing);
+      }
+      const [proof] = await tx
+        .insert(occurrenceProofs)
+        .values({
+          occurrenceId: row.id,
+          key,
+          uploadedByPersonId: actorPersonId,
+          ...(clientUuid !== undefined && clientUuid !== '' ? { clientUuid } : {}),
+        })
+        .returning();
+      return occurrenceProofRowSchema.parse(proof);
+    });
+  }
+
+  /** List proofs for an occurrence (view = occurrence visibility, §4A.2). */
+  async listProofs(householdId: string, occurrenceId: string): Promise<unknown[]> {
+    const rows = await this.uow.exec.query.occurrenceProofs!.findMany({
+      where: and(eq(occurrenceProofs.occurrenceId, occurrenceId)),
+      orderBy: occurrenceProofs.createdAt,
+    });
+    // Scope check: the occurrence must belong to the caller's household.
+    await this.findRow(this.uow.exec, householdId, occurrenceId);
+    return rows.map((r) => occurrenceProofRowSchema.parse(r));
+  }
+
+  async removeProof(
+    householdId: string,
+    occurrenceId: string,
+    actorPersonId: string,
+    proofId: string,
+  ): Promise<{ ok: true }> {
+    return this.uow.transact(async (tx) => {
+      const row = await this.findRow(tx, householdId, occurrenceId);
+      const proof = await tx.query.occurrenceProofs!.findFirst({
+        where: eq(occurrenceProofs.id, proofId),
+      });
+      if (!proof || proof.occurrenceId !== row.id) {
+        throw new AppError('NOT_FOUND', 'Proof not found');
+      }
+      const isCompleter = row.completedByPersonId === actorPersonId;
+      if (!isCompleter && row.status !== 'pending') {
+        throw new AppError('FORBIDDEN', 'Only the member who completed this can edit its photos');
+      }
+      await tx.delete(occurrenceProofs).where(eq(occurrenceProofs.id, proofId));
+      // Blob removal is the storage edge's job — the service returns the key.
+      return { ok: true as const, key: proof.key };
+    });
+  }
+
   async sweepMissed(householdId: string): Promise<number> {
     return this.uow.transact(async (tx) => {
       const today = isoTodayInTz(await householdTimezone(tx, householdId), this.clock.now());

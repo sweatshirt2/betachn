@@ -20,6 +20,12 @@ export type AuthState = {
   permissionMap: Record<string, boolean>;
   /** Read-only preview target (§4.6) — mutations are blocked server-side. */
   viewAsPersonId: string | null;
+  /**
+   * Boot-time trust flag: a rehydrated server token is NOT valid until
+   * GET /auth/me confirms it (stale-token guard). Device sessions validate
+   * at rehydrate; server sessions via useSessionValidation.
+   */
+  sessionValidated: boolean;
 };
 
 export type DeviceSessionPayload = {
@@ -36,6 +42,7 @@ const initialState: AuthState = {
   household: null,
   permissionMap: {},
   viewAsPersonId: null,
+  sessionValidated: false,
 };
 
 /** A session exists in either mode — the single "am I signed in?" check. */
@@ -91,7 +98,11 @@ const authSlice = createSlice({
   reducers: {
     setSession(
       state,
-      action: PayloadAction<Omit<AuthState, 'permissionMap' | 'viewAsPersonId' | 'mode'> & { permissionMap?: Record<string, boolean> }>,
+      action: PayloadAction<
+        Omit<AuthState, 'permissionMap' | 'viewAsPersonId' | 'mode' | 'sessionValidated'> & {
+          permissionMap?: Record<string, boolean>;
+        }
+      >,
     ) {
       state.mode = 'server';
       state.token = action.payload.token;
@@ -101,6 +112,8 @@ const authSlice = createSlice({
       state.permissionMap = action.payload.permissionMap ?? {};
       // A fresh session is never a preview — stale view-as must not survive.
       state.viewAsPersonId = null;
+      // A token straight from the server is valid by construction.
+      state.sessionValidated = true;
     },
     setDeviceSession(state, action: PayloadAction<DeviceSessionPayload>) {
       state.mode = 'device';
@@ -110,6 +123,7 @@ const authSlice = createSlice({
       state.household = action.payload.household;
       state.permissionMap = action.payload.permissionMap;
       state.viewAsPersonId = null;
+      state.sessionValidated = true;
     },
     resetSession() {
       return initialState;
@@ -119,6 +133,10 @@ const authSlice = createSlice({
     },
     exitViewAs(state) {
       state.viewAsPersonId = null;
+    },
+    /** Boot-time /auth/me confirmation (useSessionValidation). */
+    markSessionValidated(state) {
+      state.sessionValidated = true;
     },
   },
   // Device-session rehydration (Providers boot): a fulfilled run resolves the
@@ -136,9 +154,18 @@ const authSlice = createSlice({
       state.household = action.payload.household;
       state.permissionMap = action.payload.permissionMap;
       state.viewAsPersonId = null;
+      // Rehydrated against live device rows — the local-first trust root.
+      state.sessionValidated = true;
     });
   },
 });
 
-export const { setSession, setDeviceSession, resetSession, enterViewAs, exitViewAs } = authSlice.actions;
+export const {
+  setSession,
+  setDeviceSession,
+  resetSession,
+  enterViewAs,
+  exitViewAs,
+  markSessionValidated,
+} = authSlice.actions;
 export const authReducer = authSlice.reducer;

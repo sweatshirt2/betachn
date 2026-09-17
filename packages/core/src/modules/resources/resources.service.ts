@@ -1,21 +1,36 @@
 import { and, desc, eq } from 'drizzle-orm';
-import { activityEvents, shoppingItems, supplies, supplyEvents } from '@chorify/db';
+import { computeSupplyCycleStats, suggestibleCycle } from './resources.rules';
+import {
+  activityEvents,
+  recurringShoppingItems,
+  shoppingItems,
+  supplies,
+  supplyEvents,
+} from '@chorify/db';
 import { buildActivity } from '../../activity';
 import type { Executor, UnitOfWork } from '../../db';
 import { AppError } from '../../errors';
 import type { Clock } from '../../ports';
 import type {
+  CreateRecurringItemInput,
   CreateShoppingItemInput,
   CreateSupplyEventInput,
   CreateSupplyInput,
+  RecurringItemRecord,
   ShoppingItemRecord,
   SupplyEventRecord,
   SupplyRecord,
+  UpdateRecurringItemInput,
   UpdateShoppingItemInput,
   UpdateSupplyEventInput,
   UpdateSupplyInput,
 } from './resources.schema';
-import { shoppingItemRowSchema, supplyEventRowSchema, supplyRowSchema } from './resources.schema';
+import {
+  recurringItemRowSchema,
+  shoppingItemRowSchema,
+  supplyEventRowSchema,
+  supplyRowSchema,
+} from './resources.schema';
 import {
   purchaseGuard,
   supplyActivityType,
@@ -199,6 +214,15 @@ export class ResourcesService {
           }
         }
       }
+      // D110: the purchase advances the recurring reminder's anchor (if a
+      // matching reminder exists) — same transaction, never schedule-driven.
+      await this.advanceRecurringAnchorOnPurchase(
+        tx,
+        householdId,
+        String(updated.name),
+        item.sourceSupplyId,
+        this.clock.now(),
+      );
       await tx.insert(activityEvents).values({
         householdId,
         actorPersonId,
@@ -318,6 +342,197 @@ export class ResourcesService {
       clientUuid: null,
       occurredAt: this.clock.now(),
     });
+  }
+
+  // — recurring buy reminders (§4A.3 / D108–D110) —
+
+  async listRecurringItems(householdId: string): Promise<RecurringItemRecord[]> {
+    const rows = await this.uow.exec.query.recurringShoppingItems!.findMany({
+      where: eq(recurringShoppingItems.householdId, householdId),
+    });
+    return rows.map((row) => recurringItemRowSchema.parse(row));
+  }
+
+  async createRecurringItem(
+    actorPersonId: string | null,
+    householdId: string,
+    clientUuid: string,
+    input: CreateRecurringItemInput,
+  ): Promise<RecurringItemRecord> {
+    const existing = clientUuid
+      ? await this.uow.exec.query.recurringShoppingItems!.findFirst({
+          where: eq(recurringShoppingItems.clientUuid, clientUuid),
+        })
+      : undefined;
+    if (existing) return recurringItemRowSchema.parse(existing);
+    const [row] = await this.uow.exec.insert(recurringShoppingItems).values({
+      householdId,
+      name: input.name,
+      supplyId: input.supplyId ?? null,
+      intervalDays: input.intervalDays,
+      quantityText: input.quantityText ?? null,
+      note: input.note ?? null,
+      lastPurchaseAt: input.lastBoughtOn ?? null,
+      createdByPersonId: actorPersonId,
+      clientUuid,
+    }).returning();
+    return recurringItemRowSchema.parse(row);
+  }
+
+  async updateRecurringItem(
+    householdId: string,
+    itemId: string,
+    input: UpdateRecurringItemInput,
+  ): Promise<RecurringItemRecord> {
+    await this.recurringItemRow(this.uow.exec, householdId, itemId);
+    const [updated] = await this.uow.exec.update(recurringShoppingItems).set({
+      ...(input.name !== undefined ? { name: input.name } : {}),
+      ...(input.intervalDays !== undefined ? { intervalDays: input.intervalDays } : {}),
+      ...(input.quantityText !== undefined ? { quantityText: input.quantityText ?? null } : {}),
+      ...(input.note !== undefined ? { note: input.note ?? null } : {}),
+      ...(input.state !== undefined ? { state: input.state } : {}),
+      updatedAt: this.clock.now(),
+    }).where(eq(recurringShoppingItems.id, itemId)).returning();
+    if (!updated) throw new AppError('NOT_FOUND', 'Recurring item not found');
+    return recurringItemRowSchema.parse(updated);
+  }
+
+  /** Snooze the next reminder (D109) — anchor (lastPurchaseAt) untouched. */
+  async snoozeRecurringItem(
+    householdId: string,
+    itemId: string,
+    days: number,
+  ): Promise<RecurringItemRecord> {
+    await this.recurringItemRow(this.uow.exec, householdId, itemId);
+    const until = new Date(this.clock.now().getTime() + days * 86_400_000);
+    const [updated] = await this.uow.exec.update(recurringShoppingItems)
+      .set({ snoozedUntil: until, updatedAt: this.clock.now() })
+      .where(eq(recurringShoppingItems.id, itemId))
+      .returning();
+    if (!updated) throw new AppError('NOT_FOUND', 'Recurring item not found');
+    return recurringItemRowSchema.parse(updated);
+  }
+
+  /** Soft-archive (§4A.3): reminders disappear, history stays. */
+  async archiveRecurringItem(householdId: string, itemId: string): Promise<void> {
+    await this.recurringItemRow(this.uow.exec, householdId, itemId);
+    await this.uow.exec.update(recurringShoppingItems)
+      .set({ archivedAt: this.clock.now(), state: 'paused', updatedAt: this.clock.now() })
+      .where(eq(recurringShoppingItems.id, itemId));
+  }
+
+  /**
+   * D110: a purchase advances the anchor. Called from `purchase` inside the
+   * same transaction — matching by linked supply first, then exact name.
+   */
+  private async advanceRecurringAnchorOnPurchase(
+    tx: Executor,
+    householdId: string,
+    itemName: string,
+    supplyId: string | null,
+    purchasedAt: Date,
+  ): Promise<void> {
+    const candidates = (await tx.query.recurringShoppingItems!.findMany({
+      where: and(
+        eq(recurringShoppingItems.householdId, householdId),
+        eq(recurringShoppingItems.state, 'active'),
+      ),
+    })) as Array<{ id: string; name: string; supplyId: string | null }>;
+    const match =
+      (supplyId && candidates.find((c) => c.supplyId === supplyId)) ||
+      candidates.find((c) => c.name.toLowerCase() === itemName.toLowerCase());
+    if (!match) return;
+    await tx.update(recurringShoppingItems)
+      .set({ lastPurchaseAt: purchasedAt, updatedAt: this.clock.now() })
+      .where(eq(recurringShoppingItems.id, match.id));
+  }
+
+  /**
+   * D108 suggestion pick — pure evaluation server-side: the ONE supply with
+   * ≥2 completed cycles, sane average, no active reminder and no synced
+   * dismissal wins (highest cycle count). Supply events are read per
+   * candidate; households with few supplies make this cheap.
+   */
+  async suggestRecurringItem(
+    householdId: string,
+  ): Promise<{
+    supplyId: string;
+    name: string;
+    avgCycleDays: number;
+    lastPurchaseAt: string | null;
+  } | null> {
+    const allSupplies = await this.uow.exec.query.supplies!.findMany({
+      where: eq(supplies.householdId, householdId),
+    });
+    if (allSupplies.length === 0) return null;
+    const reminders = await this.uow.exec.query.recurringShoppingItems!.findMany({
+      where: eq(recurringShoppingItems.householdId, householdId),
+    });
+    const active = reminders.filter((r) => r.archivedAt === null);
+    const supplyLinked = new Set(active.map((r) => r.supplyId));
+    const dismissed = new Set(
+      allSupplies
+        .filter((s) => (s as { recurringSuggestionDismissedAt?: Date | null }).recurringSuggestionDismissedAt != null)
+        .map((s) => String(s.id)),
+    );
+    let best: { supplyId: string; name: string; avgCycleDays: number; lastPurchaseAt: string | null; cycles: number } | null =
+      null;
+    for (const supply of allSupplies) {
+      const supplyId = String(supply.id);
+      if (supplyLinked.has(supplyId) || dismissed.has(supplyId)) continue;
+      const events = await this.uow.exec.query.supplyEvents!.findMany({
+        where: and(eq(supplyEvents.householdId, householdId), eq(supplyEvents.supplyId, supplyId)),
+      });
+      const stats = computeSupplyCycleStats(
+        events.map((e) => ({
+          type: (e as { type: 'created' | 'restocked' | 'marked_low' | 'marked_out' }).type,
+          occurredAt: (e as { occurredAt: Date }).occurredAt,
+        })),
+        this.clock.now(),
+      );
+      if (!suggestibleCycle(stats)) continue;
+      if (best === null || stats.cycleCount > best.cycles) {
+        best = {
+          supplyId,
+          name: String(supply.name),
+          avgCycleDays: stats.avgCycleDays ?? 0,
+          lastPurchaseAt: null,
+          cycles: stats.cycleCount,
+        };
+      }
+    }
+    if (best === null) return null;
+    const { cycles: _cycles, ...out } = best;
+    return out;
+  }
+
+  /** D108 "Don't suggest again" — synced dismissal on the supply row. */
+  async dismissRecurringSuggestion(householdId: string, supplyId: string): Promise<void> {
+    const supply = await this.uow.exec.query.supplies!.findFirst({
+      where: eq(supplies.id, supplyId),
+    });
+    if (!supply || supply.householdId !== householdId) {
+      throw new AppError('NOT_FOUND', 'Supply not found');
+    }
+    await this.uow.exec
+      .update(supplies)
+      .set({ recurringSuggestionDismissedAt: this.clock.now() })
+      .where(eq(supplies.id, supplyId));
+  }
+
+  /** Household-scoped fetch; cross-household ids read as NOT_FOUND (§5.8). */
+  private async recurringItemRow(
+    exec: Executor,
+    householdId: string,
+    itemId: string,
+  ): Promise<RecurringItemRecord> {
+    const row = await exec.query.recurringShoppingItems!.findFirst({
+      where: eq(recurringShoppingItems.id, itemId),
+    });
+    if (!row || row.householdId !== householdId) {
+      throw new AppError('NOT_FOUND', 'Recurring item not found');
+    }
+    return recurringItemRowSchema.parse(row);
   }
 
   /** Household-scoped fetch; cross-household ids read as NOT_FOUND (§5.8). */

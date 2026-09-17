@@ -43,6 +43,34 @@
       "when": 1789374865656,
       "tag": "0005_brown_korg",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789651386723,
+      "tag": "0006_neat_rachel_grey",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789652011642,
+      "tag": "0007_rainy_black_cat",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789653633729,
+      "tag": "0008_fat_jackpot",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1789669997660,
+      "tag": "0009_many_texas_twister",
+      "breakpoints": true
     }
   ]
 }

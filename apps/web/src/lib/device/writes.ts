@@ -618,6 +618,32 @@ export async function devicePurchaseItem(input: {
       });
     }
   }
+  // D110: the SAME purchase advances the recurring reminder's anchor —
+  // supply match first, then exact name. Server purchase() mirrors this
+  // transactionally; LWW converges both sides on the same value.
+  const recurringRows = await db
+    .select()
+    .from(schema.recurringShoppingItems)
+    .where(eq(schema.recurringShoppingItems.householdId, input.householdId));
+  const reminderMatch =
+    (item.sourceSupplyId &&
+      recurringRows.find((r) => r.state === 'active' && r.supplyId === item.sourceSupplyId)) ||
+    recurringRows.find(
+      (r) => r.state === 'active' && r.name.toLowerCase() === item.name.toLowerCase(),
+    );
+  if (reminderMatch) {
+    await db
+      .update(schema.recurringShoppingItems)
+      .set({ lastPurchaseAt: nowIso, updatedAt: nowIso })
+      .where(eq(schema.recurringShoppingItems.id, reminderMatch.id));
+    enqueue(db, input.householdId, {
+      entity: 'recurring_shopping_items',
+      entityId: reminderMatch.id,
+      op: 'update',
+      payload: { ...reminderMatch, lastPurchaseAt: nowIso, updatedAt: nowIso },
+      domain: 'resources',
+    });
+  }
   await emitActivity(db, input.householdId, input.actorPersonId, 'shopping_item.purchased', { name: item.name });
   enqueue(db, input.householdId, {
     entity: 'shopping_items',
@@ -627,6 +653,152 @@ export async function devicePurchaseItem(input: {
     domain: 'resources',
   });
   return { id: item.id, name: item.name, purchasedAt: nowIso, quantityText: item.quantityText ?? null };
+}
+
+// ------------------------------------------------------------------
+// Recurring buy reminders (§4A.3 / D108–D110) — REMINDERS ONLY.
+// ------------------------------------------------------------------
+
+export interface DeviceRecurringCreateInput {
+  householdId: string;
+  actorPersonId: string;
+  name: string;
+  intervalDays: number;
+  quantityText?: string | null;
+  note?: string | null;
+  supplyId?: string | null;
+  lastBoughtOn?: string | null;
+}
+
+export async function deviceCreateRecurringItem(
+  input: DeviceRecurringCreateInput,
+): Promise<{ id: string }> {
+  const db = await requireDeviceDb();
+  const nowIso = new Date().toISOString();
+  const id = randomId();
+  const row = {
+    id,
+    householdId: input.householdId,
+    name: input.name,
+    supplyId: input.supplyId ?? null,
+    intervalDays: input.intervalDays,
+    quantityText: input.quantityText ?? null,
+    note: input.note ?? null,
+    lastPurchaseAt: input.lastBoughtOn ?? null,
+    snoozedUntil: null,
+    state: 'active' as const,
+    archivedAt: null,
+    createdByPersonId: input.actorPersonId,
+    clientUuid: id,
+    createdAt: nowIso,
+    updatedAt: nowIso,
+  };
+  await db.insert(schema.recurringShoppingItems).values(row);
+  await emitActivity(db, input.householdId, input.actorPersonId, 'reminder.created', { name: input.name });
+  enqueue(db, input.householdId, {
+    entity: 'recurring_shopping_items',
+    entityId: id,
+    op: 'create',
+    payload: row,
+    domain: 'resources',
+  });
+  return { id };
+}
+
+export async function deviceUpdateRecurringItem(input: {
+  householdId: string;
+  actorPersonId: string;
+  itemId: string;
+  patch: {
+    name?: string;
+    intervalDays?: number;
+    quantityText?: string | null;
+    note?: string | null;
+    state?: 'active' | 'paused';
+  };
+}): Promise<void> {
+  const db = await requireDeviceDb();
+  const row = await db.query.recurringShoppingItems!.findFirst({
+    where: eq(schema.recurringShoppingItems.id, input.itemId),
+  });
+  if (!row || row.householdId !== input.householdId) {
+    throw new AppError('NOT_FOUND', 'Recurring item not found');
+  }
+  const nowIso = new Date().toISOString();
+  const updated = { ...row, ...input.patch, updatedAt: nowIso };
+  await db
+    .update(schema.recurringShoppingItems)
+    .set(updated)
+    .where(eq(schema.recurringShoppingItems.id, input.itemId));
+  if (input.patch.state !== undefined && input.patch.state !== row.state) {
+    await emitActivity(db, input.householdId, input.actorPersonId, 'reminder.paused', { name: row.name });
+  }
+  enqueue(db, input.householdId, {
+    entity: 'recurring_shopping_items',
+    entityId: input.itemId,
+    op: 'update',
+    payload: updated,
+    domain: 'resources',
+  });
+}
+
+/** [Not now] — fixed 3-day snooze (D109); the anchor is untouched. */
+export async function deviceSnoozeRecurringItem(input: {
+  householdId: string;
+  itemId: string;
+  days?: number;
+}): Promise<void> {
+  const db = await requireDeviceDb();
+  const row = await db.query.recurringShoppingItems!.findFirst({
+    where: eq(schema.recurringShoppingItems.id, input.itemId),
+  });
+  if (!row || row.householdId !== input.householdId) {
+    throw new AppError('NOT_FOUND', 'Recurring item not found');
+  }
+  const days = input.days ?? 3;
+  const nowIso = new Date().toISOString();
+  const snoozedUntil = new Date(Date.now() + days * 86_400_000).toISOString();
+  const updated = { ...row, snoozedUntil, updatedAt: nowIso };
+  await db
+    .update(schema.recurringShoppingItems)
+    .set(updated)
+    .where(eq(schema.recurringShoppingItems.id, input.itemId));
+  enqueue(db, input.householdId, {
+    entity: 'recurring_shopping_items',
+    entityId: input.itemId,
+    op: 'update',
+    payload: updated,
+    domain: 'resources',
+  });
+}
+
+/** Soft-archive — reminders disappear, history stays (§4A.3). */
+export async function deviceArchiveRecurringItem(input: {
+  householdId: string;
+  actorPersonId: string;
+  itemId: string;
+}): Promise<void> {
+  const db = await requireDeviceDb();
+  const row = await db.query.recurringShoppingItems!.findFirst({
+    where: eq(schema.recurringShoppingItems.id, input.itemId),
+  });
+  if (!row || row.householdId !== input.householdId) {
+    throw new AppError('NOT_FOUND', 'Recurring item not found');
+  }
+  const nowIso = new Date().toISOString();
+  const updated = { ...row, archivedAt: nowIso, state: 'paused' as const, updatedAt: nowIso };
+  await db
+    .update(schema.recurringShoppingItems)
+    .set(updated)
+    .where(eq(schema.recurringShoppingItems.id, input.itemId));
+  await emitActivity(db, input.householdId, input.actorPersonId, 'reminder.archived', { name: row.name });
+  enqueue(db, input.householdId, {
+    entity: 'recurring_shopping_items',
+    entityId: input.itemId,
+    op: 'update',
+    payload: updated,
+    domain: 'resources',
+  });
 }
 
 // ————————————————————————————————————————————————

@@ -108,6 +108,7 @@ export class ResponsibilitiesService {
         routineId: input.routineId ?? null,
         roomId: input.roomId ?? null,
         icon: input.icon ?? '📌',
+        proofMode: input.proofMode,
         createdByPersonId: actorPersonId,
       }).returning();
       const created = responsibilityRowSchema.parse(row);
@@ -157,6 +158,7 @@ export class ResponsibilitiesService {
         ...(input.routineId !== undefined ? { routineId: input.routineId } : {}),
         ...(input.roomId !== undefined ? { roomId: input.roomId } : {}),
         ...(input.icon !== undefined ? { icon: input.icon } : {}),
+        ...(input.proofMode !== undefined ? { proofMode: input.proofMode } : {}),
         ...(input.archived !== undefined
           ? { archivedAt: input.archived ? this.clock.now() : null }
           : {}),

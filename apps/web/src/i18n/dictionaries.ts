@@ -111,6 +111,10 @@ export type Dict = {
     range: string;
     dates: string;
     icon: string;
+    proofMode: string;
+    proofModeHint: string;
+    proofOptional: string;
+    proofRequired: string;
     startDate: string;
     assignedTo: string;
     addChore: string;
@@ -240,6 +244,18 @@ export type Dict = {
       manage_purchases: string;
     };
   };
+  proofs: {
+    title: string;
+    addPhoto: string;
+    addPhotoToFinish: string;
+    finish: string;
+    requiredHint: string;
+    captureError: string;
+    loadError: string;
+    photoAlt: string;
+    offlinePlaceholder: string;
+    deleteAria: string;
+  };
   ops: {
     routines: string;
     routinesHint: string;
@@ -265,6 +281,7 @@ export type Dict = {
     addItem: string;
     bought: string;
     shoppingEmptyHint: string;
+    reminderCreatedToast: string;
     newSupply: string;
     newRoutine: string;
     organizationalOnly: string;
@@ -293,6 +310,9 @@ export type Dict = {
     personAdded: string;
     responsibilityCreated: string;
     itemPurchased: string;
+    reminderCreated: string;
+    reminderPaused: string;
+    reminderArchived: string;
   };
   notify: {
     title: string;
@@ -300,6 +320,7 @@ export type Dict = {
     readAll: string;
     whatToReceive: string;
     reminderDigest: string;
+    recurringDue: string;
     completionRecorded: string;
     missedDetected: string;
     backupNudge: string;
@@ -445,6 +466,27 @@ export type Dict = {
     cycleFacts: string;
     outFacts: string;
     noFactsYet: string;
+    reminders: string;
+    cadenceWeekly: string;
+    cadenceBiweekly: string;
+    cadenceMonthly: string;
+    cadenceCustom: string;
+    reminderDue: string;
+    reminderOverdue: string;
+    reminderOnList: string;
+    reminderSnoozed: string;
+    addToShopping: string;
+    notNow: string;
+    notNowAria: string;
+    pause: string;
+    resume: string;
+    archiveAria: string;
+    suggestLine: string;
+    suggestHint: string;
+    suggestAccept: string;
+    suggestChange: string;
+    suggestNever: string;
+    customDaysAria: string;
   };
   family: {
     title: string;
@@ -615,6 +657,10 @@ export const en: Dict = {
     range: 'Daily until…',
     dates: 'On chosen dates',
     icon: 'Icon',
+    proofMode: 'Completion photo',
+    proofModeHint: 'Require a photo proof before this chore can be marked done.',
+    proofOptional: 'Optional',
+    proofRequired: 'Required',
     startDate: 'Starting',
     assignedTo: 'Assigned to (empty = up for grabs)',
     addChore: 'Add chore',
@@ -747,6 +793,18 @@ export const en: Dict = {
       manage_purchases: 'Mark purchases',
     },
   },
+  proofs: {
+    title: 'Completion photos',
+    addPhoto: 'Add photo',
+    addPhotoToFinish: 'Add a photo to finish',
+    finish: 'Done',
+    requiredHint: 'This chore needs at least one photo to be marked complete.',
+    captureError: 'The photo could not be saved — try again.',
+    loadError: 'Photos could not be loaded.',
+    photoAlt: 'Completion photo',
+    offlinePlaceholder: 'Available when online',
+    deleteAria: 'Remove photo',
+  },
   ops: {
     routines: 'Routines',
     routinesHint: 'Buckets that organize chores — they never schedule anything themselves.',
@@ -772,6 +830,7 @@ export const en: Dict = {
     addItem: 'Add item',
     bought: 'Bought ({{count}})',
     shoppingEmptyHint: 'Running low on something? Add it here.',
+    reminderCreatedToast: 'Reminder set.',
     newSupply: 'New supply',
     newRoutine: 'New routine',
     organizationalOnly: 'Organizational only',
@@ -800,6 +859,9 @@ export const en: Dict = {
     personAdded: '{{name}} joined the household.',
     responsibilityCreated: '{{title}} added.',
     itemPurchased: '{{title}} bought.',
+    reminderCreated: 'Restock reminder for {{name}} set.',
+    reminderPaused: 'Restock reminder for {{name}} paused.',
+    reminderArchived: 'Restock reminder for {{name}} archived.',
   },
   notify: {
     title: 'Notifications',
@@ -807,6 +869,7 @@ export const en: Dict = {
     readAll: 'Read all',
     whatToReceive: 'What to receive',
     reminderDigest: '{{count}} due today — tap to open chores.',
+    recurringDue: 'Time to buy {{itemName}} — like usual.',
     completionRecorded: '{{title}} completed.',
     missedDetected: '{{title}} was missed.',
     backupNudge: 'Back up {{name}} — save a copy.',
@@ -959,6 +1022,27 @@ export const en: Dict = {
     cycleFacts: 'Usually lasts about {{days}} · ran low {{cycles}}×',
     outFacts: 'Ran out {{out30}}× in the last month · {{out90}}× in 3 months',
     noFactsYet: 'Facts appear as you track it over time.',
+    reminders: 'Restock reminders',
+    cadenceWeekly: '↻ every week',
+    cadenceBiweekly: '↻ every 2 weeks',
+    cadenceMonthly: '↻ monthly',
+    cadenceCustom: '↻ every {{days}} days',
+    reminderDue: 'due today',
+    reminderOverdue: '{{days}} days overdue',
+    reminderOnList: 'on the list',
+    reminderSnoozed: 'snoozed — we will nudge later',
+    addToShopping: 'Add to list',
+    notNow: 'Not now',
+    notNowAria: 'Snooze the reminder for {{name}}',
+    pause: 'Pause',
+    resume: 'Resume',
+    archiveAria: 'Archive the reminder for {{name}}',
+    suggestLine: '{{name}} runs out about every {{every}} — remind you?',
+    suggestHint: 'Based on how your household actually uses it.',
+    suggestAccept: 'Every {{every}}',
+    suggestChange: 'Change',
+    suggestNever: "Don't suggest again",
+    customDaysAria: 'Custom number of days',
   },
   family: {
     title: 'Family',
@@ -1129,6 +1213,10 @@ export const am: Dict = {
     range: 'ዕለት በዕለት እስከ…',
     dates: 'በተመረጡ ቀናት',
     icon: 'ምልክት',
+    proofMode: 'የማጠናቀቂያ ፎቶ',
+    proofModeHint: 'ይህ ሥራ ሳይጨረስ ከሚመዘገብ በፊት የፎቶ ማረጋገጫ ግዴታ ያድርጉ።',
+    proofOptional: 'አማራጭ',
+    proofRequired: 'ግዴታ',
     startDate: 'የሚጀምርበት',
     assignedTo: 'ለማን (ባዶ = ለሁሉም ክፍት)',
     addChore: 'ሥራ ጨምር',
@@ -1258,6 +1346,18 @@ export const am: Dict = {
       manage_purchases: 'ግዢያ መጨረስ',
     },
   },
+  proofs: {
+    title: 'የማጠናቀቂያ ፎቶዎች',
+    addPhoto: 'ፎቶ ጨምር',
+    addPhotoToFinish: 'ለማጠናቀቅ ፎቶ ጨምር',
+    finish: 'ተጠናቋል',
+    requiredHint: 'ይህ ሥራ ለመጨረስ ቢያንስ አንድ ፎቶ ያስፈልገዋል።',
+    captureError: 'ፎቶው ሊቀመጥ አልቻለም — እንደገና ይሞክሩ።',
+    loadError: 'ፎቶዎቹ ሊጫኑ አልቻሉም።',
+    photoAlt: 'የማጠናቀቂያ ፎቶ',
+    offlinePlaceholder: 'ከመስመር ላይ ሲገባ ይታያል',
+    deleteAria: 'ፎቶውን አስወግድ',
+  },
   ops: {
     routines: 'ሥርዓቶች',
     routinesHint: 'ሥራዎችን የሚያደራጁ መያዣዎች — እነርሱ ራሳቸው ምንም አይያዙም።',
@@ -1283,6 +1383,7 @@ export const am: Dict = {
     addItem: 'ዕቃ ጨምር',
     bought: 'የተገዛ ({{count}})',
     shoppingEmptyHint: 'የሚቀንስ ነገር አለ? እዚህ ይጨምሩ።',
+    reminderCreatedToast: 'ማስታወሻ ተያይዟል።',
     newSupply: 'አዲስ ቁሳቁስ',
     newRoutine: 'አዲስ ሥርዓት',
     organizationalOnly: 'ለማደራጀት ብቻ',
@@ -1311,6 +1412,9 @@ export const am: Dict = {
     personAdded: '{{name}} ወደ ቤተሰቡ ተቀላቅሏል።',
     responsibilityCreated: '{{title}} ተጨምሯል።',
     itemPurchased: '{{title}} ተገዝቷል።',
+    reminderCreated: 'ለ{{name}} የእንደገና ግዢ ማስታወሻ ተያይዟል።',
+    reminderPaused: 'ለ{{name}} የእንደገና ግዢ ማስታወሻ ቆሟል።',
+    reminderArchived: 'ለ{{name}} የእንደገና ግዢ ማስታወሻ ተወግዷል።',
   },
   notify: {
     title: 'ማሳወቂያዎች',
@@ -1318,6 +1422,7 @@ export const am: Dict = {
     readAll: 'ሁሉንም አንብብ',
     whatToReceive: 'ምን እንደሚደርስዎ',
     reminderDigest: '{{count}} ዛሬ የሚጠበቁ — ለመክፈት ይንኩ።',
+    recurringDue: 'የ{{itemName}} ግዢ ጊዜ ደርሷል — እንደ ልማዳቸው።',
     completionRecorded: '{{title}} ተጠናቋል።',
     missedDetected: '{{title}} ተረስኗል።',
     backupNudge: '{{name}} ን ያስቀምጡ — ቅጂ ይቆጥቡ።',
@@ -1465,6 +1570,27 @@ export const am: Dict = {
     cycleFacts: 'በአሂዝ ወደ {{days}} ይቆያል · {{cycles}} ጊዜ አልቧል',
     outFacts: 'ባለፈው ወር {{out30}} ጊዜ · በ3 ወር ውስጥ {{out90}} ጊዜ አልቧል',
     noFactsYet: 'በጊዜ ሂደት ስትከታተሉት መረጃዎች ይታያሉ።',
+    reminders: 'የእንደገና ግዢ ማስታወሻዎች',
+    cadenceWeekly: '↻ በየሳምንቱ',
+    cadenceBiweekly: '↻ በየ2 ሳምንቱ',
+    cadenceMonthly: '↻ በየወሩ',
+    cadenceCustom: '↻ በየ{{days}} ቀኑ',
+    reminderDue: 'ዛሬ ደርሷል',
+    reminderOverdue: 'በ{{days}} ቀን ዘግይቷል',
+    reminderOnList: 'በዝርዝሩ ላይ ነው',
+    reminderSnoozed: 'ተራዝሟል — በኋላ እናሳውቃለን',
+    addToShopping: 'ወደ ዝርዝር ጨምር',
+    notNow: 'አሁን አይደለም',
+    notNowAria: 'የ{{name}} ማስታወሻ አራዝም',
+    pause: 'አቁም',
+    resume: 'ቀጥል',
+    archiveAria: 'የ{{name}} ማስታወሻ አስወግድ',
+    suggestLine: '{{name}} በአሂዝ ወደ {{every}} ይበቃል — እናስታውስልዎ?',
+    suggestHint: 'ቤተሰብዎ በእውነቱ እንዴት እንደሚጠቀምበት ነው።',
+    suggestAccept: 'በየ{{every}}',
+    suggestChange: 'ቀይር',
+    suggestNever: 'እንደገና አትጠቀምብኝ',
+    customDaysAria: 'ብጁ የቀናት ብዛት',
   },
   family: {
     title: 'ቤተሰብ',

@@ -35,7 +35,14 @@ export type OccurrenceAction =
   | { action: 'reassign'; personIds: string[] };
 
 export type ResponsibilityDetail = {
-  responsibility: { id: string; title: string; notes: string | null; icon: string; routineId: string | null };
+  responsibility: {
+    id: string;
+    title: string;
+    notes: string | null;
+    icon: string;
+    routineId: string | null;
+    proofMode: 'optional' | 'required';
+  };
   subtasks: Array<{ id: string; title: string; assigneePersonId: string | null }>;
   rules: RuleRecord[];
 };
@@ -45,6 +52,7 @@ export type CreateResponsibilityBody = {
   notes?: string;
   icon?: string;
   routineId?: string | null;
+  proofMode?: 'optional' | 'required';
   subtasks: Array<{ title: string; assigneePersonId?: string | null }>;
   rules: RuleInput[];
 };
