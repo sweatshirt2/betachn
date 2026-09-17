@@ -162,6 +162,30 @@ body {
   animation: chorify-fade-slide-in var(--chorify-motion-base) ease-out both;
 }
 
+/** App-header stickiness (§5.5): the header (profile chip, sync state,
+ * language pill, bell) is the only reach point for both, so it stays
+ * pinned with the same surface wash + blur the bottom nav wears. */
+.app-header-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: color-mix(in srgb, var(--chorify-surface) 80%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/** Main bottom clearance for the fixed FAB + navbar (UI/UX iteration 1):
+ * mobile wears nav (fixed bottom, ~4rem) + FAB above it (~7.5rem total);
+ * wide screens hide the nav and dock the FAB at bottom-8 (~6rem total). */
+.app-main-pad {
+  padding-bottom: calc(7.5rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 64rem) {
+  .app-main-pad {
+    padding-bottom: 6rem;
+  }
+}
+
 /** Staggered list entrance: 30ms/item capped at 10 items (§5.3). Pair with
  * an inline `animation-delay` of `min(index, 9) * 30ms`. */
 .stagger-item {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { householdPreviewResponseSchema, householdPreviewSchema } from './auth.schema';
 import type { RandomSource } from '../../ports';
 import {
   generateUsernameCandidate,
@@ -141,5 +142,30 @@ describe('wire contracts', () => {
     expect(
       linkGoogleSchema.safeParse({ oauthCode: 'x', redirectUri: 'https://e.x/c', currentPassword: 'pw1234' }).success,
     ).toBe(true);
+  });
+
+  it('household-preview takes a code and returns typed faces (D101)', () => {
+    const parsed = householdPreviewSchema.parse({ code: 'bekele' });
+    expect(parsed.code).toBe('BEKELE'); // normalized like login
+
+    const response = householdPreviewResponseSchema.parse({
+      householdId: '123e4567-e89b-12d3-a456-426614174000',
+      householdName: 'Bekele Family',
+      faces: [
+        { personId: '123e4567-e89b-12d3-a456-426614174001', name: 'Hana', avatarEmoji: null, hasPassword: true },
+        { personId: '123e4567-e89b-12d3-a456-426614174002', name: 'Sami', avatarEmoji: '🙂', hasPassword: false },
+      ],
+    });
+    expect(response.faces).toHaveLength(2);
+    expect(response.faces[0]!.hasPassword).toBe(true);
+
+    // A face row missing hasPassword is invalid — the UI branches on it.
+    expect(
+      householdPreviewResponseSchema.safeParse({
+        householdId: '123e4567-e89b-12d3-a456-426614174000',
+        householdName: 'x',
+        faces: [{ personId: '123e4567-e89b-12d3-a456-426614174001', name: 'Hana', avatarEmoji: null }],
+      }).success,
+    ).toBe(false);
   });
 });

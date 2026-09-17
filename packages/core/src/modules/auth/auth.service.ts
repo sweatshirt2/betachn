@@ -1,4 +1,4 @@
-import { and, eq, gt, sql } from 'drizzle-orm';
+import { and, eq, gt, isNotNull, sql } from 'drizzle-orm';
 import {
   oauthAccounts,
   people,
@@ -12,7 +12,14 @@ import { permissionMapForPerson } from '../people';
 import { HouseholdsService } from '../households';
 import { passwordIssues } from './auth.rules';
 import { normalizeUsername } from './auth.helpers';
-import type { LinkGoogleInput, LoginInput, RegisterOnlineInput, SwitchProfileInput } from './auth.schema';
+import type {
+  HouseholdPreviewInput,
+  HouseholdPreviewResponse,
+  LinkGoogleInput,
+  LoginInput,
+  RegisterOnlineInput,
+  SwitchProfileInput,
+} from './auth.schema';
 import type { AuthenticatedContext, SessionSnapshot } from './auth.types';
 import { z } from 'zod';
 
@@ -162,6 +169,37 @@ export class AuthService {
       const created = insertedUserRow.parse(user);
       return this.mintSessionTx(tx, created.id, created.personId, household.id);
     });
+  }
+
+  /**
+   * D101 step-down login, step 1: code → face grid. Uniform NOT_FOUND when
+   * the code is unknown — same enumeration-resistance contract as login
+   * (D66). Faces list every household person; hasPassword flags those whose
+   * user row carries a password so the UI can pre-demand it.
+   */
+  async householdPreview(input: HouseholdPreviewInput): Promise<HouseholdPreviewResponse> {
+    const household = await this.householdsService.findByCode(input.code);
+    if (!household) throw new AppError('NOT_FOUND', 'Household code, username or password is incorrect');
+    const rows = (await this.uow.exec.query.people!.findMany({
+      where: eq(people.householdId, household.id),
+      columns: { id: true, name: true, avatarEmoji: true, createdAt: true },
+    })) as unknown as Array<{ id: string; name: string; avatarEmoji: string | null; createdAt: Date }>;
+    rows.sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+    const credentialed = (await this.uow.exec.query.users!.findMany({
+      where: and(eq(users.householdId, household.id), isNotNull(users.passwordHash)),
+      columns: { personId: true },
+    })) as unknown as Array<{ personId: string | null }>;
+    const withPassword = new Set(credentialed.map((u) => u.personId).filter((id): id is string => id !== null));
+    return {
+      householdId: household.id,
+      householdName: household.name,
+      faces: rows.map((p) => ({
+        personId: String(p.id),
+        name: String(p.name),
+        avatarEmoji: p.avatarEmoji,
+        hasPassword: withPassword.has(String(p.id)),
+      })),
+    };
   }
 
   async login(input: LoginInput): Promise<IssuedSession> {
