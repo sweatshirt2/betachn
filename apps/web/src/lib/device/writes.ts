@@ -171,6 +171,7 @@ export async function deviceOccurrenceAct(input: {
     where: eq(schema.responsibilities.id, row.responsibilityId),
   });
   const title = responsibility?.title ?? 'Chore';
+  const icon = responsibility?.icon ?? null;
 
   const transition: TransitionInput & { completedAt: Date | null } = {
     status: row.status,
@@ -263,6 +264,7 @@ export async function deviceOccurrenceAct(input: {
     status: after?.status ?? row.status,
     completedByPersonId: after?.completedByPersonId ?? null,
     title,
+    icon,
   };
 }
 
@@ -298,7 +300,7 @@ export async function deviceCreateResponsibility(input: {
     title: input.title,
     notes: input.notes ?? null,
     routineId: input.routineId ?? null,
-    icon: input.icon ?? '📌',
+    icon: input.icon ?? 'pin',
     createdByPersonId: actorPersonId,
     createdAt: now,
   });
@@ -357,7 +359,7 @@ export async function deviceCreateResponsibility(input: {
       title: input.title,
       notes: input.notes ?? null,
       routineId: input.routineId ?? null,
-      icon: input.icon ?? '📌',
+      icon: input.icon ?? 'pin',
       createdByPersonId: actorPersonId,
       archivedAt: null,
       roomId: null,
@@ -817,7 +819,7 @@ export async function deviceCreateRoutine(input: {
     id,
     householdId: input.householdId,
     name: input.name,
-    icon: '🌅',
+    icon: 'sun',
     timeBucket: 'anytime',
     createdAt: now,
   });
@@ -830,13 +832,13 @@ export async function deviceCreateRoutine(input: {
       id,
       householdId: input.householdId,
       name: input.name,
-      icon: '🌅',
+      icon: 'sun',
       timeBucket: 'anytime',
       createdAt: now,
     },
     domain: 'responsibilities',
   });
-  return { id, name: input.name, icon: '🌅', timeBucket: 'anytime' };
+  return { id, name: input.name, icon: 'sun', timeBucket: 'anytime' };
 }
 
 export async function deviceDeleteRoutine(input: {
@@ -883,7 +885,7 @@ export async function deviceCreateRoom(input: {
     id,
     householdId: input.householdId,
     name: input.name,
-    icon: '🏠',
+    icon: 'door',
     createdAt: now,
   });
   await emitActivity(db, input.householdId, input.actorPersonId, 'room.added', { name: input.name });
@@ -891,10 +893,10 @@ export async function deviceCreateRoom(input: {
     entity: 'rooms',
     entityId: id,
     op: 'create',
-    payload: { id, householdId: input.householdId, name: input.name, icon: '🏠', createdAt: now },
+    payload: { id, householdId: input.householdId, name: input.name, icon: 'door', createdAt: now },
     domain: 'home',
   });
-  return { id, name: input.name, icon: '🏠' };
+  return { id, name: input.name, icon: 'door' };
 }
 
 export async function deviceCreateAsset(input: {
@@ -911,7 +913,7 @@ export async function deviceCreateAsset(input: {
     householdId: input.householdId,
     roomId: input.roomId ?? null,
     name: input.name,
-    icon: '🔧',
+    icon: 'wrench',
     maintenanceIntervalDays: null,
     createdAt: now,
   });
@@ -925,13 +927,13 @@ export async function deviceCreateAsset(input: {
       householdId: input.householdId,
       roomId: input.roomId ?? null,
       name: input.name,
-      icon: '🔧',
+      icon: 'wrench',
       maintenanceIntervalDays: null,
       createdAt: now,
     },
     domain: 'home',
   });
-  return { id, name: input.name, icon: '🔧', roomId: input.roomId ?? null, maintenanceIntervalDays: null };
+  return { id, name: input.name, icon: 'wrench', roomId: input.roomId ?? null, maintenanceIntervalDays: null };
 }
 
 export async function deviceLogService(input: {

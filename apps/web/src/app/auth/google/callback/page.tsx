@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Card } from '@/components/ui';
+import { Button, Card, Glyph } from '@/components/ui';
 import { useGoogleLogin } from '@/features/auth';
 
 /**
@@ -36,7 +36,7 @@ export default function GoogleCallbackPage() {
     return (
       <main className="mx-auto flex min-h-[70vh] w-full max-w-sm flex-col justify-center px-4">
         <Card className="flex flex-col items-center gap-3 p-6 text-center">
-          <p className="text-2xl" aria-hidden>😕</p>
+          <Glyph name="cloud" className="text-muted h-9 w-9" aria-hidden />
           <p className="text-sm">{t('auth.googleFailed')}</p>
           <Button onClick={() => router.push('/login')}>{t('auth.backToLogin')}</Button>
         </Card>

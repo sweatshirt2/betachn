@@ -30,7 +30,17 @@ const HH = 'hh1';
 const TZ = 'Africa/Addis_Ababa';
 
 function isoDay(offsetDays: number): string {
-  const d = new Date();
+  // Resolve the BASE day in the job's timezone (Africa/Addis_Ababa), not the
+  // machine clock's UTC — otherwise running this suite between 21:00 UTC
+  // (Addis midnight) and 00:00 UTC makes isoDay(0) land "yesterday" and the
+  // sweep/digest expectations flip. The offset is still applied in UTC days.
+  const today = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Africa/Addis_Ababa',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+  const d = new Date(`${today}T12:00:00Z`); // noon UTC is safe: never straddles a day boundary in either tz
   d.setUTCDate(d.getUTCDate() + offsetDays);
   return d.toISOString().slice(0, 10);
 }

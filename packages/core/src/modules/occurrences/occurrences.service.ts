@@ -106,13 +106,17 @@ export class OccurrencesService {
     const rows = await this.uow.exec.query.occurrences!.findMany({
       where: and(...conditions),
       orderBy: [occurrences.dueDate],
-      with: { responsibility: { columns: { title: true } } },
+      with: { responsibility: { columns: { title: true, icon: true } } },
     });
     let records = rows.map((row) => {
       const { responsibility, ...rest } = row as typeof row & {
-        responsibility: { title: string } | undefined;
+        responsibility: { title: string; icon: string | null } | undefined;
       };
-      return titledOccurrenceSchema.parse({ ...rest, title: responsibility?.title ?? '' });
+      return titledOccurrenceSchema.parse({
+        ...rest,
+        title: responsibility?.title ?? '',
+        icon: responsibility?.icon ?? null,
+      });
     });
     if (opts.status) records = records.filter((r) => r.status === opts.status);
     if (opts.personId) records = records.filter((r) => r.personIds.includes(opts.personId!));

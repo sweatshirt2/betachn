@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { use, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, ChoreCheck, EmptyState, Sheet, Skeleton } from '@/components/ui';
+import { Button, Card, ChoreCheck, EmptyState, Glyph, Sheet, Skeleton, storedIconGlyph } from '@/components/ui';
 import { useOccurrenceAct, useOccurrences, useResponsibility, usePeopleMap } from '@/features/chores';
 import { ProofSheet } from '@/features/chores/components/ProofSheet';
 import type { RootState } from '@/store';
@@ -102,10 +102,10 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
       <div className="bg-card-wash border-line shadow-soft mt-2 flex items-center gap-4 rounded-lg border p-4">
         <span
           aria-hidden
-          className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[34%] text-2xl"
+          className="text-ink flex h-14 w-14 shrink-0 items-center justify-center rounded-[34%]"
           style={{ background: 'var(--chorify-crayon-2)' }}
         >
-          {responsibility.icon}
+          <Glyph name={storedIconGlyph(responsibility.icon, responsibility.title)} className="h-7 w-7" />
         </span>
         <div className="min-w-0 flex-1">
           <h1 className="font-display truncate text-2xl">{responsibility.title}</h1>
@@ -165,7 +165,11 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
                     : t('chores.statusMissed', { date: o.dueDate });
               return (
                 <div key={o.id} className="text-muted flex items-center gap-2 py-0.5 text-sm">
-                  <span aria-hidden>{o.status === 'completed' ? '✓' : o.status === 'skipped' ? '⤼' : '✕'}</span>
+                  <Glyph
+                    name={o.status === 'completed' ? 'check-circle' : o.status === 'skipped' ? 'skip' : 'close'}
+                    className="h-3.5 w-3.5 shrink-0"
+                    aria-hidden
+                  />
                   <span className="flex-1 truncate">{label}{taker}</span>
                 </div>
               );

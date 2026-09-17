@@ -23,7 +23,7 @@ export const routines = pgTable(
       .notNull()
       .references(() => households.id),
     name: text('name').notNull(),
-    icon: text('icon').notNull().default('🌅'),
+    icon: text('icon').notNull().default('sun'),
     timeBucket: text('time_bucket')
       .$type<'morning' | 'afternoon' | 'evening' | 'anytime'>()
       .notNull()
@@ -46,7 +46,7 @@ export const responsibilities = pgTable(
     roomId: uuid('room_id').references(() => rooms.id),
     archivedAt: timestamp('archived_at', { withTimezone: true }),
     createdByPersonId: uuid('created_by_person_id').references(() => people.id),
-    icon: text('icon').notNull().default('📌'),
+    icon: text('icon').notNull().default('pin'),
     /** §4A.2/D107: required ⇒ completion blocks until ≥1 proof exists. */
     proofMode: text('proof_mode').$type<'optional' | 'required'>().notNull().default('optional'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

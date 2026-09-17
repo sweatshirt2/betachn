@@ -168,8 +168,8 @@ async function main(): Promise<void> {
   const roomRows = await db
     .insert(rooms)
     .values([
-      { householdId: household.id, name: 'Kitchen', icon: '🍳' },
-      { householdId: household.id, name: 'Living Room', icon: '🛋️' },
+      { householdId: household.id, name: 'Kitchen', icon: 'cooking' },
+      { householdId: household.id, name: 'Living Room', icon: 'door' },
     ])
     .returning();
   const kitchen = roomRows.find((r) => r.name === 'Kitchen');
@@ -180,7 +180,7 @@ async function main(): Promise<void> {
       householdId: household.id,
       roomId: kitchen?.id ?? null,
       name: 'Washing Machine',
-      icon: '🌀',
+      icon: 'repeat',
       maintenanceIntervalDays: 60,
     })
     .returning();
@@ -198,20 +198,20 @@ async function main(): Promise<void> {
       {
         householdId: household.id,
         title: 'Laundry',
-        icon: '🧺',
+        icon: 'basket',
         roomId: null,
         createdByPersonId: hana.id,
       },
       {
         householdId: household.id,
         title: 'Trash',
-        icon: '🗑️',
+        icon: 'trash',
         createdByPersonId: hana.id,
       },
       {
         householdId: household.id,
         title: 'Dishes',
-        icon: '🍽️',
+        icon: 'dishes',
         roomId: kitchen?.id ?? null,
         createdByPersonId: hana.id,
       },

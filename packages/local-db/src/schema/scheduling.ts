@@ -9,7 +9,7 @@ export const routines = sqliteTable('routines', {
     .notNull()
     .references(() => households.id),
   name: text('name').notNull(),
-  icon: text('icon').notNull().default('🌅'),
+  icon: text('icon').notNull().default('sun'),
   timeBucket: text('time_bucket', { enum: ['morning', 'afternoon', 'evening', 'anytime'] })
     .notNull()
     .default('anytime'),
@@ -27,7 +27,7 @@ export const responsibilities = sqliteTable('responsibilities', {
   roomId: text('room_id').references(() => rooms.id),
   archivedAt: text('archived_at'),
   createdByPersonId: text('created_by_person_id').references(() => people.id),
-  icon: text('icon').notNull().default('📌'),
+  icon: text('icon').notNull().default('pin'),
   /** §4A.2/D107 mirror — required ⇒ completion blocks until ≥1 proof. */
   proofMode: text('proof_mode').notNull().default('optional'),
   createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),

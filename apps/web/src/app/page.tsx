@@ -1,9 +1,33 @@
 'use client';
 
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Chip, ChoreCheck, EmptyState, SectionWatermark, Skeleton, SwipeCard, TaskActionRow, TaskUpcomingRow, crayon } from '@/components/ui';
+import {
+  Button,
+  Card,
+  Chip,
+  ChoreCheck,
+  EmptyState,
+  Glyph,
+  GlyphTile,
+  SectionWatermark,
+  Skeleton,
+  SwipeCard,
+  TaskActionRow,
+  TaskMissedRow,
+  TaskUpcomingRow,
+  storedIconGlyph,
+  supplyGlyph,
+  crayon,
+} from '@/components/ui';
 import { useOccurrenceAct, useToday, usePeopleMap, type TitledOccurrence } from '@/features/chores';
 import { formatDate } from '@/lib/dates';
+
+/** Whole days an occurrence is past due (missed-in-grace rows). */
+function daysLate(dueDate: string): number {
+  const due = new Date(`${dueDate}T00:00:00Z`).getTime();
+  const now = Date.now();
+  return Math.max(1, Math.floor((now - due) / 86_400_000));
+}
 
 export default function TodayPage() {
   const { t } = useTranslation();
@@ -35,6 +59,7 @@ export default function TodayPage() {
   }
 
   const data = today.data;
+  const todayIso = new Date().toISOString().slice(0, 10);
   const assigneeLabel = (o: TitledOccurrence) => {
     if (o.personIds.length === 0) return t('today.upForGrabs');
     return o.personIds.map((id) => names.get(id) ?? '…').join(', ');
@@ -63,6 +88,7 @@ export default function TodayPage() {
                   accent={crayon(index)}
                   title={o.title}
                   meta={assigneeLabel(o)}
+                  glyph={storedIconGlyph(o.icon, o.title)}
                   people={assigneePeople(o)}
                   action={
                     <ChoreCheck
@@ -81,22 +107,44 @@ export default function TodayPage() {
 
       {data.missedInGrace.length > 0 && (
         <section aria-label={t('today.missedRecently')} className="mt-6">
-          <p className="text-muted text-sm">
-            {t('today.missedRecently')} · <span className="text-clay-red font-bold">{data.missedInGrace.length}</span>
-          </p>
-          <div className="mt-2 flex flex-col gap-2 opacity-80">
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-display text-xl">{t('today.missedRecently')}</h2>
+            <Chip tone="danger">{data.missedInGrace.length}</Chip>
+          </div>
+          <p className="text-muted mt-0.5 text-xs font-semibold">{t('today.missedHint')}</p>
+          <div className="mt-2 flex flex-col gap-2.5">
             {data.missedInGrace.map((o, index) => (
               <SwipeCard key={o.id} onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}>
-                <TaskActionRow
+                <TaskMissedRow
                   className="stagger-item"
                   style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}
                   title={o.title}
-                  meta={formatDate(o.dueDate)}
-                  overdue
+                  meta={assigneeLabel(o)}
+                  glyph={storedIconGlyph(o.icon, o.title)}
+                  chip={
+                    <span
+                      className="text-ink/80 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                      style={{ background: 'var(--chorify-danger-soft)' }}
+                      title={formatDate(o.dueDate)}
+                    >
+                      {t('today.daysLate', { count: daysLate(o.dueDate) })}
+                    </span>
+                  }
                   people={assigneePeople(o)}
+                  secondaryAction={
+                    <Button
+                      tone="quiet"
+                      className="h-10 w-10 !px-0"
+                      disabled={act.isPending}
+                      onClick={() => act.mutate({ id: o.id, action: 'skip' })}
+                      aria-label={t('today.skipAria', { title: o.title })}
+                    >
+                      <Glyph name="skip" className="h-4.5 w-4.5" aria-hidden />
+                    </Button>
+                  }
                   action={
                     <ChoreCheck
-                      done={o.status === 'completed'}
+                      done={false}
                       disabled={act.isPending}
                       onClick={() => act.mutate({ id: o.id, action: 'complete' })}
                       label={t('chores.completeAria', { title: o.title })}
@@ -112,17 +160,30 @@ export default function TodayPage() {
       {(data.lowSupplies.length > 0 || data.maintenanceDue.length > 0) && (
         <section aria-label={t('today.attention')} className="mt-6">
           <h2 className="font-display text-xl">{t('today.attention')}</h2>
-          <div className="mt-2 flex flex-col gap-2">
-            {data.lowSupplies.map((s) => (
-              <Card key={s.id} className="lift-hover flex items-center gap-3.5 py-3">
-                <p className="flex-1 text-sm font-semibold">{s.name}</p>
-                <Chip tone="warning">{s.state === 'out' ? t('ops.supplyOut') : t('ops.supplyLow')}</Chip>
+          <div className="mt-2 flex flex-col gap-2.5">
+            {data.lowSupplies.map((s, index) => (
+              <Card key={s.id} className="lift-hover flex items-center gap-3 px-3 py-2.5">
+                <GlyphTile glyph={supplyGlyph(s.name)} wash="var(--chorify-danger-soft)" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold">{s.name}</p>
+                  <p className="text-muted mt-0.5 text-xs font-semibold">
+                    {s.state === 'out' ? t('ops.supplyOutHint') : t('ops.supplyLowHint')}
+                  </p>
+                </div>
+                <Chip tone={s.state === 'out' ? 'danger' : 'warning'}>
+                  {s.state === 'out' ? t('ops.supplyOut') : t('ops.supplyLow')}
+                </Chip>
+                <span className="shrink-0" aria-hidden style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }} />
               </Card>
             ))}
             {data.maintenanceDue.map((m) => (
-              <Card key={m.assetId} className="lift-hover flex items-center gap-3.5 py-3">
-                <p className="flex-1 text-sm font-semibold">{m.assetName}</p>
-                <Chip tone="info">{t('ops.dueDate', { date: formatDate(m.nextDue) })}</Chip>
+              <Card key={m.assetId} className="lift-hover flex items-center gap-3 px-3 py-2.5">
+                <GlyphTile glyph="wrench" wash="var(--chorify-primary-soft)" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold">{m.assetName}</p>
+                  <p className="text-muted mt-0.5 text-xs font-semibold">{t('ops.maintenanceHint')}</p>
+                </div>
+                <Chip tone="info">{formatDate(m.nextDue)}</Chip>
               </Card>
             ))}
           </div>
@@ -140,6 +201,9 @@ export default function TodayPage() {
                 style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}
                 title={o.title}
                 meta={formatDate(o.dueDate)}
+                glyph={storedIconGlyph(o.icon, o.title)}
+                crayonIndex={index + 1}
+                people={assigneePeople(o)}
               />
             ))}
           </div>

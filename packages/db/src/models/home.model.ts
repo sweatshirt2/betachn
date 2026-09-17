@@ -17,7 +17,7 @@ export const rooms = pgTable(
       .notNull()
       .references(() => households.id),
     name: text('name').notNull(),
-    icon: text('icon').notNull().default('🏠'),
+    icon: text('icon').notNull().default('door'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('rooms_household_id_idx').on(t.householdId)],
@@ -32,7 +32,7 @@ export const assets = pgTable(
       .references(() => households.id),
     roomId: uuid('room_id').references((): AnyPgColumn => rooms.id),
     name: text('name').notNull(),
-    icon: text('icon').notNull().default('🔧'),
+    icon: text('icon').notNull().default('wrench'),
     maintenanceIntervalDays: integer('maintenance_interval_days'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },

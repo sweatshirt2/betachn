@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Field } from '@/components/ui';
+import { Button, Card, Field, Glyph, type GlyphName } from '@/components/ui';
 import { useCreateResponsibility, usePeopleMap } from '@/features/chores';
 import {
   buildRuleInput,
@@ -30,7 +30,8 @@ const PATTERN_OPTIONS: ComposerPattern[] = [
   'range',
 ];
 
-const ICONS = ['📌', '🧺', '🍳', '🗑️', '🧹', '🪴', '🛒', '💧'] as const;
+/** Chore icon choices — glyph keys now, intuitive at a glance (§8: no emoji chrome). */
+const ICONS: GlyphName[] = ['pin', 'basket', 'cooking', 'trash', 'cleaning', 'plant', 'cart', 'water'];
 
 function defaultRule(today: string): ComposerRule {
   return {
@@ -58,7 +59,7 @@ export default function NewChorePage() {
 
   // Assign-again prefill (CN micro-29): /chores/new?title=…&icon=…&pattern=once&start=…
   const prefillTitle = params.get('title') ?? '';
-  const prefillIcon = params.get('icon') ?? '📌';
+  const prefillIcon = params.get('icon') ?? 'pin';
   const prefillPattern = params.get('pattern');
   const prefillStart = params.get('start');
 
@@ -161,16 +162,17 @@ export default function NewChorePage() {
 
           <fieldset>
             <legend className="text-sm font-semibold">{t('chores.icon')}</legend>
-            <div className="mt-1 flex flex-wrap gap-1">
-              {ICONS.map((emoji) => (
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {ICONS.map((glyph) => (
                 <button
-                  key={emoji}
+                  key={glyph}
                   type="button"
-                  onClick={() => setIcon(emoji)}
-                  aria-pressed={icon === emoji}
-                  className={`tap-spring rounded-md px-2 py-1 text-xl transition-colors ${icon === emoji ? 'border-terracotta bg-accent-wash shadow-soft border' : 'border-line bg-surface border'}`}
+                  onClick={() => setIcon(glyph)}
+                  aria-pressed={icon === glyph}
+                  aria-label={glyph}
+                  className={`tap-spring text-ink flex h-10 w-10 items-center justify-center rounded-md transition-colors ${icon === glyph ? 'border-terracotta bg-accent-wash shadow-soft border' : 'border-line bg-surface border'}`}
                 >
-                  {emoji}
+                  <Glyph name={glyph} className="h-5 w-5" aria-hidden />
                 </button>
               ))}
             </div>

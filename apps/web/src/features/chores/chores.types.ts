@@ -11,6 +11,8 @@ export type TitledOccurrence = {
   status: OccurrenceStatus;
   completedByPersonId: string | null;
   title: string;
+  /** Responsibility icon (legacy emoji or glyph key) for tile rendering. */
+  icon: string | null;
 };
 
 export type SupplyPayload = { id: string; name: string; state: string };

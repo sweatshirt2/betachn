@@ -50,6 +50,13 @@
       "when": 1789670021209,
       "tag": "0006_daffy_rage",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1789679075743,
+      "tag": "0007_even_nighthawk",
+      "breakpoints": true
     }
   ]
 }

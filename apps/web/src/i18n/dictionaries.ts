@@ -91,6 +91,9 @@ export type Dict = {
     comingUp: string;
     completedWeek: string;
     upForGrabs: string;
+    missedHint: string;
+    daysLate: string;
+    skipAria: string;
   };
   chores: {
     title: string;
@@ -275,6 +278,9 @@ export type Dict = {
     supplyAvailable: string;
     supplyLow: string;
     supplyOut: string;
+    supplyLowHint: string;
+    supplyOutHint: string;
+    maintenanceHint: string;
     dueDate: string;
     buy: string;
     buyAria: string;
@@ -637,6 +643,9 @@ export const en: Dict = {
     comingUp: 'Coming up',
     completedWeek: 'responsibilities completed this week.',
     upForGrabs: 'Up for grabs',
+    missedHint: 'Still within the undo window — finish or skip.',
+    daysLate: '{{count}} day late',
+    skipAria: 'Skip {{title}}',
   },
   chores: {
     title: 'Chores',
@@ -824,6 +833,9 @@ export const en: Dict = {
     supplyAvailable: 'Available',
     supplyLow: 'Running low',
     supplyOut: 'Out',
+    supplyLowHint: 'Add it to the shopping list before it runs out.',
+    supplyOutHint: 'Grab it on the next shopping run.',
+    maintenanceHint: 'Regular upkeep keeps it working for years.',
     dueDate: 'Due {{date}}',
     buy: 'Buy',
     buyAria: 'Buy {{name}}',
@@ -1193,6 +1205,9 @@ export const am: Dict = {
     comingUp: 'የሚመጣ',
     completedWeek: 'ኃላፊነቶች በዚህ ሳምንት ተጠናቀዋል።',
     upForGrabs: 'ለሁሉም ክፍት',
+    missedHint: 'እስከ አሁን መመለስ ይቻላል — ይጨርሱት ወይም ይዝለሉት።',
+    daysLate: 'በ{{count}} ቀን ዘግይቷል',
+    skipAria: '{{title}} ይዝለሉ',
   },
   chores: {
     title: 'ሥራዎች',
@@ -1377,6 +1392,9 @@ export const am: Dict = {
     supplyAvailable: 'አለ',
     supplyLow: 'በመቀነስ ላይ',
     supplyOut: 'አልቋል',
+    supplyLowHint: 'ከመበታተኑ በፊት ወደ ግዢ ዝርዝሩ ይጨምሩት።',
+    supplyOutHint: 'በቀጣዩ ግዢ ጊዜ ያምጡት።',
+    maintenanceHint: 'መደበኛ እንክብካቤ ለዓመታት እንዲሠራ ያቆየዋል።',
     dueDate: 'የሚጠበቅበት {{date}}',
     buy: 'ግዛ',
     buyAria: 'ግዛ፦ {{name}}',

@@ -38,9 +38,11 @@ export type OccurrenceStatus = z.infer<typeof occurrenceStatusSchema>;
 export type OccurrenceRecord = z.infer<typeof occurrenceRowSchema>;
 export type OccurrenceAction = z.infer<typeof occurrenceActionSchema>;
 
-/** List wire shape (§4.14): occurrence row + responsibility title join. */
+/** List wire shape (§4.14): occurrence row + responsibility title/icon join. */
 export const titledOccurrenceSchema = occurrenceRowSchema.extend({
   title: z.string().min(1),
+  /** Responsibility icon (legacy emoji or glyph key) — clients render a tile. */
+  icon: z.string().nullable(),
 });
 export type TitledOccurrenceRecord = z.infer<typeof titledOccurrenceSchema>;
 
