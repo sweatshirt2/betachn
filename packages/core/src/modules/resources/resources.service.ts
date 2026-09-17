@@ -1,4 +1,5 @@
 import { and, desc, eq } from 'drizzle-orm';
+import { computeSupplyCycleStats, suggestibleCycle } from './resources.rules';
 import {
   activityEvents,
   recurringShoppingItems,
@@ -444,6 +445,79 @@ export class ResourcesService {
     await tx.update(recurringShoppingItems)
       .set({ lastPurchaseAt: purchasedAt, updatedAt: this.clock.now() })
       .where(eq(recurringShoppingItems.id, match.id));
+  }
+
+  /**
+   * D108 suggestion pick — pure evaluation server-side: the ONE supply with
+   * ≥2 completed cycles, sane average, no active reminder and no synced
+   * dismissal wins (highest cycle count). Supply events are read per
+   * candidate; households with few supplies make this cheap.
+   */
+  async suggestRecurringItem(
+    householdId: string,
+  ): Promise<{
+    supplyId: string;
+    name: string;
+    avgCycleDays: number;
+    lastPurchaseAt: string | null;
+  } | null> {
+    const allSupplies = await this.uow.exec.query.supplies!.findMany({
+      where: eq(supplies.householdId, householdId),
+    });
+    if (allSupplies.length === 0) return null;
+    const reminders = await this.uow.exec.query.recurringShoppingItems!.findMany({
+      where: eq(recurringShoppingItems.householdId, householdId),
+    });
+    const active = reminders.filter((r) => r.archivedAt === null);
+    const supplyLinked = new Set(active.map((r) => r.supplyId));
+    const dismissed = new Set(
+      allSupplies
+        .filter((s) => (s as { recurringSuggestionDismissedAt?: Date | null }).recurringSuggestionDismissedAt != null)
+        .map((s) => String(s.id)),
+    );
+    let best: { supplyId: string; name: string; avgCycleDays: number; lastPurchaseAt: string | null; cycles: number } | null =
+      null;
+    for (const supply of allSupplies) {
+      const supplyId = String(supply.id);
+      if (supplyLinked.has(supplyId) || dismissed.has(supplyId)) continue;
+      const events = await this.uow.exec.query.supplyEvents!.findMany({
+        where: and(eq(supplyEvents.householdId, householdId), eq(supplyEvents.supplyId, supplyId)),
+      });
+      const stats = computeSupplyCycleStats(
+        events.map((e) => ({
+          type: (e as { type: 'created' | 'restocked' | 'marked_low' | 'marked_out' }).type,
+          occurredAt: (e as { occurredAt: Date }).occurredAt,
+        })),
+        this.clock.now(),
+      );
+      if (!suggestibleCycle(stats)) continue;
+      if (best === null || stats.cycleCount > best.cycles) {
+        best = {
+          supplyId,
+          name: String(supply.name),
+          avgCycleDays: stats.avgCycleDays ?? 0,
+          lastPurchaseAt: null,
+          cycles: stats.cycleCount,
+        };
+      }
+    }
+    if (best === null) return null;
+    const { cycles: _cycles, ...out } = best;
+    return out;
+  }
+
+  /** D108 "Don't suggest again" — synced dismissal on the supply row. */
+  async dismissRecurringSuggestion(householdId: string, supplyId: string): Promise<void> {
+    const supply = await this.uow.exec.query.supplies!.findFirst({
+      where: eq(supplies.id, supplyId),
+    });
+    if (!supply || supply.householdId !== householdId) {
+      throw new AppError('NOT_FOUND', 'Supply not found');
+    }
+    await this.uow.exec
+      .update(supplies)
+      .set({ recurringSuggestionDismissedAt: this.clock.now() })
+      .where(eq(supplies.id, supplyId));
   }
 
   /** Household-scoped fetch; cross-household ids read as NOT_FOUND (§5.8). */

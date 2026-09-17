@@ -9,6 +9,7 @@ export const supplies = sqliteTable('supplies', {
   name: text('name').notNull(),
   state: text('state', { enum: ['available', 'low', 'out'] }).notNull().default('available'),
   note: text('note'),
+  recurringSuggestionDismissedAt: text('recurring_suggestion_dismissed_at'),
   createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
 });
 

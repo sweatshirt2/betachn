@@ -24,6 +24,7 @@ import {
   useCycleSupply,
   useSupplies,
   RecurringReminderRows,
+  RecurringSuggestionCard,
   SupplyFactsSubline,
   type SupplyState,
 } from '@/features/supplies';
@@ -107,6 +108,7 @@ export default function PantryPage() {
       {/* ── Section 0 · Restock reminders (§4A.4: above supplies) ──────── */}
       <section className="mt-4" aria-label={t('pantry.reminders')}>
         <h2 className="font-display text-lg">{t('pantry.reminders')}</h2>
+        <RecurringSuggestionCard />
         <RecurringReminderRows />
       </section>
 

@@ -22,6 +22,10 @@ export const supplies = pgTable(
     name: text('name').notNull(),
     state: text('state').$type<'available' | 'low' | 'out'>().notNull().default('available'),
     note: text('note'),
+    /** D108 "Don't suggest again" — synced dismissal of the reminder card. */
+    recurringSuggestionDismissedAt: timestamp('recurring_suggestion_dismissed_at', {
+      withTimezone: true,
+    }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('supplies_household_id_idx').on(t.householdId)],

@@ -19,6 +19,12 @@ export type SupplyEventPayload = {
 
 /** Recurring buy reminder wire shape (§4A.3 / D108–D110). */
 export type RecurringStateKind = 'idle' | 'due' | 'snoozed' | 'onList' | 'overdue';
+export type RecurringSuggestionPayload = {
+  supplyId: string;
+  name: string;
+  avgCycleDays: number;
+  lastPurchaseAt: string | null;
+} | null;
 export type RecurringItemPayload = {
   id: string;
   name: string;

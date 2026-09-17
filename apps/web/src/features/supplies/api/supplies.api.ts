@@ -19,6 +19,7 @@ import type { RootState } from '@/store';
 import { suppliesEndpoints } from '../supplies.endpoints';
 import type {
   RecurringItemPayload,
+  RecurringSuggestionPayload,
   SupplyCycleStats,
   SupplyEventPayload,
   SupplyPayload,
@@ -91,6 +92,35 @@ function useInvalidateRecurring() {
     void queryClient.invalidateQueries({ queryKey: ['recurring-items'] });
     void queryClient.invalidateQueries({ queryKey: ['activity'] });
   };
+}
+
+export function useSupplySuggestion() {
+  const mode = useSelector((state: RootState) => state.auth.mode);
+  return useApiQuery<{ suggestion: RecurringSuggestionPayload }>({
+    endpoint: suppliesEndpoints.recurringSuggestion,
+    key: ['recurring-suggestion'] as const,
+    options: {
+      // Device mode has no suggestion surface yet (server computes it from
+      // the full event log); query stays server-only until parity lands.
+      enabled: mode !== 'device',
+    },
+  });
+}
+
+export function useDismissSuggestion() {
+  const queryClient = useQueryClient();
+  const mode = useSelector((state: RootState) => state.auth.mode);
+
+  const onSuccess = () => {
+    void queryClient.invalidateQueries({ queryKey: ['recurring-suggestion'] });
+  };
+
+  // Same wire shape in both modes — the device queues the dismissal like any
+  // op; `forever` collapses to a persistent supplies-row stamp server-side.
+  return useApiMutation<{ ok: boolean }, { supplyId: string; forever?: boolean }>({
+    endpoint: suppliesEndpoints.dismissRecurringSuggestion,
+    options: { onSuccess },
+  });
 }
 
 export function useCreateRecurringItem() {

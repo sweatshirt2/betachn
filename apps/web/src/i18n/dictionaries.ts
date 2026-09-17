@@ -481,6 +481,12 @@ export type Dict = {
     pause: string;
     resume: string;
     archiveAria: string;
+    suggestLine: string;
+    suggestHint: string;
+    suggestAccept: string;
+    suggestChange: string;
+    suggestNever: string;
+    customDaysAria: string;
   };
   family: {
     title: string;
@@ -1031,6 +1037,12 @@ export const en: Dict = {
     pause: 'Pause',
     resume: 'Resume',
     archiveAria: 'Archive the reminder for {{name}}',
+    suggestLine: '{{name}} runs out about every {{every}} — remind you?',
+    suggestHint: 'Based on how your household actually uses it.',
+    suggestAccept: 'Every {{every}}',
+    suggestChange: 'Change',
+    suggestNever: "Don't suggest again",
+    customDaysAria: 'Custom number of days',
   },
   family: {
     title: 'Family',
@@ -1570,9 +1582,15 @@ export const am: Dict = {
     addToShopping: 'ወደ ዝርዝር ጨምር',
     notNow: 'አሁን አይደለም',
     notNowAria: 'የ{{name}} ማስታወሻ አራዝም',
-    pause: 'ኣቁም',
+    pause: 'አቁም',
     resume: 'ቀጥል',
     archiveAria: 'የ{{name}} ማስታወሻ አስወግድ',
+    suggestLine: '{{name}} በአሂዝ ወደ {{every}} ይበቃል — እናስታውስልዎ?',
+    suggestHint: 'ቤተሰብዎ በእውነቱ እንዴት እንደሚጠቀምበት ነው።',
+    suggestAccept: 'በየ{{every}}',
+    suggestChange: 'ቀይር',
+    suggestNever: 'እንደገና አትጠቀምብኝ',
+    customDaysAria: 'ብጁ የቀናት ብዛት',
   },
   family: {
     title: 'ቤተሰብ',

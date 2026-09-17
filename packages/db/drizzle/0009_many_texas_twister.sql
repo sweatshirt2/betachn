@@ -1,0 +1,1 @@
+ALTER TABLE "supplies" ADD COLUMN "recurring_suggestion_dismissed_at" timestamp with time zone;

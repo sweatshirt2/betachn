@@ -1,0 +1,1 @@
+ALTER TABLE `supplies` ADD `recurring_suggestion_dismissed_at` text;

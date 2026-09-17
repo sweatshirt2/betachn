@@ -6,6 +6,8 @@ export const suppliesEndpoints = {
   updateSupply: { method: 'patch', path: '/supplies/:id' },
   supplyEvents: { method: 'get', path: '/supplies/:id/events' },
   recurringItems: { method: 'get', path: '/recurring-shopping-items' },
+  recurringSuggestion: { method: 'get', path: '/recurring-suggestion' },
+  dismissRecurringSuggestion: { method: 'post', path: '/recurring-suggestion' },
   createRecurringItem: { method: 'post', path: '/recurring-shopping-items' },
   updateRecurringItem: { method: 'patch', path: '/recurring-shopping-items/:id' },
   snoozeRecurringItem: { method: 'post', path: '/recurring-shopping-items/:id' },
