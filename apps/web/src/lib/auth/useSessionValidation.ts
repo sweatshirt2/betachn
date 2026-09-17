@@ -47,9 +47,13 @@ export function useSessionValidation(): void {
     }
     if (ranForToken.current === token) return;
     ranForToken.current = token;
+    // NOTE: the axios response interceptor unwraps the {data} envelope, so
+    // this resolves to the AuthenticatedContext object DIRECTLY — wrapping
+    // it in another object here would silently mis-parse and mis-route the
+    // stale-token case into the network-hiccup branch.
     void api
-      .get<never, { context: MeContext }>('/auth/me')
-      .then(({ context }) => {
+      .get<never, MeContext>('/auth/me')
+      .then((context) => {
         dispatch(
           setSession({
             token,
