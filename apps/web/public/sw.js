@@ -2,7 +2,9 @@
 // Navigation is network-first with last-cached-document fallback; hashed
 // static assets and fonts are runtime-cached. Bump CACHE_VERSION on shell
 // changes — clients claim immediately (skipWaiting + clientsClaim).
-const CACHE_VERSION = 'chorify-v1';
+// Bump history: v2 invalidated v1 caches that were cached-shelling the
+// pre-auth-hardening app after session eviction (the 401-loop resurrector).
+const CACHE_VERSION = 'chorify-v2';
 const DOCUMENT_CACHE = `${CACHE_VERSION}-documents`;
 const ASSET_CACHE = `${CACHE_VERSION}-assets`;
 
@@ -38,6 +40,10 @@ self.addEventListener('fetch', (event) => {
         } catch {
           const cache = await caches.open(DOCUMENT_CACHE);
           const cached = await cache.match(request);
+          // Never fall back for un-cached navigations: serving Response.error()
+          // beats a stale document from a DIFFERENT cached page (the old shell
+          // resurrecting against a dead session). Only an exact cached match
+          // for THIS url is a legitimate offline shell.
           return cached ?? Response.error();
         }
       })(),
