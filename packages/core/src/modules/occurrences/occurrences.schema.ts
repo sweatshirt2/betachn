@@ -43,3 +43,23 @@ export const titledOccurrenceSchema = occurrenceRowSchema.extend({
   title: z.string().min(1),
 });
 export type TitledOccurrenceRecord = z.infer<typeof titledOccurrenceSchema>;
+
+/**
+ * Proof photos (§4A.2 / D104–D107) — the wire contract. The blob goes to
+ * POST /uploads (raw image bytes, Content-Type header carries the format);
+ * the returned key is bound to the occurrence via the proof-bind mutation.
+ * Serving is the auth-checked GET /occurrences/:id/proof/:proofId proxy.
+ */
+export const proofBindSchema = z.object({
+  key: z.string().min(1).max(512).regex(/^hh\/[0-9a-fA-F-]+\/proof\/[0-9a-fA-F-]+\/[0-9a-fA-F-]+\.jpg$/),
+});
+export type ProofBindInput = z.infer<typeof proofBindSchema>;
+
+export const occurrenceProofRowSchema = z.object({
+  id: z.string().uuid(),
+  occurrenceId: z.string().uuid(),
+  key: z.string().min(1),
+  uploadedByPersonId: z.string().uuid().nullable(),
+  createdAt: z.date(),
+});
+export type OccurrenceProofRecord = z.infer<typeof occurrenceProofRowSchema>;

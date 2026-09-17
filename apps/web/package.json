@@ -12,6 +12,7 @@
     "wasm": "node scripts/copy-sqlite-wasm.mjs"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1134.0",
     "@chorify/core": "workspace:*",
     "@chorify/db": "workspace:*",
     "@chorify/local-db": "workspace:*",
