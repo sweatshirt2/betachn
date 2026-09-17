@@ -281,6 +281,7 @@ export type Dict = {
     addItem: string;
     bought: string;
     shoppingEmptyHint: string;
+    reminderCreatedToast: string;
     newSupply: string;
     newRoutine: string;
     organizationalOnly: string;
@@ -309,6 +310,9 @@ export type Dict = {
     personAdded: string;
     responsibilityCreated: string;
     itemPurchased: string;
+    reminderCreated: string;
+    reminderPaused: string;
+    reminderArchived: string;
   };
   notify: {
     title: string;
@@ -316,6 +320,7 @@ export type Dict = {
     readAll: string;
     whatToReceive: string;
     reminderDigest: string;
+    recurringDue: string;
     completionRecorded: string;
     missedDetected: string;
     backupNudge: string;
@@ -461,6 +466,21 @@ export type Dict = {
     cycleFacts: string;
     outFacts: string;
     noFactsYet: string;
+    reminders: string;
+    cadenceWeekly: string;
+    cadenceBiweekly: string;
+    cadenceMonthly: string;
+    cadenceCustom: string;
+    reminderDue: string;
+    reminderOverdue: string;
+    reminderOnList: string;
+    reminderSnoozed: string;
+    addToShopping: string;
+    notNow: string;
+    notNowAria: string;
+    pause: string;
+    resume: string;
+    archiveAria: string;
   };
   family: {
     title: string;
@@ -804,6 +824,7 @@ export const en: Dict = {
     addItem: 'Add item',
     bought: 'Bought ({{count}})',
     shoppingEmptyHint: 'Running low on something? Add it here.',
+    reminderCreatedToast: 'Reminder set.',
     newSupply: 'New supply',
     newRoutine: 'New routine',
     organizationalOnly: 'Organizational only',
@@ -832,6 +853,9 @@ export const en: Dict = {
     personAdded: '{{name}} joined the household.',
     responsibilityCreated: '{{title}} added.',
     itemPurchased: '{{title}} bought.',
+    reminderCreated: 'Restock reminder for {{name}} set.',
+    reminderPaused: 'Restock reminder for {{name}} paused.',
+    reminderArchived: 'Restock reminder for {{name}} archived.',
   },
   notify: {
     title: 'Notifications',
@@ -839,6 +863,7 @@ export const en: Dict = {
     readAll: 'Read all',
     whatToReceive: 'What to receive',
     reminderDigest: '{{count}} due today — tap to open chores.',
+    recurringDue: 'Time to buy {{itemName}} — like usual.',
     completionRecorded: '{{title}} completed.',
     missedDetected: '{{title}} was missed.',
     backupNudge: 'Back up {{name}} — save a copy.',
@@ -991,6 +1016,21 @@ export const en: Dict = {
     cycleFacts: 'Usually lasts about {{days}} · ran low {{cycles}}×',
     outFacts: 'Ran out {{out30}}× in the last month · {{out90}}× in 3 months',
     noFactsYet: 'Facts appear as you track it over time.',
+    reminders: 'Restock reminders',
+    cadenceWeekly: '↻ every week',
+    cadenceBiweekly: '↻ every 2 weeks',
+    cadenceMonthly: '↻ monthly',
+    cadenceCustom: '↻ every {{days}} days',
+    reminderDue: 'due today',
+    reminderOverdue: '{{days}} days overdue',
+    reminderOnList: 'on the list',
+    reminderSnoozed: 'snoozed — we will nudge later',
+    addToShopping: 'Add to list',
+    notNow: 'Not now',
+    notNowAria: 'Snooze the reminder for {{name}}',
+    pause: 'Pause',
+    resume: 'Resume',
+    archiveAria: 'Archive the reminder for {{name}}',
   },
   family: {
     title: 'Family',
@@ -1331,6 +1371,7 @@ export const am: Dict = {
     addItem: 'ዕቃ ጨምር',
     bought: 'የተገዛ ({{count}})',
     shoppingEmptyHint: 'የሚቀንስ ነገር አለ? እዚህ ይጨምሩ።',
+    reminderCreatedToast: 'ማስታወሻ ተያይዟል።',
     newSupply: 'አዲስ ቁሳቁስ',
     newRoutine: 'አዲስ ሥርዓት',
     organizationalOnly: 'ለማደራጀት ብቻ',
@@ -1359,6 +1400,9 @@ export const am: Dict = {
     personAdded: '{{name}} ወደ ቤተሰቡ ተቀላቅሏል።',
     responsibilityCreated: '{{title}} ተጨምሯል።',
     itemPurchased: '{{title}} ተገዝቷል።',
+    reminderCreated: 'ለ{{name}} የእንደገና ግዢ ማስታወሻ ተያይዟል።',
+    reminderPaused: 'ለ{{name}} የእንደገና ግዢ ማስታወሻ ቆሟል።',
+    reminderArchived: 'ለ{{name}} የእንደገና ግዢ ማስታወሻ ተወግዷል።',
   },
   notify: {
     title: 'ማሳወቂያዎች',
@@ -1366,6 +1410,7 @@ export const am: Dict = {
     readAll: 'ሁሉንም አንብብ',
     whatToReceive: 'ምን እንደሚደርስዎ',
     reminderDigest: '{{count}} ዛሬ የሚጠበቁ — ለመክፈት ይንኩ።',
+    recurringDue: 'የ{{itemName}} ግዢ ጊዜ ደርሷል — እንደ ልማዳቸው።',
     completionRecorded: '{{title}} ተጠናቋል።',
     missedDetected: '{{title}} ተረስኗል።',
     backupNudge: '{{name}} ን ያስቀምጡ — ቅጂ ይቆጥቡ።',
@@ -1513,6 +1558,21 @@ export const am: Dict = {
     cycleFacts: 'በአሂዝ ወደ {{days}} ይቆያል · {{cycles}} ጊዜ አልቧል',
     outFacts: 'ባለፈው ወር {{out30}} ጊዜ · በ3 ወር ውስጥ {{out90}} ጊዜ አልቧል',
     noFactsYet: 'በጊዜ ሂደት ስትከታተሉት መረጃዎች ይታያሉ።',
+    reminders: 'የእንደገና ግዢ ማስታወሻዎች',
+    cadenceWeekly: '↻ በየሳምንቱ',
+    cadenceBiweekly: '↻ በየ2 ሳምንቱ',
+    cadenceMonthly: '↻ በየወሩ',
+    cadenceCustom: '↻ በየ{{days}} ቀኑ',
+    reminderDue: 'ዛሬ ደርሷል',
+    reminderOverdue: 'በ{{days}} ቀን ዘግይቷል',
+    reminderOnList: 'በዝርዝሩ ላይ ነው',
+    reminderSnoozed: 'ተራዝሟል — በኋላ እናሳውቃለን',
+    addToShopping: 'ወደ ዝርዝር ጨምር',
+    notNow: 'አሁን አይደለም',
+    notNowAria: 'የ{{name}} ማስታወሻ አራዝም',
+    pause: 'ኣቁም',
+    resume: 'ቀጥል',
+    archiveAria: 'የ{{name}} ማስታወሻ አስወግድ',
   },
   family: {
     title: 'ቤተሰብ',

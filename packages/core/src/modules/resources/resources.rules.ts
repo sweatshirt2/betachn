@@ -120,3 +120,38 @@ export function suggestibleCycle(stats: SupplyCycleStats): boolean {
     stats.avgCycleDays <= 365
   );
 }
+
+/**
+ * Recurring reminder state machine (§4A.3 / D108–D110) — pure, tested.
+ * Reminders only: nothing here assumes a purchase happened or adds to the
+ * list by itself (micro-74). `onList` = an OPEN (unpurchased) shopping item
+ * exists linked to this reminder's supply or matching its name.
+ */
+export type RecurringStateKind = 'idle' | 'due' | 'snoozed' | 'onList' | 'overdue';
+
+export interface RecurringItemLike {
+  intervalDays: number;
+  lastPurchaseAt: Date | null;
+  snoozedUntil: Date | null;
+  state: 'active' | 'paused';
+}
+
+export function computeRecurringState(
+  item: RecurringItemLike,
+  now: Date,
+  openListItemExists: boolean,
+): RecurringStateKind {
+  if (item.state === 'paused') return 'idle';
+  if (openListItemExists) return 'onList';
+  if (item.lastPurchaseAt === null) return 'due'; // never bought through the flow yet
+  if (item.snoozedUntil !== null && now.getTime() < item.snoozedUntil.getTime()) return 'snoozed';
+  const elapsedDays = Math.floor((now.getTime() - item.lastPurchaseAt.getTime()) / 86_400_000);
+  if (elapsedDays < item.intervalDays) return 'idle';
+  return elapsedDays === item.intervalDays ? 'due' : 'overdue';
+}
+
+/** Gentle overdue text input (micro-45) — days, never an alarm state. */
+export function recurringOverdueDays(item: RecurringItemLike, now: Date): number {
+  if (item.lastPurchaseAt === null) return 0;
+  return Math.max(0, Math.floor((now.getTime() - item.lastPurchaseAt.getTime()) / 86_400_000) - item.intervalDays);
+}

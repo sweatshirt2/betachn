@@ -1,4 +1,4 @@
-import { sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { households } from './households';
 
 export const supplies = sqliteTable('supplies', {
@@ -48,6 +48,34 @@ export const shoppingItems = sqliteTable('shopping_items', {
   createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
 });
 
+/**
+ * Recurring buy reminders mirror (§4A.3 / D108–D110) — REMINDERS ONLY.
+ * Anchor (lastPurchaseAt) advances solely via a recorded purchase op;
+ * nothing in the device ever schedule-advances it (micro-74). Timestamps
+ * ride as ISO strings like every other mirror row (LWW compare in the
+ * applier is lexicographic-safe on ISO-8601 UTC).
+ */
+export const recurringShoppingItems = sqliteTable('recurring_shopping_items', {
+  id: text('id').primaryKey(),
+  householdId: text('household_id')
+    .notNull()
+    .references(() => households.id),
+  name: text('name').notNull(),
+  supplyId: text('supply_id').references(() => supplies.id),
+  intervalDays: integer('interval_days').notNull(),
+  quantityText: text('quantity_text'),
+  note: text('note'),
+  lastPurchaseAt: text('last_purchase_at'),
+  snoozedUntil: text('snoozed_until'),
+  state: text('state', { enum: ['active', 'paused'] }).notNull().default('active'),
+  archivedAt: text('archived_at'),
+  createdByPersonId: text('created_by_person_id'),
+  clientUuid: text('client_uuid'),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+});
+
 export type SupplyRow = typeof supplies.$inferSelect;
 export type ShoppingItemRow = typeof shoppingItems.$inferSelect;
 export type SupplyEventRow = typeof supplyEvents.$inferSelect;
+export type RecurringShoppingItemRow = typeof recurringShoppingItems.$inferSelect;

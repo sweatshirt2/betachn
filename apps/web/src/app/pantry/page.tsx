@@ -23,6 +23,7 @@ import {
   useCreateSupply,
   useCycleSupply,
   useSupplies,
+  RecurringReminderRows,
   SupplyFactsSubline,
   type SupplyState,
 } from '@/features/supplies';
@@ -102,6 +103,12 @@ export default function PantryPage() {
       <SectionWatermark variant="steam" />
       <h1 className="font-display text-2xl">{t('pantry.title')}</h1>
       <p className="text-muted mt-1 text-sm">{t('pantry.subtitle')}</p>
+
+      {/* ── Section 0 · Restock reminders (§4A.4: above supplies) ──────── */}
+      <section className="mt-4" aria-label={t('pantry.reminders')}>
+        <h2 className="font-display text-lg">{t('pantry.reminders')}</h2>
+        <RecurringReminderRows />
+      </section>
 
       {/* ── Section 1 · Running out ─────────────────────────────────────── */}
       <section className="mt-4" aria-label={t('pantry.runningOut')}>

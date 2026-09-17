@@ -27,5 +27,9 @@ export const DEVICE_MIGRATIONS: readonly DeviceMigration[] = [
   {
     "tag": "0004_opposite_risque",
     "sql": "ALTER TABLE `responsibilities` ADD `proof_mode` text DEFAULT 'optional' NOT NULL;"
+  },
+  {
+    "tag": "0005_sleepy_landau",
+    "sql": "CREATE TABLE `recurring_shopping_items` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`household_id` text NOT NULL,\n\t`name` text NOT NULL,\n\t`supply_id` text,\n\t`interval_days` integer NOT NULL,\n\t`quantity_text` text,\n\t`note` text,\n\t`last_purchase_at` text,\n\t`snoozed_until` text,\n\t`state` text DEFAULT 'active' NOT NULL,\n\t`archived_at` text,\n\t`created_by_person_id` text,\n\t`client_uuid` text,\n\t`created_at` text NOT NULL,\n\t`updated_at` text NOT NULL,\n\tFOREIGN KEY (`household_id`) REFERENCES `households`(`id`) ON UPDATE no action ON DELETE no action,\n\tFOREIGN KEY (`supply_id`) REFERENCES `supplies`(`id`) ON UPDATE no action ON DELETE no action\n);\n"
   }
 ];

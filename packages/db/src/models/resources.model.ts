@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   index,
+  integer,
   jsonb,
   pgTable,
   text,
@@ -83,4 +84,37 @@ export const supplyEvents = pgTable(
 export type Supply = typeof supplies.$inferSelect;
 export type ShoppingItem = typeof shoppingItems.$inferSelect;
 export type SupplyEvent = typeof supplyEvents.$inferSelect;
+
+/**
+ * Recurring buy reminders (§4A.3 / D108–D110). Anchor (lastPurchaseAt)
+ * advances ONLY on a recorded purchase/restock — never on schedule.
+ */
+export const recurringShoppingItems = pgTable(
+  'recurring_shopping_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    householdId: uuid('household_id')
+      .notNull()
+      .references(() => households.id),
+    name: text('name').notNull(),
+    supplyId: uuid('supply_id').references(() => supplies.id),
+    intervalDays: integer('interval_days').notNull(),
+    quantityText: text('quantity_text'),
+    note: text('note'),
+    lastPurchaseAt: timestamp('last_purchase_at', { withTimezone: true }),
+    snoozedUntil: timestamp('snoozed_until', { withTimezone: true }),
+    state: text('state').$type<'active' | 'paused'>().notNull().default('active'),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+    createdByPersonId: uuid('created_by_person_id'),
+    clientUuid: text('client_uuid'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('recurring_shopping_items_household_id_idx').on(t.householdId),
+    uniqueIndex('recurring_shopping_items_client_uuid_key').on(t.clientUuid).where(sql`client_uuid is not null`),
+  ],
+);
+
+export type RecurringShoppingItem = typeof recurringShoppingItems.$inferSelect;
 

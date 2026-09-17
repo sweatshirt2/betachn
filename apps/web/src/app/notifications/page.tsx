@@ -26,9 +26,12 @@ function describe(t: TFunction, type: string, params: Record<string, unknown>): 
   const count = typeof params.count === 'number' ? params.count : null;
   const title = typeof params.title === 'string' ? params.title : t('chores.title');
   const name = typeof params.householdName === 'string' ? params.householdName : t('common.appName');
+  const itemName = typeof params.itemName === 'string' ? params.itemName : title;
   switch (type) {
     case 'notify.reminder.digest':
       return t('notify.reminderDigest', { count: count ?? 0 });
+    case 'notify.recurring.due':
+      return t('notify.recurringDue', { itemName });
     case 'notify.completion.recorded':
       return t('notify.completionRecorded', { title });
     case 'notify.missed.detected':

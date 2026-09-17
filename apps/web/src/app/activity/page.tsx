@@ -22,6 +22,12 @@ function describe(t: TFunction, type: string, params: Record<string, unknown>): 
       return t('activity.responsibilityCreated', { title });
     case 'shopping_item.purchased':
       return t('activity.itemPurchased', { title: typeof params.title === 'string' ? params.title : name });
+    case 'reminder.created':
+      return t('activity.reminderCreated', { name });
+    case 'reminder.paused':
+      return t('activity.reminderPaused', { name });
+    case 'reminder.archived':
+      return t('activity.reminderArchived', { name });
     default:
       return title ?? name;
   }

@@ -49,6 +49,9 @@ export const ACTIVITY_TYPES = [
   'supply.out',
   'shopping_item.added',
   'shopping_item.purchased',
+  'reminder.created',
+  'reminder.paused',
+  'reminder.archived',
 ] as const;
 
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];
@@ -91,6 +94,10 @@ export const DOMAIN_BY_TYPE: Record<ActivityType, ActivityDomain> = {
   'supply.out': 'resources',
   'shopping_item.added': 'resources',
   'shopping_item.purchased': 'resources',
+  // §4A.5: story entries ONLY for create/pause/archive of reminders.
+  'reminder.created': 'resources',
+  'reminder.paused': 'resources',
+  'reminder.archived': 'resources',
 };
 
 /** What persists into activity_events (actor/household columns set by callers). */

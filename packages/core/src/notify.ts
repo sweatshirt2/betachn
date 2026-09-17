@@ -25,7 +25,8 @@ export type NotifyKind =
   | 'missed'
   | 'reminderDigest'
   | 'backup'
-  | 'supplyAlert';
+  | 'supplyAlert'
+  | 'recurringDue';
 
 /** The notification category a kind persists under. */
 export const KIND_CATEGORY: Record<NotifyKind, NotifyCategory> = {
@@ -35,6 +36,8 @@ export const KIND_CATEGORY: Record<NotifyKind, NotifyCategory> = {
   reminderDigest: 'reminder',
   backup: 'backup',
   supplyAlert: 'reminder',
+  // §4A.3/D108: recurring-buy reminders ride the `reminder` prefs toggle.
+  recurringDue: 'reminder',
 };
 
 /** Inputs available per emission site; unused members are ignored. */
@@ -76,6 +79,16 @@ export function resolveRecipients(kind: NotifyKind, ctx: RecipientContext): stri
       return unique(ctx.ownerPersonIds ?? []);
     case 'supplyAlert':
       return withoutActor(ctx.supplyManagerPersonIds ?? [], ctx.actorPersonId);
+    case 'recurringDue':
+      // D108: creator + manage_shopping holders minus the actor (the sweep
+      // has no actor; the minus-actor branch matters only for the device job).
+      return withoutActor(
+        [
+          ...(ctx.ruleCreatorPersonId ? [ctx.ruleCreatorPersonId] : []),
+          ...(ctx.supplyManagerPersonIds ?? []),
+        ],
+        ctx.actorPersonId,
+      );
   }
 }
 

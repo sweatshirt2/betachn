@@ -494,3 +494,36 @@ export async function deviceShoppingItems(): Promise<{ items: DeviceShoppingPayl
     })),
   };
 }
+
+/** §4A.3: active (non-archived) recurring reminders for the Pantry rows. */
+export async function deviceRecurringItems(): Promise<{
+  items: Array<{
+    id: string;
+    name: string;
+    supplyId: string | null;
+    intervalDays: number;
+    quantityText: string | null;
+    note: string | null;
+    lastPurchaseAt: string | null;
+    snoozedUntil: string | null;
+    state: 'active' | 'paused';
+    archivedAt: string | null;
+  }>;
+}> {
+  const db = await deviceContext();
+  const rows = await db.select().from(schema.recurringShoppingItems);
+  return {
+    items: rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      supplyId: r.supplyId,
+      intervalDays: r.intervalDays,
+      quantityText: r.quantityText,
+      note: r.note,
+      lastPurchaseAt: r.lastPurchaseAt,
+      snoozedUntil: r.snoozedUntil,
+      state: r.state,
+      archivedAt: r.archivedAt,
+    })),
+  };
+}
