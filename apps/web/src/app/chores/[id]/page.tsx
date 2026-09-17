@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, ChoreCheck, EmptyState, Sheet, Skeleton } from '@/components/ui';
 import { useOccurrenceAct, useOccurrences, useResponsibility, usePeopleMap } from '@/features/chores';
+import { ProofSheet } from '@/features/chores/components/ProofSheet';
 import type { RootState } from '@/store';
 
 function addDaysIso(iso: string, days: number): string {
@@ -29,6 +30,14 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
 
   const [reassignFor, setReassignFor] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  /** Required-proof gate (§4A.4): occurrence id awaiting photo completion. */
+  const [proofFor, setProofFor] = useState<string | null>(null);
+
+  /** Shared completion entry — routes through the proof sheet when required. */
+  const requestComplete = (occurrenceId: string) => {
+    if (responsibility?.proofMode === 'required') setProofFor(occurrenceId);
+    else act.mutate({ id: occurrenceId, action: 'complete' });
+  };
 
   if (detail.isPending) {
     return (
@@ -185,7 +194,7 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
                   <ChoreCheck
                     done={false}
                     disabled={act.isPending}
-                    onClick={() => act.mutate({ id: o.id, action: 'complete' })}
+                    onClick={() => requestComplete(o.id)}
                     label={t('chores.completeAria', { title: o.title ?? responsibility.title })}
                   />
                 </Card>
@@ -205,6 +214,15 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
         confirmLabel={t('common.save')}
         cancelLabel={t('common.cancel')}
       />
+      {proofFor !== null && (
+        <ProofSheet
+          occurrenceId={proofFor}
+          onClose={() => setProofFor(null)}
+          onComplete={() => act.mutate({ id: proofFor, action: 'complete' })}
+          onCompleted={() => setProofFor(null)}
+          isCompleting={act.isPending}
+        />
+      )}
     </div>
   );
 }

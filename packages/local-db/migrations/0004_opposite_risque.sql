@@ -1,0 +1,1 @@
+ALTER TABLE `responsibilities` ADD `proof_mode` text DEFAULT 'optional' NOT NULL;

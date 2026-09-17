@@ -34,7 +34,8 @@ export type GlyphName =
   | 'shield'
   | 'check-circle'
   | 'alert'
-  | 'info';
+  | 'info'
+  | 'camera';
 
 const strokeProps = {
   stroke: 'currentColor',
@@ -193,6 +194,12 @@ const PATHS: Record<GlyphName, React.ReactNode> = {
       <circle cx="12" cy="12" r="8.4" />
       <path d="M12 11v5" />
       <path d="M12 7.6v.2" />
+    </>
+  ),
+  camera: (
+    <>
+      <path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.2a2 2 0 0 0 1.7-.95l.5-.8a1 1 0 0 1 .85-.47h2.5a1 1 0 0 1 .85.47l.5.8A2 2 0 0 0 16.3 6h1.2A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5Z" />
+      <circle cx="12" cy="12.5" r="3.4" />
     </>
   ),
 };

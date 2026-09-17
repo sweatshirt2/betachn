@@ -47,6 +47,8 @@ export const responsibilities = pgTable(
     archivedAt: timestamp('archived_at', { withTimezone: true }),
     createdByPersonId: uuid('created_by_person_id').references(() => people.id),
     icon: text('icon').notNull().default('📌'),
+    /** §4A.2/D107: required ⇒ completion blocks until ≥1 proof exists. */
+    proofMode: text('proof_mode').$type<'optional' | 'required'>().notNull().default('optional'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

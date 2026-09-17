@@ -23,5 +23,9 @@ export const DEVICE_MIGRATIONS: readonly DeviceMigration[] = [
   {
     "tag": "0003_red_spyke",
     "sql": "CREATE TABLE `supply_events` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`household_id` text NOT NULL,\n\t`supply_id` text NOT NULL,\n\t`actor_person_id` text,\n\t`type` text NOT NULL,\n\t`source` text DEFAULT 'manual' NOT NULL,\n\t`quantity_text` text,\n\t`note` text,\n\t`client_uuid` text,\n\t`occurred_at` text NOT NULL,\n\t`created_at` text NOT NULL,\n\tFOREIGN KEY (`household_id`) REFERENCES `households`(`id`) ON UPDATE no action ON DELETE no action,\n\tFOREIGN KEY (`supply_id`) REFERENCES `supplies`(`id`) ON UPDATE no action ON DELETE no action\n);\n"
+  },
+  {
+    "tag": "0004_opposite_risque",
+    "sql": "ALTER TABLE `responsibilities` ADD `proof_mode` text DEFAULT 'optional' NOT NULL;"
   }
 ];

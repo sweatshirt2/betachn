@@ -28,6 +28,8 @@ export const responsibilities = sqliteTable('responsibilities', {
   archivedAt: text('archived_at'),
   createdByPersonId: text('created_by_person_id').references(() => people.id),
   icon: text('icon').notNull().default('📌'),
+  /** §4A.2/D107 mirror — required ⇒ completion blocks until ≥1 proof. */
+  proofMode: text('proof_mode').notNull().default('optional'),
   createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
 });
 

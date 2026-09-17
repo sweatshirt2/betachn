@@ -305,6 +305,7 @@ export async function deviceResponsibilityDetail(
       notes: responsibility.notes,
       icon: responsibility.icon,
       routineId: responsibility.routineId,
+      proofMode: responsibility.proofMode === 'required' ? 'required' : 'optional',
     },
     subtasks: subtasks
       .sort((a, b) => a.sortOrder - b.sortOrder)

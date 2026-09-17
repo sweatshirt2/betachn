@@ -111,6 +111,10 @@ export type Dict = {
     range: string;
     dates: string;
     icon: string;
+    proofMode: string;
+    proofModeHint: string;
+    proofOptional: string;
+    proofRequired: string;
     startDate: string;
     assignedTo: string;
     addChore: string;
@@ -239,6 +243,18 @@ export type Dict = {
       manage_shopping: string;
       manage_purchases: string;
     };
+  };
+  proofs: {
+    title: string;
+    addPhoto: string;
+    addPhotoToFinish: string;
+    finish: string;
+    requiredHint: string;
+    captureError: string;
+    loadError: string;
+    photoAlt: string;
+    offlinePlaceholder: string;
+    deleteAria: string;
   };
   ops: {
     routines: string;
@@ -615,6 +631,10 @@ export const en: Dict = {
     range: 'Daily until…',
     dates: 'On chosen dates',
     icon: 'Icon',
+    proofMode: 'Completion photo',
+    proofModeHint: 'Require a photo proof before this chore can be marked done.',
+    proofOptional: 'Optional',
+    proofRequired: 'Required',
     startDate: 'Starting',
     assignedTo: 'Assigned to (empty = up for grabs)',
     addChore: 'Add chore',
@@ -746,6 +766,18 @@ export const en: Dict = {
       manage_shopping: 'Manage shopping',
       manage_purchases: 'Mark purchases',
     },
+  },
+  proofs: {
+    title: 'Completion photos',
+    addPhoto: 'Add photo',
+    addPhotoToFinish: 'Add a photo to finish',
+    finish: 'Done',
+    requiredHint: 'This chore needs at least one photo to be marked complete.',
+    captureError: 'The photo could not be saved — try again.',
+    loadError: 'Photos could not be loaded.',
+    photoAlt: 'Completion photo',
+    offlinePlaceholder: 'Available when online',
+    deleteAria: 'Remove photo',
   },
   ops: {
     routines: 'Routines',
@@ -1129,6 +1161,10 @@ export const am: Dict = {
     range: 'ዕለት በዕለት እስከ…',
     dates: 'በተመረጡ ቀናት',
     icon: 'ምልክት',
+    proofMode: 'የማጠናቀቂያ ፎቶ',
+    proofModeHint: 'ይህ ሥራ ሳይጨረስ ከሚመዘገብ በፊት የፎቶ ማረጋገጫ ግዴታ ያድርጉ።',
+    proofOptional: 'አማራጭ',
+    proofRequired: 'ግዴታ',
     startDate: 'የሚጀምርበት',
     assignedTo: 'ለማን (ባዶ = ለሁሉም ክፍት)',
     addChore: 'ሥራ ጨምር',
@@ -1257,6 +1293,18 @@ export const am: Dict = {
       manage_shopping: 'ግዢያ አስተዳደር',
       manage_purchases: 'ግዢያ መጨረስ',
     },
+  },
+  proofs: {
+    title: 'የማጠናቀቂያ ፎቶዎች',
+    addPhoto: 'ፎቶ ጨምር',
+    addPhotoToFinish: 'ለማጠናቀቅ ፎቶ ጨምር',
+    finish: 'ተጠናቋል',
+    requiredHint: 'ይህ ሥራ ለመጨረስ ቢያንስ አንድ ፎቶ ያስፈልገዋል።',
+    captureError: 'ፎቶው ሊቀመጥ አልቻለም — እንደገና ይሞክሩ።',
+    loadError: 'ፎቶዎቹ ሊጫኑ አልቻሉም።',
+    photoAlt: 'የማጠናቀቂያ ፎቶ',
+    offlinePlaceholder: 'ከመስመር ላይ ሲገባ ይታያል',
+    deleteAria: 'ፎቶውን አስወግድ',
   },
   ops: {
     routines: 'ሥርዓቶች',
