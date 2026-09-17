@@ -16,6 +16,18 @@ export type AuthContextPayload = {
 
 export type LoginResponse = { token: string; context: AuthContextPayload };
 
+/** D101 wire shapes — mirror core's householdPreviewResponseSchema. */
+export type HouseholdPreviewResponse = {
+  householdId: string;
+  householdName: string;
+  faces: Array<{
+    personId: string;
+    name: string;
+    avatarEmoji: string | null;
+    hasPassword: boolean;
+  }>;
+};
+
 /** Maps the wire context onto the RTK auth slice (identity state only). */
 export function toAuthState(token: string, context: AuthContextPayload) {
   return {

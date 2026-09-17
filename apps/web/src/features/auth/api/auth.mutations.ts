@@ -8,7 +8,19 @@ import { popReturnTo } from '@/lib/auth/returnTo';
 import { clearPasscodeGate } from '@/lib/device/passcodeGate';
 import { switchDeviceProfile, type DeviceSwitchResult } from '@/lib/device';
 import { authEndpoints } from '../auth.endpoints';
-import { toAuthState, type AuthContextPayload, type LoginResponse } from '../auth.types';
+import {
+  toAuthState,
+  type AuthContextPayload,
+  type HouseholdPreviewResponse,
+  type LoginResponse,
+} from '../auth.types';
+
+/** D101 step 1: resolve the face grid from a household code (public endpoint). */
+export function useHouseholdPreview() {
+  return useApiMutation<HouseholdPreviewResponse, { code: string }>({
+    endpoint: authEndpoints.householdPreview,
+  });
+}
 
 /**
  * D63: online sign-in resets the device passcode gate. Wired into BOTH login

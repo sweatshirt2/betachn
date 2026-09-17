@@ -74,6 +74,14 @@ export type Dict = {
     switchProfileAria: string;
     passwordFor: string;
     wrongPassword: string;
+    differentCode: string;
+    pickYourFace: string;
+    whoAreYou: string;
+    codeNotFound: string;
+    enterCodeTitle: string;
+    continueLabel: string;
+    notYou: string;
+    useCodeInstead: string;
   };
   today: {
     today: string;
@@ -570,6 +578,14 @@ export const en: Dict = {
     switchProfileAria: 'Switch profile (currently {{name}})',
     passwordFor: 'Password for {{name}}',
     wrongPassword: 'Wrong password — try again.',
+    differentCode: 'Use a different code',
+    pickYourFace: 'Who are you?',
+    whoAreYou: 'Tap your face to sign in — no typing needed.',
+    codeNotFound: 'No household carries this code yet. Check it and try again.',
+    enterCodeTitle: 'Enter your household code',
+    continueLabel: 'Continue',
+    notYou: 'Not {{name}}?',
+    useCodeInstead: 'Type code instead',
   },
   today: {
     today: 'Today',
@@ -1076,6 +1092,14 @@ export const am: Dict = {
     switchProfileAria: 'መገለጫ ቀይር (አሁን {{name}})',
     passwordFor: 'የ{{name}} የይለፍ ቃል',
     wrongPassword: 'የተሳሳተ የይለፍ ቃል — እንደገና ይሞክሩ።',
+    differentCode: 'ሌላ ኮድ ይጠቀሙ',
+    pickYourFace: 'ማን ነዎት?',
+    whoAreYou: 'መግቢያዎን ለመጀመር ፊትዎን ይንኩ — መጻፍ አያስፈልግም።',
+    codeNotFound: 'በዚህ ኮድ የሚገኝ ቤተሰብ የለም። ይፈትሹትና እንደገና ይሞክሩ።',
+    enterCodeTitle: 'የቤተሰብ ኮድዎን ያስገቡ',
+    continueLabel: 'ቀጥል',
+    notYou: '{{name}} አይደሉትም?',
+    useCodeInstead: 'ኮድ ይጻፉ',
   },
   today: {
     today: 'ዛሬ',

@@ -42,6 +42,27 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+/**
+ * POST /auth/household-preview (D101 step-down login, additive): resolves
+ * whether a household code exists and which faces (people) its members pick
+ * from. Uniform NOT_FOUND mirrors the login contract — no code enumeration.
+ */
+export const householdPreviewSchema = z.object({ code: householdCodeSchema });
+
+export const householdPreviewResponseSchema = z.object({
+  householdId: z.string().uuid(),
+  householdName: z.string().min(1),
+  faces: z.array(
+    z.object({
+      personId: z.string().uuid(),
+      name: z.string().min(1),
+      avatarEmoji: z.string().nullable(),
+      /** Faces with a password demand one; passwordless faces switch in. */
+      hasPassword: z.boolean(),
+    }),
+  ),
+});
+
 export const switchProfileSchema = z.object({
   personId: z.string().uuid(),
   password: z.string().min(1).optional(),
@@ -61,6 +82,8 @@ export const googleLoginSchema = z.object({
 
 export type RegisterOnlineInput = z.infer<typeof registerOnlineSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type HouseholdPreviewInput = z.infer<typeof householdPreviewSchema>;
+export type HouseholdPreviewResponse = z.infer<typeof householdPreviewResponseSchema>;
 export type SwitchProfileInput = z.infer<typeof switchProfileSchema>;
 export type LinkGoogleInput = z.infer<typeof linkGoogleSchema>;
 export type GoogleLoginInput = z.infer<typeof googleLoginSchema>;
