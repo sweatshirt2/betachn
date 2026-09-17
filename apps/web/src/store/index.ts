@@ -2,6 +2,7 @@ export {
   authReducer,
   enterViewAs,
   exitViewAs,
+  markSessionValidated,
   rehydrateDeviceSession,
   resetSession,
   setDeviceSession,

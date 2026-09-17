@@ -23,10 +23,15 @@ import { readPasscodeGateState } from '@/lib/device/passcodeGate';
 export function useRedirectIfSignedIn(): void {
   const router = useRouter();
   const signedIn = useSelector(hasSession);
+  const sessionValidated = useSelector((state: RootState) => state.auth.sessionValidated);
   const reduxReady = useSelector((state: RootState) => state.auth._persist?.rehydrated ?? false);
 
   useEffect(() => {
-    if (!signedIn || !reduxReady) return;
+    // sessionValidated guards against the stale-token loop: a persisted token
+    // the server no longer recognizes must not redirect the user away from
+    // /login — the /auth/me check evicts it instead. Redirect only once the
+    // session is rehydrated AND validated (device rehydrate, server /auth/me).
+    if (!signedIn || !reduxReady || !sessionValidated) return;
     let cancelled = false;
     void readPasscodeGateState()
       .then((gate) => {
@@ -39,5 +44,5 @@ export function useRedirectIfSignedIn(): void {
     return () => {
       cancelled = true;
     };
-  }, [signedIn, reduxReady, router]);
+  }, [signedIn, reduxReady, sessionValidated, router]);
 }
