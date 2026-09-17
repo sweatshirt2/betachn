@@ -75,10 +75,17 @@ api.interceptors.response.use(
   (error: AxiosError<{ error?: ApiErrorBody }>) => {
     const status = error.response?.status ?? 0;
     const body = error.response?.data?.error;
-    // §5.8: 401 UNAUTHENTICATED purges the session and lands on /login —
-    // silent, no toast. evictSession stashes return-to (G1) and exempts
-    // auth surfaces (G2) via the shared returnTo list.
-    if (status === 401 && body?.code === 'UNAUTHENTICATED') {
+    // §5.8: 401 purges the session and lands on /login — silent, no toast.
+    // Default is EVICT for every 401, including foreign ones with no Chorify
+    // envelope (deploy-protection proxies, gateways, HTML error pages): a
+    // 401 that isn't a deliberate app-level flow must never wedge the app.
+    // The only exemptions are the two app 401s that are form flows, not
+    // session states — PASSWORD_REQUIRED / WRONG_PASSWORD (profile switch
+    // gate, login form); evicting on those would loop the user mid-form.
+    // Permission failures arrive as 403 FORBIDDEN / VIEW_AS_READONLY and
+    // never touch this path.
+    const isDeliberateForm401 = body?.code === 'PASSWORD_REQUIRED' || body?.code === 'WRONG_PASSWORD';
+    if (status === 401 && !isDeliberateForm401) {
       setViewAsPersonId(null);
       evictSession();
     }

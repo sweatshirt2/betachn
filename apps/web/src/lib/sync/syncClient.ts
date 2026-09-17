@@ -138,13 +138,16 @@ function refreshAfterFlush(result: FlushResult | undefined): void {
 
 /**
  * Flush error triage: the transport throws the server error CODE as the
- * message. An expired Bearer during push/pull must evict the session like
- * any axios 401 (§5.8) — otherwise a stale token wedges the device in
- * endless "pending" sync with no path back to login. Everything else
- * (network hiccup, 5xx) stays a silent retry — pending_ops are preserved.
+ * message (Chorify envelope) or `HTTP <status>` (foreign envelope — proxies,
+ * deploy protection, HTML error pages). An expired Bearer during push/pull
+ * must evict the session like any axios 401 (§5.8) — otherwise a stale token
+ * wedges the device in endless "pending" sync with no path back to login.
+ * Everything else (network hiccup, 5xx) stays a silent retry — pending_ops
+ * are preserved.
  */
 function handleFlushError(err: unknown): void {
-  if (err instanceof Error && err.message === 'UNAUTHENTICATED') evictSession();
+  if (!(err instanceof Error)) return;
+  if (err.message === 'UNAUTHENTICATED' || err.message === 'HTTP 401') evictSession();
 }
 
 /**
