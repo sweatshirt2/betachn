@@ -73,6 +73,11 @@ export default function LoginPage() {
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
   const [meta, setMeta] = useState<{ googleEnabled: boolean; googleClientId: string | null } | null>(null);
 
+  /** Stable crayon per face — list position, matching the in-app member order. */
+  function faceIndex(personId: string): number {
+    return faces.findIndex((f) => f.personId === personId);
+  }
+
   // Warm device: a remembered code resolves the face grid on mount (D101) —
   // cold devices just see the code form.
   useEffect(() => {
@@ -237,7 +242,7 @@ export default function LoginPage() {
                 className="tap-spring flex flex-col items-center gap-1.5 rounded-xl p-2 transition-colors hover:bg-surface-alt"
                 onClick={() => pickFace(face)}
               >
-                <PersonAvatar emoji={face.avatarEmoji ?? '🙂'} size="lg" />
+                <PersonAvatar name={face.name} index={faceIndex(face.personId)} size="lg" />
                 <span className="w-full truncate text-center text-xs font-semibold">{face.name}</span>
               </button>
             ))}
@@ -260,7 +265,8 @@ export default function LoginPage() {
         <Card className="page-enter mt-6 w-full max-w-sm" style={{ animationDelay: '60ms' }}>
           <div className="flex flex-col items-center">
             <PersonAvatar
-              emoji={faces.find((f) => f.personId === chosen.personId)?.avatarEmoji ?? '🙂'}
+              name={chosen.name}
+              index={faceIndex(chosen.personId)}
               size="lg"
             />
             <p className="text-muted mt-2 text-sm">{t('auth.notYou', { name: chosen.name })}</p>

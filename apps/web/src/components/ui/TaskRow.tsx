@@ -31,30 +31,24 @@ export function crayon(index: number): string {
   return `var(--chorify-crayon-${(index % CRAYON_COUNT) + 1})`;
 }
 
-export type RowPerson = { initial: string; label: string; emoji?: string | null };
+export type RowPerson = { label: string };
 
-/** Stacked assignee avatars (≤3 + overflow) — family-warm, never initial dots. */
+/** Stacked assignee avatars (≤3 + overflow) — initial tiles, family-warm. */
 function AvatarStack({ people, size }: { people: RowPerson[]; size: 'xs' | 'sm' }) {
   const visible = people.slice(0, 3);
   const extra = people.length - visible.length;
   if (visible.length === 0) return null;
   return (
     <span className="flex -space-x-1.5">
-      {visible.map((p, i) =>
-        p.emoji ? (
-          <PersonAvatar key={`${p.label}-${i}`} emoji={p.emoji} index={i} size={size} className={size === 'xs' ? 'ring-surface ring-2' : ''} />
-        ) : (
-          <span
-            key={`${p.label}-${i}`}
-            title={p.label}
-            className={`bg-surface border-line shadow-soft flex items-center justify-center rounded-full border text-[10px] font-bold ${
-              size === 'xs' ? 'h-6 w-6' : 'h-7 w-7'
-            }`}
-          >
-            {p.initial}
-          </span>
-        ),
-      )}
+      {visible.map((p, i) => (
+        <PersonAvatar
+          key={`${p.label}-${i}`}
+          name={p.label}
+          index={i}
+          size={size}
+          className={size === 'xs' ? 'ring-surface ring-2' : ''}
+        />
+      ))}
       {extra > 0 && (
         <span
           title={`+${extra}`}

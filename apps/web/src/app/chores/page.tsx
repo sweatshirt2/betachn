@@ -27,7 +27,6 @@ export default function ChoresPage() {
   const occurrences = useOccurrences({ from, to });
   const people = usePeopleMap();
   const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
-  const emojis = new Map((people.data?.people ?? []).map((p) => [p.id, p.avatarEmoji ?? null] as const));
 
   if (occurrences.isPending) {
     return (
@@ -59,7 +58,7 @@ export default function ChoresPage() {
   const peopleOf = (o: TitledOccurrence) =>
     o.personIds.map((id) => {
       const name = names.get(id) ?? '?';
-      return { initial: name.trim().charAt(0).toUpperCase() || '?', label: name, emoji: emojis.get(id) ?? null };
+      return { label: name };
     });
 
   const dueLabelOf = (o: TitledOccurrence) => {

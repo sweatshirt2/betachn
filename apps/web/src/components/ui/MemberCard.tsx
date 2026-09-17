@@ -20,9 +20,8 @@ import { PersonAvatar } from './PersonAvatar';
 export type MemberFacts = Array<{ label: string; value: number }>;
 
 export function MemberCard({
-  emoji,
-  index = 0,
   name,
+  index = 0,
   owner = false,
   role,
   factsTag,
@@ -34,10 +33,10 @@ export function MemberCard({
   style,
   className = '',
 }: {
-  emoji: string;
+  /** Person display name — initial renders on the avatar tile. */
+  name: string;
   /** Stable person index — drives the crayon color. */
   index?: number;
-  name: ReactNode;
   owner?: boolean;
   role?: ReactNode;
   /** Small tag after the role: e.g. "12 · girl". Rendered subdued. */
@@ -53,7 +52,7 @@ export function MemberCard({
 }) {
   const header = (
     <>
-      <PersonAvatar emoji={emoji} index={index} size="md" />
+      <PersonAvatar name={typeof name === 'string' ? name : String(name)} index={index} size="md" />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
           <span className="truncate text-base font-bold leading-tight text-ink">{name}</span>

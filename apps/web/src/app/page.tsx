@@ -35,7 +35,6 @@ export default function TodayPage() {
   const act = useOccurrenceAct();
   const people = usePeopleMap();
   const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
-  const emojis = new Map((people.data?.people ?? []).map((p) => [p.id, p.avatarEmoji ?? null] as const));
 
   if (today.isPending) {
     return (
@@ -68,7 +67,7 @@ export default function TodayPage() {
   const assigneePeople = (o: TitledOccurrence) =>
     o.personIds.map((id) => {
       const name = names.get(id) ?? '?';
-      return { initial: name.trim().charAt(0).toUpperCase() || '?', label: name, emoji: emojis.get(id) ?? null };
+      return { label: name };
     });
 
   return (

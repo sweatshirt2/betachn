@@ -114,14 +114,14 @@ async function main(): Promise<void> {
         householdId: household.id,
         name: 'Hana',
         sex: 'female' as const,
-        avatarEmoji: '👩🏽',
+        
         roleId: ownerRole.id,
       },
       {
         householdId: household.id,
         name: 'Abebe',
         sex: 'male' as const,
-        avatarEmoji: '👨🏽',
+        
         roleId: builtinRoleIds.get('father'),
       },
       {
@@ -129,7 +129,7 @@ async function main(): Promise<void> {
         name: 'Daniel',
         sex: 'male' as const,
         birthDate: addDays(today, -Math.round(13 * 365.25)),
-        avatarEmoji: '🧑🏽',
+        
         roleId: builtinRoleIds.get('responsible_child'),
       },
       {
@@ -137,14 +137,14 @@ async function main(): Promise<void> {
         name: 'Sami',
         sex: 'male' as const,
         birthDate: addDays(today, -Math.round(8 * 365.25)),
-        avatarEmoji: '👦🏽',
+        
         roleId: builtinRoleIds.get('child'),
       },
       {
         householdId: household.id,
         name: 'Sara',
         sex: 'female' as const,
-        avatarEmoji: '👩🏾',
+        
         roleId: builtinRoleIds.get('guardian'),
       },
     ])

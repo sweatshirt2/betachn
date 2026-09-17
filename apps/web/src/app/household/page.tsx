@@ -48,7 +48,6 @@ export default function HouseholdPage() {
             <MemberCard
               key={p.id}
               index={index}
-              emoji={p.avatarEmoji}
               name={p.name}
               owner={role?.isOwnerRole === true}
               role={roleDisplayName(role, t)}

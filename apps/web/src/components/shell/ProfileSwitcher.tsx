@@ -83,7 +83,6 @@ export function ProfileSwitcher({ open, onClose }: { open: boolean; onClose: () 
             <AccountSwitcherCard
               key={p.id}
               index={index}
-              emoji={p.avatarEmoji}
               name={p.name}
               who={who || personFactsTag(p, t) || undefined}
               status={
