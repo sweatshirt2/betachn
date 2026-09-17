@@ -9,7 +9,12 @@
 const RETURN_TO_KEY = 'chorify-return-to';
 
 /** Auth surfaces are never stashed — landing on /login after login is a loop. */
-const AUTH_PREFIXES = ['/login', '/onboarding', '/auth'];
+export const AUTH_PREFIXES = ['/login', '/onboarding', '/auth'];
+
+/** True when the path is an auth surface (login, onboarding, OAuth callback). */
+export function isAuthPath(pathname: string): boolean {
+  return AUTH_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
 
 /** Only same-origin-safe app paths: starts with one '/', never '//'. */
 function isSafePath(path: string): boolean {
@@ -19,7 +24,7 @@ function isSafePath(path: string): boolean {
 export function stashReturnTo(pathname: string, search = ''): void {
   const path = `${pathname}${search}`;
   if (!isSafePath(path)) return;
-  if (AUTH_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return;
+  if (isAuthPath(pathname)) return;
   try {
     sessionStorage.setItem(RETURN_TO_KEY, path);
   } catch {

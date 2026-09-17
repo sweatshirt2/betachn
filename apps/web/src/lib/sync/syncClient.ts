@@ -13,6 +13,7 @@ import {
 import { runDeviceJobs } from '@chorify/local-db/jobs';
 import { openBrowserDevice } from '@/lib/device/openDevice';
 import { invalidateApiCache } from '@/lib/api/client';
+import { evictSession } from '@/lib/auth/evictSession';
 import { store, type RootState } from '@/store';
 import { useSyncStatus, statusChanged, type SyncStatusState } from './syncStatus';
 
@@ -101,11 +102,25 @@ function getEngine(): Promise<SyncEngine | null> {
       // D67 edge cast: the engine is typed against the node (sync) driver;
       // the browser proxy handle is the async twin with identical call sites.
       type EngineCtor = ConstructorParameters<typeof SyncEngine>;
-      return new SyncEngine(
+      const engine = new SyncEngine(
         device.db as unknown as EngineCtor[0],
         fetchSyncTransport(),
         identityFromStore(),
       );
+      // Instrument flush so scheduler-driven runs (30s tick, focus, online —
+      // whose errors the FlushScheduler swallows for retry) still surface a
+      // 401 to the eviction path. This is the app-edge DIP seam; the pure
+      // package stays transport- and store-agnostic.
+      const rawFlush = engine.flush.bind(engine);
+      engine.flush = async () => {
+        try {
+          return await rawFlush();
+        } catch (err) {
+          handleFlushError(err);
+          throw err;
+        }
+      };
+      return engine;
     });
   }
   return enginePromise;
@@ -122,6 +137,17 @@ function refreshAfterFlush(result: FlushResult | undefined): void {
 }
 
 /**
+ * Flush error triage: the transport throws the server error CODE as the
+ * message. An expired Bearer during push/pull must evict the session like
+ * any axios 401 (§5.8) — otherwise a stale token wedges the device in
+ * endless "pending" sync with no path back to login. Everything else
+ * (network hiccup, 5xx) stays a silent retry — pending_ops are preserved.
+ */
+function handleFlushError(err: unknown): void {
+  if (err instanceof Error && err.message === 'UNAUTHENTICATED') evictSession();
+}
+
+/**
  * Schedule a flush after a device mutation lands (write-ack trigger, §4.12).
  * Fire-and-forget by design — mutations never block on the network.
  */
@@ -133,7 +159,10 @@ export function scheduleSyncFlush(): void {
       if (stopScheduler === null) {
         stopScheduler = new FlushScheduler(engine, domTimers()).start();
       }
-      return engine.flush().catch(() => undefined);
+      return engine.flush().catch((err) => {
+        handleFlushError(err);
+        return undefined;
+      });
     })
     .then(refreshAfterFlush)
     .finally(() => statusChanged());
@@ -144,7 +173,10 @@ export async function flushNow(): Promise<FlushResult | null> {
   if (store.getState().auth.mode !== 'device') return null;
   const engine = await getEngine();
   if (engine === null) return null;
-  const result = await engine.flush().catch(() => null);
+  const result = await engine.flush().catch((err) => {
+    handleFlushError(err);
+    return null;
+  });
   refreshAfterFlush(result ?? undefined);
   statusChanged();
   return result;

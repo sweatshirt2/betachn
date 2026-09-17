@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '@/lib/api';
+import { useRedirectIfSignedIn } from '@/lib/auth/useRedirectIfSignedIn';
 import { AuthArt, Button, Card, Field } from '@/components/ui';
 import { useLogin } from '@/features/auth';
 
@@ -33,6 +34,9 @@ function GoogleMark() {
 
 export default function LoginPage() {
   const { t } = useTranslation();
+  // Signed-in visitors have no business here — except a LOCKED one recovering
+  // via online sign-in (D63); the hook suppresses the redirect while a gate exists.
+  useRedirectIfSignedIn();
   const login = useLogin();
   const [code, setCode] = useState('');
   const [username, setUsername] = useState('');

@@ -1,6 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import type { QueryClient } from '@tanstack/react-query';
-import { resetSession, store } from '@/store';
+import { evictSession, setQueryClientClearForEvict } from '@/lib/auth/evictSession';
+import { store } from '@/store';
 
 export type ApiErrorBody = {
   code: string;
@@ -30,6 +31,9 @@ let queryClientRef: QueryClient | null = null;
 /** Registered once by Providers — lets the 401 interceptor purge caches. */
 export function setQueryClientForApi(client: QueryClient | null): void {
   queryClientRef = client;
+  // Keep the eviction helper in sync — it must never import this module
+  // (circular: client → evictSession → store, and client needs evictSession).
+  setQueryClientClearForEvict(client === null ? null : () => client.clear());
 }
 
 /** Wholesale cache clear on profile switch / view-as exit / logout (D38). */
@@ -71,13 +75,12 @@ api.interceptors.response.use(
   (error: AxiosError<{ error?: ApiErrorBody }>) => {
     const status = error.response?.status ?? 0;
     const body = error.response?.data?.error;
+    // §5.8: 401 UNAUTHENTICATED purges the session and lands on /login —
+    // silent, no toast. evictSession stashes return-to (G1) and exempts
+    // auth surfaces (G2) via the shared returnTo list.
     if (status === 401 && body?.code === 'UNAUTHENTICATED') {
       setViewAsPersonId(null);
-      store.dispatch(resetSession());
-      queryClientRef?.clear();
-      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-        window.location.assign('/login');
-      }
+      evictSession();
     }
     if (body) return Promise.reject(new ApiError(status, body));
     return Promise.reject(error);

@@ -5,9 +5,23 @@ import { useDispatch } from 'react-redux';
 import { clearApiCache, useApiMutation, useDeviceMutation } from '@/lib/api';
 import { resetSession, setSession, setDeviceSession, store } from '@/store';
 import { popReturnTo } from '@/lib/auth/returnTo';
+import { clearPasscodeGate } from '@/lib/device/passcodeGate';
 import { switchDeviceProfile, type DeviceSwitchResult } from '@/lib/device';
 import { authEndpoints } from '../auth.endpoints';
 import { toAuthState, type AuthContextPayload, type LoginResponse } from '../auth.types';
+
+/**
+ * D63: online sign-in resets the device passcode gate. Wired into BOTH login
+ * paths — LockScreen's "recover online" link lands here; without the clear,
+ * the user signs in successfully and is handed straight back to the lock.
+ */
+async function clearGateAfterOnlineAuth(): Promise<void> {
+  try {
+    await clearPasscodeGate();
+  } catch {
+    // Gate clear is best-effort — the shell re-asks if it survived.
+  }
+}
 
 export function useLogin() {
   const dispatch = useDispatch();
@@ -17,6 +31,7 @@ export function useLogin() {
     options: {
       onSuccess: ({ token, context }) => {
         dispatch(setSession(toAuthState(token, context)));
+        void clearGateAfterOnlineAuth();
         router.push(popReturnTo() ?? '/');
       },
     },
@@ -36,6 +51,7 @@ export function useGoogleLogin() {
     options: {
       onSuccess: ({ token, context }) => {
         dispatch(setSession(toAuthState(token, context)));
+        void clearGateAfterOnlineAuth();
         router.push(popReturnTo() ?? '/');
       },
     },

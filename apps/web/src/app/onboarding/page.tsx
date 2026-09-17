@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { ParseKeys } from 'i18next';
 import { useDispatch } from 'react-redux';
 import { setDeviceSession } from '@/store';
+import { useRedirectIfSignedIn } from '@/lib/auth/useRedirectIfSignedIn';
 import { Button, Card, Field, AuthArt } from '@/components/ui';
 import { LANGUAGE_STORAGE_KEY, LOCALES, type Locale } from '@/i18n/dictionaries';
 import {
@@ -40,6 +41,10 @@ const ROLE_OPTIONS = [
  */
 export default function OnboardingPage() {
   const router = useRouter();
+  // Guard against a signed-in visitor creating a SECOND local household that
+  // competes with the persisted one (G3). Device-session onboarding sets the
+  // session BEFORE router.push('/'), so the in-page finish flow is unaffected.
+  useRedirectIfSignedIn();
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const [step, setStep] = useState(0);
