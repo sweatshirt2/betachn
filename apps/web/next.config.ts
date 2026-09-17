@@ -1,6 +1,19 @@
 import type { NextConfig } from 'next';
 
 /**
+ * NO middleware/proxy.ts BY DESIGN (Next 15.5; `middleware.ts` is deprecated
+ * upstream in favor of `proxy.ts`). Auth is Bearer-in-localStorage (§6) — a
+ * server-side proxy can only see cookies/headers the browser sends
+ * automatically, never the token, so classic edge route-gating is
+ * architecturally impossible without reintroducing cookie auth (banned).
+ * The API is the security boundary: every /api/v1 route re-authorizes.
+ * Client-side gating lives in Shell.tsx (signed-out door), the axios 401
+ * interceptor + sync transport (eviction), and useRedirectIfSignedIn
+ * (auth-surface guard). Revisit only if a non-session hint cookie is ever
+ * deemed worthwhile — not for security, only UX pre-painting.
+ */
+
+/**
  * CSP baseline (§8: the accepted Bearer-token XSS tradeoff, D36, is mitigated
  * by exactly this header among others). Policy notes:
  * - 'unsafe-inline' on script-src covers the tiny theme boot script in the
