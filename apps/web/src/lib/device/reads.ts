@@ -7,6 +7,7 @@ import * as schema from '@chorify/local-db/schema';
 import type { DeviceDb } from './createHousehold';
 import type {
   OccurrenceStatus,
+  OccurrenceSwap,
   ResponsibilityDetail,
   TodayPayload,
   TitledOccurrence,
@@ -282,6 +283,34 @@ export async function deviceOccurrences(filters: {
   if (filters.personId) records = records.filter((o) => o.personIds.includes(filters.personId!));
   records.sort((a, b) => (a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0));
   return { occurrences: records };
+}
+
+/**
+ * Open (pending) swaps for the active person (§16b / D113) — twin of
+ * GET /occurrences/swaps. Incoming = offered TO me; outgoing = offered BY me.
+ */
+export async function deviceSwaps(
+  role: 'incoming' | 'outgoing',
+  activePersonId: string,
+): Promise<{ swaps: OccurrenceSwap[] }> {
+  const db = await deviceContext();
+  const column = role === 'incoming' ? schema.occurrenceSwaps.toPersonId : schema.occurrenceSwaps.fromPersonId;
+  const rows = await db
+    .select()
+    .from(schema.occurrenceSwaps)
+    .where(and(eq(column, activePersonId), eq(schema.occurrenceSwaps.status, 'pending')));
+  return {
+    swaps: rows.map((s) => ({
+      id: s.id,
+      householdId: s.householdId,
+      occurrenceId: s.occurrenceId,
+      fromPersonId: s.fromPersonId,
+      toPersonId: s.toPersonId,
+      status: s.status,
+      createdAt: s.createdAt,
+      updatedAt: s.updatedAt,
+    })),
+  };
 }
 
 /** Chore detail — twin of GET /api/v1/responsibilities/:id. */
