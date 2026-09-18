@@ -110,3 +110,31 @@ export type ResponsibilityRow = typeof responsibilities.$inferSelect;
 export type SubtaskRow = typeof subtasks.$inferSelect;
 export type AssignmentRuleRow = typeof assignmentRules.$inferSelect;
 export type OccurrenceRow = typeof occurrences.$inferSelect;
+
+/**
+ * Occurrence-level mutual swaps mirror (§16b / D113). Row-level LWW; status
+ * transitions ride as updates. Timestamps ISO strings like every mirror row.
+ */
+export const occurrenceSwaps = sqliteTable('occurrence_swaps', {
+  id: text('id').primaryKey(),
+  householdId: text('household_id')
+    .notNull()
+    .references(() => households.id),
+  occurrenceId: text('occurrence_id')
+    .notNull()
+    .references(() => occurrences.id),
+  fromPersonId: text('from_person_id')
+    .notNull()
+    .references(() => people.id),
+  toPersonId: text('to_person_id')
+    .notNull()
+    .references(() => people.id),
+  status: text('status', { enum: ['pending', 'accepted', 'declined', 'cancelled'] })
+    .notNull()
+    .default('pending'),
+  clientUuid: text('client_uuid'),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+export type OccurrenceSwapRow = typeof occurrenceSwaps.$inferSelect;

@@ -57,6 +57,13 @@
       "when": 1789679075743,
       "tag": "0007_even_nighthawk",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1789705516705,
+      "tag": "0008_certain_boomer",
+      "breakpoints": true
     }
   ]
 }
