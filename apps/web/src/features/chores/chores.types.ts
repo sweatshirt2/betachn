@@ -36,6 +36,18 @@ export type OccurrenceAction =
   | { action: 'reopen' }
   | { action: 'reassign'; personIds: string[] };
 
+/** Occurrence-level mutual swap (§16b / D113) — mirrors core occurrenceSwapRowSchema. */
+export type OccurrenceSwap = {
+  id: string;
+  householdId: string;
+  occurrenceId: string;
+  fromPersonId: string;
+  toPersonId: string;
+  status: 'pending' | 'accepted' | 'declined' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type ResponsibilityDetail = {
   responsibility: {
     id: string;

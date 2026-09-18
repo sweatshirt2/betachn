@@ -3,9 +3,10 @@ export type {
   CreateResponsibilityBody,
   OccurrenceAction,
   OccurrenceStatus,
+  OccurrenceSwap,
   ResponsibilityDetail,
   TodayPayload,
   TitledOccurrence,
 } from './chores.types';
-export { useOccurrences, useResponsibility, useToday, usePeopleMap } from './api/chores.queries';
-export { useCreateResponsibility, useOccurrenceAct } from './api/chores.mutations';
+export { useOccurrences, useResponsibility, useToday, usePeopleMap, useSwaps } from './api/chores.queries';
+export { useCreateResponsibility, useOccurrenceAct, useCreateSwap, useResolveSwap } from './api/chores.mutations';
