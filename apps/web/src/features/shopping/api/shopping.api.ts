@@ -5,11 +5,15 @@ import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { queryKeys, useApiMutation, useApiQuery, useDeviceMutation } from '@/lib/api';
 import { useToast } from '@/components/ui';
-import { deviceCreateShoppingItem, devicePurchaseItem } from '@/lib/device/writes';
+import {
+  deviceCreateShoppingItem,
+  devicePurchaseItem,
+  deviceReorderShoppingItem,
+} from '@/lib/device/writes';
 import { deviceShoppingItems } from '@/lib/device/reads';
 import type { RootState } from '@/store';
 import { shoppingEndpoints } from '../shopping.endpoints';
-import type { ShoppingItemPayload } from '../shopping.types';
+import type { ReorderItemVariables, ShoppingItemPayload } from '../shopping.types';
 
 export function useShoppingItems() {
   const mode = useSelector((state: RootState) => state.auth.mode);
@@ -71,6 +75,34 @@ export function usePurchaseItem() {
     write: ({ id }, identity) =>
       devicePurchaseItem({ ...identity, itemId: id }).then((item) => ({ item })),
     options: { onSuccess },
+  });
+
+  return mode === 'device' ? device : server;
+}
+
+/**
+ * Drag-to-reorder (D115): optimistic position via sparse sortKey. The
+ * dragged item's new spot is expressed by its neighbors — the server/device
+ * twin computes the midpoint key; one row is written either way.
+ */
+export function useReorderShoppingItem() {
+  const queryClient = useQueryClient();
+  const mode = useSelector((state: RootState) => state.auth.mode);
+
+  const onSettled = () => {
+    void queryClient.invalidateQueries({ queryKey: ['shopping-items'] });
+  };
+
+  const server = useApiMutation<{ item: ShoppingItemPayload }, ReorderItemVariables>({
+    endpoint: shoppingEndpoints.reorderItem,
+    options: { onSettled },
+  });
+  const device = useDeviceMutation<{ item: ShoppingItemPayload }, ReorderItemVariables>({
+    write: ({ itemId, beforeItemId, afterItemId }, identity) =>
+      deviceReorderShoppingItem({ ...identity, itemId, beforeItemId, afterItemId }).then(
+        (r) => ({ item: { ...r, name: '', quantityText: null, purchasedAt: null } as ShoppingItemPayload }),
+      ),
+    options: { onSettled },
   });
 
   return mode === 'device' ? device : server;

@@ -80,7 +80,18 @@ export const shoppingItemRowSchema = z.object({
   category: z.string().nullable(),
   sourceSupplyId: z.string().uuid().nullable(),
   purchasedAt: z.date().nullable(),
+  /** Manual drag order (D115): sparse decimals; null = created before the feature. */
+  sortKey: z.number().nullable(),
   createdAt: z.date(),
+});
+
+/** POST /shopping/reorder (D115): assign the dragged item a position between neighbors. */
+export const reorderShoppingItemSchema = z.object({
+  itemId: z.string().uuid(),
+  /** Positioning anchor: place before/after this item's sortKey. */
+  beforeItemId: z.string().uuid().nullish(),
+  afterItemId: z.string().uuid().nullish(),
+  clientUuid: z.string().min(8).max(64).optional(),
 });
 
 export type SupplyState = z.infer<typeof supplyStateSchema>;
@@ -95,6 +106,7 @@ export type CreateShoppingItemInput = z.infer<typeof createShoppingItemSchema>;
 export type UpdateShoppingItemInput = z.infer<typeof updateShoppingItemSchema>;
 export type SupplyRecord = z.infer<typeof supplyRowSchema>;
 export type ShoppingItemRecord = z.infer<typeof shoppingItemRowSchema>;
+export type ReorderShoppingItemInput = z.infer<typeof reorderShoppingItemSchema>;
 
 /**
  * Recurring buy reminders (§4A.3 / D108–D110): REMINDERS ONLY — never an

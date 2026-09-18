@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Card,
@@ -19,7 +19,7 @@ import {
   storedIconGlyph,
   supplyGlyph,
   crayon,
-} from '@/components/ui';
+} from "@/components/ui";
 import {
   useOccurrenceAct,
   useResolveSwap,
@@ -28,14 +28,18 @@ import {
   usePeopleMap,
   OccurrenceContextSheet,
   type TitledOccurrence,
-} from '@/features/chores';
-import { formatDate } from '@/lib/dates';
-import { flushNow } from '@/lib/sync/syncClient';
-import { usePullToRefresh } from '@/lib/pullToRefresh';
-import { useLongPress } from '@/lib/gestures';
-import { usePermission } from '@/lib/permissions';
-import { useSelector } from 'react-redux';
-import type { RootState } from '@/store';
+} from "@/features/chores";
+import { formatDate } from "@/lib/dates";
+import { flushNow } from "@/lib/sync/syncClient";
+import { usePullToRefresh } from "@/lib/pullToRefresh";
+import { useLongPress } from "@/lib/gestures";
+import { usePermission } from "@/lib/permissions";
+import { CoachTourOverlay, coachAnchorIds } from "@/features/onboarding";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/store";
+
+/** Anchor ids shared with the D114 coach-tour steps registry. */
+const ANCHORS = coachAnchorIds();
 
 /** Whole days an occurrence is past due (missed-in-grace rows). */
 function daysLate(dueDate: string): number {
@@ -60,11 +64,11 @@ function LongPressTaskRow({
 }) {
   const { pressing, handlers } = useLongPress(() => onOpen(occurrence));
   return (
-    <div {...handlers} style={{ touchAction: 'pan-y' }}>
+    <div {...handlers} style={{ touchAction: "pan-y" }}>
       <div
         style={{
-          transform: pressing ? 'scale(0.985)' : 'scale(1)',
-          transition: 'transform 150ms ease-out',
+          transform: pressing ? "scale(0.985)" : "scale(1)",
+          transition: "transform 150ms ease-out",
         }}
       >
         {children}
@@ -78,23 +82,29 @@ export default function TodayPage() {
   const today = useToday();
   const act = useOccurrenceAct();
   const people = usePeopleMap();
-  const incomingSwaps = useSwaps('incoming');
+  const incomingSwaps = useSwaps("incoming");
   const resolveSwap = useResolveSwap();
-  const canReassign = usePermission('responsibilities.reassign');
+  const canReassign = usePermission("responsibilities.reassign");
   const [contextFor, setContextFor] = useState<TitledOccurrence | null>(null);
   const mode = useSelector((state: RootState) => state.auth.mode);
 
   // Pull-to-refresh (D115): device households flush the sync engine (push +
   // pull + cache invalidation ride refreshAfterFlush); server households
   // just refetch. Same paths as the visible retry controls.
-  const { pull, refreshing, handlers: ptrHandlers } = usePullToRefresh(async () => {
-    if (mode === 'device') {
+  const {
+    pull,
+    refreshing,
+    handlers: ptrHandlers,
+  } = usePullToRefresh(async () => {
+    if (mode === "device") {
       await flushNow();
     } else {
       await today.refetch();
     }
   });
-  const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
+  const names = new Map(
+    (people.data?.people ?? []).map((p) => [p.id, p.name] as const),
+  );
 
   if (today.isPending) {
     return (
@@ -110,9 +120,11 @@ export default function TodayPage() {
     return (
       <EmptyState
         art="cloud"
-        title={t('common.loadError')}
-        hint={t('common.checkConnection')}
-        action={<Button onClick={() => today.refetch()}>{t('common.retry')}</Button>}
+        title={t("common.loadError")}
+        hint={t("common.checkConnection")}
+        action={
+          <Button onClick={() => today.refetch()}>{t("common.retry")}</Button>
+        }
       />
     );
   }
@@ -120,13 +132,13 @@ export default function TodayPage() {
   const data = today.data;
   const todayIso = new Date().toISOString().slice(0, 10);
   const assigneeLabel = (o: TitledOccurrence) => {
-    if (o.personIds.length === 0) return t('today.upForGrabs');
-    return o.personIds.map((id) => names.get(id) ?? '…').join(', ');
+    if (o.personIds.length === 0) return t("today.upForGrabs");
+    return o.personIds.map((id) => names.get(id) ?? "…").join(", ");
   };
 
   const assigneePeople = (o: TitledOccurrence) =>
     o.personIds.map((id) => {
-      const name = names.get(id) ?? '?';
+      const name = names.get(id) ?? "?";
       return { label: name };
     });
 
@@ -141,40 +153,57 @@ export default function TodayPage() {
           className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-center text-xs font-bold text-ink/60"
           style={{ height: Math.max(pull, refreshing ? 28 : 0) }}
         >
-          {refreshing ? '…' : pull >= 72 ? '↑' : '↓'}
+          {refreshing ? "…" : pull >= 72 ? "↑" : "↓"}
         </div>
       )}
       <SectionWatermark variant="leaves" />
 
       {swaps.length > 0 && (
-        <section aria-label={t('chores.swapIncomingTitle')} className="mb-6">
-          <h2 className="font-display text-xl">{t('chores.swapIncomingTitle')}</h2>
+        <section aria-label={t("chores.swapIncomingTitle")} className="mb-6">
+          <h2 className="font-display text-xl">
+            {t("chores.swapIncomingTitle")}
+          </h2>
           <div className="mt-2 flex flex-col gap-2">
             {swaps.map((s) => {
               const occurrence =
                 data.todayOccurrences.find((o) => o.id === s.occurrenceId) ??
                 data.upcoming.find((o) => o.id === s.occurrenceId);
               return (
-                <Card key={s.id} className="flex flex-wrap items-center gap-2 py-3">
+                <Card
+                  key={s.id}
+                  className="flex flex-wrap items-center gap-2 py-3"
+                >
                   <p className="min-w-0 flex-1 text-sm">
-                    {t('chores.swapIncomingLine', {
-                      who: names.get(s.fromPersonId) ?? '…',
-                      title: occurrence?.title ?? t('chores.title'),
-                      date: occurrence ? formatDate(occurrence.dueDate) : '',
+                    {t("chores.swapIncomingLine", {
+                      who: names.get(s.fromPersonId) ?? "…",
+                      title: occurrence?.title ?? t("chores.title"),
+                      date: occurrence ? formatDate(occurrence.dueDate) : "",
                     })}
                   </p>
                   <Button
                     disabled={resolveSwap.isPending}
-                    onClick={() => resolveSwap.mutate({ occurrenceId: s.occurrenceId, swapId: s.id, action: 'accept' })}
+                    onClick={() =>
+                      resolveSwap.mutate({
+                        occurrenceId: s.occurrenceId,
+                        swapId: s.id,
+                        action: "accept",
+                      })
+                    }
                   >
-                    {t('chores.swapAccept')}
+                    {t("chores.swapAccept")}
                   </Button>
                   <Button
                     tone="quiet"
                     disabled={resolveSwap.isPending}
-                    onClick={() => resolveSwap.mutate({ occurrenceId: s.occurrenceId, swapId: s.id, action: 'decline' })}
+                    onClick={() =>
+                      resolveSwap.mutate({
+                        occurrenceId: s.occurrenceId,
+                        swapId: s.id,
+                        action: "decline",
+                      })
+                    }
                   >
-                    {t('chores.swapDecline')}
+                    {t("chores.swapDecline")}
                   </Button>
                 </Card>
               );
@@ -182,17 +211,23 @@ export default function TodayPage() {
           </div>
         </section>
       )}
-      <section aria-label={t('today.today')}>
-        <h2 className="font-display text-xl">{t('today.today')}</h2>
+      <section aria-label={t("today.today")} id={ANCHORS.todayList}>
+        <h2 className="font-display text-xl">{t("today.today")}</h2>
         {data.todayOccurrences.length === 0 ? (
-          <p className="text-muted mt-2 text-sm">{t('today.empty')}</p>
+          <p className="text-muted mt-2 text-sm">{t("today.empty")}</p>
         ) : (
           <div className="mt-2 flex flex-col gap-3">
             {data.todayOccurrences.map((o, index) => (
-              <LongPressTaskRow key={o.id} occurrence={o} onOpen={setContextFor}>
+              <LongPressTaskRow
+                key={o.id}
+                occurrence={o}
+                onOpen={setContextFor}
+              >
                 <SwipeCard
-                  onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}
-                  onSwipeLeft={() => act.mutate({ id: o.id, action: 'skip' })}
+                  onSwipeRight={() =>
+                    act.mutate({ id: o.id, action: "complete" })
+                  }
+                  onSwipeLeft={() => act.mutate({ id: o.id, action: "skip" })}
                 >
                   <TaskActionRow
                     className="stagger-item"
@@ -204,10 +239,12 @@ export default function TodayPage() {
                     people={assigneePeople(o)}
                     action={
                       <ChoreCheck
-                        done={o.status === 'completed'}
+                        done={o.status === "completed"}
                         disabled={act.isPending}
-                        onClick={() => act.mutate({ id: o.id, action: 'complete' })}
-                        label={t('chores.completeAria', { title: o.title })}
+                        onClick={() =>
+                          act.mutate({ id: o.id, action: "complete" })
+                        }
+                        label={t("chores.completeAria", { title: o.title })}
                       />
                     }
                   />
@@ -219,56 +256,72 @@ export default function TodayPage() {
       </section>
 
       {data.missedInGrace.length > 0 && (
-        <section aria-label={t('today.missedRecently')} className="mt-6">
+        <section aria-label={t("today.missedRecently")} className="mt-6">
           <div className="flex items-baseline justify-between">
-            <h2 className="font-display text-xl">{t('today.missedRecently')}</h2>
+            <h2 className="font-display text-xl">
+              {t("today.missedRecently")}
+            </h2>
             <Chip tone="danger">{data.missedInGrace.length}</Chip>
           </div>
-          <p className="text-muted mt-0.5 text-xs font-semibold">{t('today.missedHint')}</p>
+          <p className="text-muted mt-0.5 text-xs font-semibold">
+            {t("today.missedHint")}
+          </p>
           <div className="mt-2 flex flex-col gap-2.5">
             {data.missedInGrace.map((o, index) => (
-              <LongPressTaskRow key={o.id} occurrence={o} onOpen={setContextFor}>
-              <SwipeCard
-                onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}
-                onSwipeLeft={() => act.mutate({ id: o.id, action: 'skip' })}
+              <LongPressTaskRow
+                key={o.id}
+                occurrence={o}
+                onOpen={setContextFor}
               >
-                <TaskMissedRow
-                  className="stagger-item"
-                  style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}
-                  title={o.title}
-                  meta={assigneeLabel(o)}
-                  glyph={storedIconGlyph(o.icon, o.title)}
-                  chip={
-                    <span
-                      className="text-ink/80 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold"
-                      style={{ background: 'var(--chorify-danger-soft)' }}
-                      title={formatDate(o.dueDate)}
-                    >
-                      {t('today.daysLate', { count: daysLate(o.dueDate) })}
-                    </span>
+                <SwipeCard
+                  onSwipeRight={() =>
+                    act.mutate({ id: o.id, action: "complete" })
                   }
-                  people={assigneePeople(o)}
-                  secondaryAction={
-                    <Button
-                      tone="quiet"
-                      className="h-10 w-10 !px-0"
-                      disabled={act.isPending}
-                      onClick={() => act.mutate({ id: o.id, action: 'skip' })}
-                      aria-label={t('today.skipAria', { title: o.title })}
-                    >
-                      <Glyph name="skip" className="h-4.5 w-4.5" aria-hidden />
-                    </Button>
-                  }
-                  action={
-                    <ChoreCheck
-                      done={false}
-                      disabled={act.isPending}
-                      onClick={() => act.mutate({ id: o.id, action: 'complete' })}
-                      label={t('chores.completeAria', { title: o.title })}
-                    />
-                  }
-                />
-              </SwipeCard>
+                  onSwipeLeft={() => act.mutate({ id: o.id, action: "skip" })}
+                >
+                  <TaskMissedRow
+                    className="stagger-item"
+                    style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}
+                    title={o.title}
+                    meta={assigneeLabel(o)}
+                    glyph={storedIconGlyph(o.icon, o.title)}
+                    chip={
+                      <span
+                        className="text-ink/80 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold"
+                        style={{ background: "var(--chorify-danger-soft)" }}
+                        title={formatDate(o.dueDate)}
+                      >
+                        {t("today.daysLate", { count: daysLate(o.dueDate) })}
+                      </span>
+                    }
+                    people={assigneePeople(o)}
+                    secondaryAction={
+                      <Button
+                        tone="quiet"
+                        className="h-10 w-10 !px-0"
+                        disabled={act.isPending}
+                        onClick={() => act.mutate({ id: o.id, action: "skip" })}
+                        aria-label={t("today.skipAria", { title: o.title })}
+                      >
+                        <Glyph
+                          name="skip"
+                          className="h-4.5 w-4.5"
+                          aria-hidden
+                        />
+                      </Button>
+                    }
+                    action={
+                      <ChoreCheck
+                        done={false}
+                        disabled={act.isPending}
+                        onClick={() =>
+                          act.mutate({ id: o.id, action: "complete" })
+                        }
+                        label={t("chores.completeAria", { title: o.title })}
+                      />
+                    }
+                  />
+                </SwipeCard>
               </LongPressTaskRow>
             ))}
           </div>
@@ -277,40 +330,57 @@ export default function TodayPage() {
 
       <OccurrenceContextSheet
         occurrenceId={contextFor?.id ?? null}
-        title={contextFor?.title ?? ''}
-        choreId={contextFor?.responsibilityId ?? ''}
+        title={contextFor?.title ?? ""}
+        choreId={contextFor?.responsibilityId ?? ""}
         canReassign={canReassign}
         onSkip={() => {
-          if (contextFor) act.mutate({ id: contextFor.id, action: 'skip' });
+          if (contextFor) act.mutate({ id: contextFor.id, action: "skip" });
         }}
         onClose={() => setContextFor(null)}
       />
 
       {(data.lowSupplies.length > 0 || data.maintenanceDue.length > 0) && (
-        <section aria-label={t('today.attention')} className="mt-6">
-          <h2 className="font-display text-xl">{t('today.attention')}</h2>
+        <section aria-label={t("today.attention")} className="mt-6">
+          <h2 className="font-display text-xl">{t("today.attention")}</h2>
           <div className="mt-2 flex flex-col gap-2.5">
             {data.lowSupplies.map((s, index) => (
-              <Card key={s.id} className="lift-hover flex items-center gap-3 px-3 py-2.5">
-                <GlyphTile glyph={supplyGlyph(s.name)} wash="var(--chorify-danger-soft)" />
+              <Card
+                key={s.id}
+                className="lift-hover flex items-center gap-3 px-3 py-2.5"
+              >
+                <GlyphTile
+                  glyph={supplyGlyph(s.name)}
+                  wash="var(--chorify-danger-soft)"
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold">{s.name}</p>
                   <p className="text-muted mt-0.5 text-xs font-semibold">
-                    {s.state === 'out' ? t('ops.supplyOutHint') : t('ops.supplyLowHint')}
+                    {s.state === "out"
+                      ? t("ops.supplyOutHint")
+                      : t("ops.supplyLowHint")}
                   </p>
                 </div>
-                <Chip tone={s.state === 'out' ? 'danger' : 'warning'}>
-                  {s.state === 'out' ? t('ops.supplyOut') : t('ops.supplyLow')}
+                <Chip tone={s.state === "out" ? "danger" : "warning"}>
+                  {s.state === "out" ? t("ops.supplyOut") : t("ops.supplyLow")}
                 </Chip>
-                <span className="shrink-0" aria-hidden style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }} />
+                <span
+                  className="shrink-0"
+                  aria-hidden
+                  style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}
+                />
               </Card>
             ))}
             {data.maintenanceDue.map((m) => (
-              <Card key={m.assetId} className="lift-hover flex items-center gap-3 px-3 py-2.5">
+              <Card
+                key={m.assetId}
+                className="lift-hover flex items-center gap-3 px-3 py-2.5"
+              >
                 <GlyphTile glyph="wrench" wash="var(--chorify-primary-soft)" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-bold">{m.assetName}</p>
-                  <p className="text-muted mt-0.5 text-xs font-semibold">{t('ops.maintenanceHint')}</p>
+                  <p className="text-muted mt-0.5 text-xs font-semibold">
+                    {t("ops.maintenanceHint")}
+                  </p>
                 </div>
                 <Chip tone="info">{formatDate(m.nextDue)}</Chip>
               </Card>
@@ -320,8 +390,8 @@ export default function TodayPage() {
       )}
 
       {data.upcoming.length > 0 && (
-        <section aria-label={t('today.comingUp')} className="mt-6">
-          <h2 className="font-display text-xl">{t('today.comingUp')}</h2>
+        <section aria-label={t("today.comingUp")} className="mt-6">
+          <h2 className="font-display text-xl">{t("today.comingUp")}</h2>
           <div className="mt-2 flex flex-col gap-2">
             {data.upcoming.map((o, index) => (
               <TaskUpcomingRow
@@ -338,6 +408,9 @@ export default function TodayPage() {
           </div>
         </section>
       )}
+
+      {/* First-comer guide (D114): auto-plays once for synced households. */}
+      <CoachTourOverlay />
     </div>
   );
 }

@@ -674,7 +674,7 @@ export async function deviceCreateShoppingItem(input: {
   householdId: string;
   actorPersonId: string;
   name: string;
-}): Promise<{ id: string; name: string; purchasedAt: string | null; quantityText: string | null }> {
+}): Promise<{ id: string; name: string; purchasedAt: string | null; quantityText: string | null; sortKey: number | null }> {
   const db = await requireDeviceDb();
   const now = new Date().toISOString();
   const id = randomId();
@@ -705,7 +705,7 @@ export async function deviceCreateShoppingItem(input: {
     },
     domain: 'resources',
   });
-  return { id, name: input.name, purchasedAt: null, quantityText: null };
+  return { id, name: input.name, purchasedAt: null, quantityText: null, sortKey: null };
 }
 
 /** Idempotent purchase (§6.12): purchaseGuard + silent supply restock (§6.11). */
@@ -713,7 +713,7 @@ export async function devicePurchaseItem(input: {
   householdId: string;
   actorPersonId: string;
   itemId: string;
-}): Promise<{ id: string; name: string; purchasedAt: string | null; quantityText: string | null }> {
+}): Promise<{ id: string; name: string; purchasedAt: string | null; quantityText: string | null; sortKey: number | null }> {
   const db = await requireDeviceDb();
   const item = await db.query.shoppingItems!.findFirst({ where: eq(schema.shoppingItems.id, input.itemId) });
   if (!item || item.householdId !== input.householdId) {
@@ -804,7 +804,67 @@ export async function devicePurchaseItem(input: {
     payload: { ...item, purchasedAt: nowIso },
     domain: 'resources',
   });
-  return { id: item.id, name: item.name, purchasedAt: nowIso, quantityText: item.quantityText ?? null };
+  return { id: item.id, name: item.name, purchasedAt: nowIso, quantityText: item.quantityText ?? null, sortKey: item.sortKey };
+}
+
+/**
+ * D115 drag-to-reorder (device twin of POST /shopping-items/reorder):
+ * compute the sparse sortKey from the local mirror, update one row, enqueue.
+ */
+export async function deviceReorderShoppingItem(input: {
+  householdId: string;
+  actorPersonId: string;
+  itemId: string;
+  beforeItemId?: string | null;
+  afterItemId?: string | null;
+}): Promise<{ id: string; sortKey: number }> {
+  const db = await requireDeviceDb();
+  const rows = await db
+    .select()
+    .from(schema.shoppingItems)
+    .where(eq(schema.shoppingItems.householdId, input.householdId));
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const dragged = byId.get(input.itemId);
+  if (!dragged) throw new AppError('NOT_FOUND', 'Shopping item not found');
+  const before = input.beforeItemId ? byId.get(input.beforeItemId) : undefined;
+  const after = input.afterItemId ? byId.get(input.afterItemId) : undefined;
+  if (input.beforeItemId && !before) throw new AppError('VALIDATION_ERROR', 'Unknown before item');
+  if (input.afterItemId && !after) throw new AppError('VALIDATION_ERROR', 'Unknown after item');
+
+  const keyOf = (row: { sortKey: number | null } | undefined): number | undefined =>
+    row === undefined ? undefined : (row.sortKey ?? 0);
+  const beforeKey = keyOf(before);
+  const afterKey = keyOf(after);
+
+  let sortKey: number;
+  if (beforeKey !== undefined && afterKey !== undefined) {
+    sortKey = (beforeKey + afterKey) / 2;
+  } else if (beforeKey !== undefined) {
+    sortKey = beforeKey + 1000;
+  } else if (afterKey !== undefined) {
+    sortKey = afterKey - 1000;
+  } else {
+    let maxKey = 0;
+    for (const r of rows) {
+      const k = Number(r.sortKey);
+      if (!Number.isNaN(k) && k > maxKey) maxKey = k;
+    }
+    sortKey = maxKey + 1000;
+  }
+
+  const nowIso = new Date().toISOString();
+  await db
+    .update(schema.shoppingItems)
+    .set({ sortKey })
+    .where(eq(schema.shoppingItems.id, input.itemId));
+  enqueue(db, input.householdId, {
+    entity: 'shopping_items',
+    entityId: input.itemId,
+    op: 'update',
+    payload: { ...dragged, sortKey },
+    domain: 'resources',
+  });
+  return { id: input.itemId, sortKey };
 }
 
 // ------------------------------------------------------------------

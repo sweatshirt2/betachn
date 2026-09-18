@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  doublePrecision,
   index,
   integer,
   jsonb,
@@ -43,6 +44,8 @@ export const shoppingItems = pgTable(
     category: text('category'),
     sourceSupplyId: uuid('source_supply_id').references((): AnyPgColumn => supplies.id),
     purchasedAt: timestamp('purchased_at', { withTimezone: true }),
+    /** Manual drag order (D115): sparse decimals; new items sort after existing. */
+    sortKey: doublePrecision('sort_key'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

@@ -1,59 +1,59 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useDispatch, useSelector } from 'react-redux';
-import { AuthArt, Button, Glyph, Sheet } from '@/components/ui';
-import { NavIcon, type NavIconName } from '@/components/icons';
-import { clearApiCache, queryKeys, useApiQuery } from '@/lib/api';
-import { useSyncBoot, useSyncStatus } from '@/lib/sync/syncClient';
-import { stashReturnTo } from '@/lib/auth/returnTo';
-import { exitViewAs, hasSession, type RootState } from '@/store';
-import { deviceNotifications } from '@/lib/device/reads';
-import { readPasscodeGateState } from '@/lib/device/passcodeGate';
-import { LockScreen } from './LockScreen';
-import { LanguageSwitcher } from './LanguageSwitcher';
-import { ProfileChip } from './ProfileChip';
-import { ProfileSwitcher } from './ProfileSwitcher';
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useDispatch, useSelector } from "react-redux";
+import { AuthArt, Button, Glyph, Sheet } from "@/components/ui";
+import { NavIcon, type NavIconName } from "@/components/icons";
+import { clearApiCache, queryKeys, useApiQuery } from "@/lib/api";
+import { useSyncBoot, useSyncStatus } from "@/lib/sync/syncClient";
+import { stashReturnTo } from "@/lib/auth/returnTo";
+import { exitViewAs, hasSession, type RootState } from "@/store";
+import { deviceNotifications } from "@/lib/device/reads";
+import { readPasscodeGateState } from "@/lib/device/passcodeGate";
+import { LockScreen } from "./LockScreen";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { ProfileChip } from "./ProfileChip";
+import { ProfileSwitcher } from "./ProfileSwitcher";
 
 type TabKey =
-  | 'today'
-  | 'chores'
-  | 'pantry'
-  | 'family'
-  | 'routines'
-  | 'home'
-  | 'activity'
-  | 'notifications'
-  | 'settings';
+  | "today"
+  | "chores"
+  | "pantry"
+  | "family"
+  | "routines"
+  | "home"
+  | "activity"
+  | "notifications"
+  | "settings";
 
 type TabItem = { href: string; key: TabKey; icon: NavIconName };
 
 /** Five destinations per the §5.5 nav spec: Home, Tasks, Pantry, Family, Settings. */
 const TABS: TabItem[] = [
-  { href: '/', key: 'today', icon: 'today' },
-  { href: '/chores', key: 'chores', icon: 'chores' },
-  { href: '/pantry', key: 'pantry', icon: 'supplies' },
-  { href: '/family', key: 'family', icon: 'household' },
-  { href: '/settings', key: 'settings', icon: 'settings' },
+  { href: "/", key: "today", icon: "today" },
+  { href: "/chores", key: "chores", icon: "chores" },
+  { href: "/pantry", key: "pantry", icon: "supplies" },
+  { href: "/family", key: "family", icon: "household" },
+  { href: "/settings", key: "settings", icon: "settings" },
 ];
 
 /** Wide-screen rail: the five tabs plus the management pages. */
 const RAIL: TabItem[] = [
   ...TABS.slice(0, 3),
-  { href: '/routines', key: 'routines', icon: 'routines' },
-  { href: '/home', key: 'home', icon: 'home' },
-  { href: '/activity', key: 'activity', icon: 'activity' },
-  { href: '/notifications', key: 'notifications', icon: 'notifications' },
+  { href: "/routines", key: "routines", icon: "routines" },
+  { href: "/home", key: "home", icon: "home" },
+  { href: "/activity", key: "activity", icon: "activity" },
+  { href: "/notifications", key: "notifications", icon: "notifications" },
   ...TABS.slice(3),
 ];
 
-const CHROMELESS = ['/login', '/onboarding', '/auth'];
+const CHROMELESS = ["/login", "/onboarding", "/auth"];
 
 /** sessionStorage marker that the app-entry gate was satisfied this tab session. */
-const ENTRY_KEY = 'chorify-entry-ok';
+const ENTRY_KEY = "chorify-entry-ok";
 
 /** App shell (§5.5): profile chip + language header, 5-tab bottom nav on mobile, left rail wide. */
 export function Shell({ children }: { children: React.ReactNode }) {
@@ -64,24 +64,31 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [profilesOpen, setProfilesOpen] = useState(false);
   const mode = useSelector((state: RootState) => state.auth.mode);
   const hasToken = useSelector((state: RootState) => state.auth.token !== null);
-  const activePerson = useSelector((state: RootState) => state.auth.activePerson);
-  const viewAsPersonId = useSelector((state: RootState) => state.auth.viewAsPersonId);
+  const activePerson = useSelector(
+    (state: RootState) => state.auth.activePerson,
+  );
+  const viewAsPersonId = useSelector(
+    (state: RootState) => state.auth.viewAsPersonId,
+  );
   // Device passcode gate (D63): while a gate exists and the entry secret isn't
   // in sessionStorage, the shell renders the LockScreen INSTEAD of the app —
   // queries inside children stay unmounted, so nothing leaks.
-  const [gateState, setGateState] = useState<'checking' | 'locked' | 'open'>('checking');
+  const [gateState, setGateState] = useState<"checking" | "locked" | "open">(
+    "checking",
+  );
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       try {
-        if (sessionStorage.getItem(ENTRY_KEY) === '1') {
-          if (!cancelled) setGateState('open');
+        if (sessionStorage.getItem(ENTRY_KEY) === "1") {
+          if (!cancelled) setGateState("open");
           return;
         }
         const state = await readPasscodeGateState();
-        if (!cancelled) setGateState(state.status === 'gate' ? 'locked' : 'open');
+        if (!cancelled)
+          setGateState(state.status === "gate" ? "locked" : "open");
       } catch {
-        if (!cancelled) setGateState('open'); // fail-open: never brick the app
+        if (!cancelled) setGateState("open"); // fail-open: never brick the app
       }
     })();
     return () => {
@@ -91,44 +98,55 @@ export function Shell({ children }: { children: React.ReactNode }) {
   useSyncBoot();
   const sync = useSyncStatus();
   const people = useApiQuery<{ people: Array<{ id: string; name: string }> }>({
-    endpoint: { method: 'get', path: '/profiles' },
+    endpoint: { method: "get", path: "/profiles" },
     key: queryKeys.profiles(),
     options: { enabled: hasToken },
   });
-  const viewedName = people.data?.people.find((p) => p.id === viewAsPersonId)?.name;
+  const viewedName = people.data?.people.find(
+    (p) => p.id === viewAsPersonId,
+  )?.name;
   // Unread notification dot rides the header bell (micro-24 companion); the
   // poll is handled by the global sync tick, enabled only with a session.
-  const notifications = useApiQuery<{ notifications: Array<{ readAt: string | null }> }>({
-    endpoint: { method: 'get', path: '/notifications' },
-    key: ['notifications', 'all'] as const,
+  const notifications = useApiQuery<{
+    notifications: Array<{ readAt: string | null }>;
+  }>({
+    endpoint: { method: "get", path: "/notifications" },
+    key: ["notifications", "all"] as const,
     options: {
-      enabled: hasToken || mode === 'device',
+      enabled: hasToken || mode === "device",
       queryFn:
-        mode === 'device'
-          ? () => deviceNotifications(false) as Promise<{ notifications: Array<{ readAt: string | null }> }>
+        mode === "device"
+          ? () =>
+              deviceNotifications(false) as Promise<{
+                notifications: Array<{ readAt: string | null }>;
+              }>
           : undefined,
     },
   });
-  const unreadCount = (notifications.data?.notifications ?? []).filter((n) => n.readAt === null).length;
+  const unreadCount = (notifications.data?.notifications ?? []).filter(
+    (n) => n.readAt === null,
+  ).length;
   const signedIn = useSelector(hasSession);
 
-  const chromeless = CHROMELESS.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  const chromeless = CHROMELESS.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
   if (chromeless) {
     return <>{children}</>;
   }
-  if (gateState === 'checking') {
+  if (gateState === "checking") {
     return <div className="bg-page-wash min-h-screen" aria-busy="true" />;
   }
-  if (gateState === 'locked') {
+  if (gateState === "locked") {
     return (
       <LockScreen
         onUnlocked={() => {
           try {
-            sessionStorage.setItem(ENTRY_KEY, '1');
+            sessionStorage.setItem(ENTRY_KEY, "1");
           } catch {
             // private-mode — gate re-asks per navigation, acceptable
           }
-          setGateState('open');
+          setGateState("open");
         }}
       />
     );
@@ -141,7 +159,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
   if (!signedIn) {
     // Return-to: remember where the visitor was headed so login lands them
     // on the thing they tapped (deep links, PWA relaunch, bookmarks).
-    if (typeof window !== 'undefined') stashReturnTo(pathname, window.location.search);
+    if (typeof window !== "undefined")
+      stashReturnTo(pathname, window.location.search);
     return <SignedOutDoor />;
   }
 
@@ -152,7 +171,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         data-no-print
       >
         <p className="font-display px-2 text-xl">Chorify</p>
-        <nav className="mt-2 flex flex-col gap-1" aria-label={t('nav.primary')}>
+        <nav className="mt-2 flex flex-col gap-1" aria-label={t("nav.primary")}>
           {RAIL.map((item) => {
             const active = pathname === item.href;
             return (
@@ -160,11 +179,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 key={`${item.href}-${item.key}`}
                 href={item.href}
                 className={`tap-spring flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
-                  active ? 'bg-accent-wash text-ink shadow-soft' : 'text-muted hover:bg-surface-alt'
+                  active
+                    ? "bg-accent-wash text-ink shadow-soft"
+                    : "text-muted hover:bg-surface-alt"
                 }`}
-                aria-current={active ? 'page' : undefined}
+                aria-current={active ? "page" : undefined}
               >
-                <NavIcon name={item.icon} variant={active ? 'filled' : 'outline'} className="h-5 w-5" />
+                <NavIcon
+                  name={item.icon}
+                  variant={active ? "filled" : "outline"}
+                  className="h-5 w-5"
+                />
                 {t(`nav.${item.key}`)}
               </Link>
             );
@@ -175,43 +200,48 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="app-header-sticky flex items-center justify-between gap-2 px-4 pt-4">
           <div className="flex min-w-0 items-center gap-3">
-            {activePerson && <ProfileChip onOpen={() => setProfilesOpen(true)} />}
+            {activePerson && (
+              <ProfileChip onOpen={() => setProfilesOpen(true)} />
+            )}
             <p className="font-display hidden text-xl sm:block sm:text-2xl">
-              {t(greetingKey())}, {activePerson?.name ?? t('nav.family')}
+              {t(greetingKey())}, {activePerson?.name ?? t("nav.family")}
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            {mode === 'server' && hasToken && (
+            {mode === "server" && hasToken && (
               <span
                 className="border-line bg-surface/80 shadow-soft hidden rounded-full border px-2.5 py-0.5 text-xs md:block"
                 role="status"
               >
-                {t('nav.upToDate')}
+                {t("nav.upToDate")}
               </span>
             )}
-            {mode === 'device' && (
+            {mode === "device" && (
               <SyncChip
                 pendingCount={sync.pendingCount}
                 level={sync.banner.level}
-                syncingLabel={t('sync.syncing')}
-                freshLabel={t('sync.savedLocal')}
-                pendingLabel={t('sync.pending', { count: sync.pendingCount })}
+                syncingLabel={t("sync.syncing")}
+                freshLabel={t("sync.savedLocal")}
+                pendingLabel={t("sync.pending", { count: sync.pendingCount })}
               />
             )}
             <LanguageSwitcher />
             <Link
               href="/notifications"
               className="border-line bg-surface/80 shadow-soft tap-spring relative flex h-9 w-9 items-center justify-center rounded-full border"
-              aria-label={t('nav.notifications')}
+              aria-label={t("nav.notifications")}
             >
               <NavIcon
                 name="notifications"
-                variant={unreadCount > 0 ? 'filled' : 'outline'}
+                variant={unreadCount > 0 ? "filled" : "outline"}
                 className="text-ink h-5 w-5"
                 aria-hidden
               />
               {unreadCount > 0 && (
-                <span className="bg-clay-red absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full" aria-hidden />
+                <span
+                  className="bg-clay-red absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full"
+                  aria-hidden
+                />
               )}
             </Link>
           </div>
@@ -222,7 +252,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
             className="bg-accent-wash text-ink mx-4 mt-2 flex items-center justify-between rounded-md px-3 py-2 text-sm font-semibold"
             role="status"
           >
-            <span>{t('nav.previewingAs', { name: viewedName ?? t('nav.family') })}</span>
+            <span>
+              {t("nav.previewingAs", { name: viewedName ?? t("nav.family") })}
+            </span>
             <button
               className="underline"
               onClick={() => {
@@ -230,45 +262,57 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 clearApiCache();
               }}
             >
-              {t('nav.exit')}
+              {t("nav.exit")}
             </button>
           </div>
         )}
 
-        {mode === 'device' && sync.banner.level !== 'fresh' && (
+        {mode === "device" && sync.banner.level !== "fresh" && (
           <div
             className={`text-ink mx-4 mt-2 flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm font-semibold ${
-              sync.banner.level === 'warn' ? 'bg-mustard' : 'bg-clay-red text-cream'
+              sync.banner.level === "warn"
+                ? "bg-mustard"
+                : "bg-clay-red text-cream"
             }`}
             role="status"
           >
             <span>
-              {sync.banner.level === 'warn' && t('sync.staleWarn')}
-              {sync.banner.level === 'strong' && t('sync.staleStrong')}
-              {sync.banner.level === 'resync' && t('sync.staleResync')}
+              {sync.banner.level === "warn" && t("sync.staleWarn")}
+              {sync.banner.level === "strong" && t("sync.staleStrong")}
+              {sync.banner.level === "resync" && t("sync.staleResync")}
             </span>
-            {!hasToken && <span className="hidden text-xs sm:inline">{t('sync.signUpNudge')}</span>}
+            {!hasToken && (
+              <span className="hidden text-xs sm:inline">
+                {t("sync.signUpNudge")}
+              </span>
+            )}
           </div>
         )}
 
-        <ProfileSwitcher open={profilesOpen} onClose={() => setProfilesOpen(false)} />
+        <ProfileSwitcher
+          open={profilesOpen}
+          onClose={() => setProfilesOpen(false)}
+        />
 
         {/* Bottom padding clears the fixed FAB + navbar — cards/adders must
             never sit underneath either (UI/UX iteration 1). Responsive via
             .app-main-pad: 7.5rem mobile (nav + FAB), 6rem wide (FAB only). */}
-        <main className="app-main-pad mx-auto w-full max-w-3xl flex-1 px-4 pt-2 sm:px-6 xl:max-w-4xl">{children}</main>
+        <main className="app-main-pad mx-auto w-full max-w-3xl flex-1 px-4 pt-2 sm:px-6 xl:max-w-4xl">
+          {children}
+        </main>
 
         <button
+          id="coach-anchor-create-fab"
           className="bg-fab text-fab-ink tap-spring outline-surface shadow-lift hover:shadow-glow fixed bottom-[4.5rem] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full text-2xl outline-4 transition-all duration-200 hover:scale-105 sm:right-6 lg:bottom-8 lg:right-8"
           onClick={() => setCreateOpen(true)}
-          aria-label={t('nav.create')}
+          aria-label={t("nav.create")}
         >
           +
         </button>
 
         <nav
           className="border-line/70 bg-surface/90 fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
-          aria-label={t('nav.primary')}
+          aria-label={t("nav.primary")}
           data-no-print
         >
           {TABS.map((item) => (
@@ -278,29 +322,47 @@ export function Shell({ children }: { children: React.ReactNode }) {
               label={t(`nav.${item.key}`)}
               icon={item.icon}
               active={pathname === item.href}
+              anchorId={
+                item.key === "pantry" ? "coach-anchor-pantry-tab" : undefined
+              }
             />
           ))}
         </nav>
 
-        <Sheet open={createOpen} onClose={() => setCreateOpen(false)} title={t('nav.create')}>
+        <Sheet
+          open={createOpen}
+          onClose={() => setCreateOpen(false)}
+          title={t("nav.create")}
+        >
           <div className="flex flex-col gap-2">
-            <Button onClick={() => setCreateOpen(false)} className="flex items-center justify-center gap-2">
+            <Button
+              onClick={() => setCreateOpen(false)}
+              className="flex items-center justify-center gap-2"
+            >
               <Glyph name="basket" className="h-4.5 w-4.5" aria-hidden />
-              {t('nav.newResponsibility')}
+              {t("nav.newResponsibility")}
             </Button>
-            <Button tone="quiet" onClick={() => setCreateOpen(false)} className="flex items-center justify-center gap-2">
+            <Button
+              tone="quiet"
+              onClick={() => setCreateOpen(false)}
+              className="flex items-center justify-center gap-2"
+            >
               <Glyph name="cart" className="h-4.5 w-4.5" aria-hidden />
-              {t('nav.newShoppingItem')}
+              {t("nav.newShoppingItem")}
             </Button>
-            <Button tone="quiet" onClick={() => setCreateOpen(false)} className="flex items-center justify-center gap-2">
+            <Button
+              tone="quiet"
+              onClick={() => setCreateOpen(false)}
+              className="flex items-center justify-center gap-2"
+            >
               <Glyph name="people" className="h-4.5 w-4.5" aria-hidden />
-              {t('nav.newPerson')}
+              {t("nav.newPerson")}
             </Button>
             <Button tone="quiet" disabled>
-              {t('nav.expense')} — {t('nav.soon')}
+              {t("nav.expense")} — {t("nav.soon")}
             </Button>
             <Button tone="quiet" disabled>
-              {t('nav.bill')} — {t('nav.soon')}
+              {t("nav.bill")} — {t("nav.soon")}
             </Button>
           </div>
         </Sheet>
@@ -318,25 +380,29 @@ function SignedOutDoor() {
   return (
     <main className="bg-page-wash ambient page-enter flex min-h-screen w-full flex-col items-center justify-center px-4 py-10">
       <AuthArt variant="welcome" />
-      <h1 className="font-display mt-4 text-center text-3xl">{t('auth.welcomeBack')}</h1>
-      <p className="text-muted mt-1 text-center text-sm">{t('auth.signInSubtitle')}</p>
+      <h1 className="font-display mt-4 text-center text-3xl">
+        {t("auth.welcomeBack")}
+      </h1>
+      <p className="text-muted mt-1 text-center text-sm">
+        {t("auth.signInSubtitle")}
+      </p>
       <div className="mt-6 flex gap-3">
         <Link href="/login">
-          <Button>{t('auth.signIn')}</Button>
+          <Button>{t("auth.signIn")}</Button>
         </Link>
         <Link href="/onboarding">
-          <Button tone="quiet">{t('auth.setupHousehold')}</Button>
+          <Button tone="quiet">{t("auth.setupHousehold")}</Button>
         </Link>
       </div>
     </main>
   );
 }
 
-function greetingKey(): 'nav.morning' | 'nav.afternoon' | 'nav.evening' {
+function greetingKey(): "nav.morning" | "nav.afternoon" | "nav.evening" {
   const hour = new Date().getHours();
-  if (hour < 12) return 'nav.morning';
-  if (hour < 18) return 'nav.afternoon';
-  return 'nav.evening';
+  if (hour < 12) return "nav.morning";
+  if (hour < 18) return "nav.afternoon";
+  return "nav.evening";
 }
 
 /** Device-mode sync chip (§4.12): syncing pulse, saved-local check, pending count. */
@@ -348,7 +414,9 @@ function SyncChip(props: {
   pendingLabel: string;
 }) {
   const label =
-    props.level === 'resync' || props.pendingCount === 0 ? props.freshLabel : props.pendingLabel;
+    props.level === "resync" || props.pendingCount === 0
+      ? props.freshLabel
+      : props.pendingLabel;
   return (
     <span
       className="border-line bg-surface/80 shadow-soft hidden rounded-full border px-2.5 py-0.5 text-xs md:block"
@@ -364,21 +432,30 @@ function Tab({
   label,
   icon,
   active,
+  anchorId,
 }: {
   href: string;
   label: string;
   icon: NavIconName;
   active: boolean;
+  /** Optional DOM id for the D114 coach-mark spotlight. */
+  anchorId?: string;
 }) {
   return (
     <Link
       href={href}
+      id={anchorId}
       className={`tap-spring relative flex flex-1 flex-col items-center gap-0.5 rounded-md py-2 text-[10px] font-semibold leading-tight transition-colors ${
-        active ? 'text-ink' : 'text-muted'
+        active ? "text-ink" : "text-muted"
       }`}
-      aria-current={active ? 'page' : undefined}
+      aria-current={active ? "page" : undefined}
     >
-      <NavIcon name={icon} variant={active ? 'filled' : 'outline'} className="h-6 w-6" aria-hidden />
+      <NavIcon
+        name={icon}
+        variant={active ? "filled" : "outline"}
+        className="h-6 w-6"
+        aria-hidden
+      />
       {label}
     </Link>
   );

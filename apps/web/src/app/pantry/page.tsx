@@ -6,6 +6,7 @@ import {
   Button,
   Card,
   Chip,
+  DragRow,
   EmptyState,
   Field,
   Glyph,
@@ -18,7 +19,7 @@ import {
 } from '@/components/ui';
 import { NavIcon } from '@/components/icons';
 import { useToday } from '@/features/chores';
-import { useCreateShoppingItem, usePurchaseItem, useShoppingItems } from '@/features/shopping';
+import { useCreateShoppingItem, usePurchaseItem, useReorderShoppingItem, useShoppingItems } from '@/features/shopping';
 import {
   useCreateSupply,
   useCycleSupply,
@@ -46,10 +47,12 @@ export default function PantryPage() {
   const cycle = useCycleSupply();
   const createItem = useCreateShoppingItem();
   const purchase = usePurchaseItem();
+  const reorder = useReorderShoppingItem();
   const [supplyName, setSupplyName] = useState('');
   const [itemName, setItemName] = useState('');
 
-  const pendingAny = createSupply.isPending || cycle.isPending || createItem.isPending || purchase.isPending;
+  const pendingAny =
+    createSupply.isPending || cycle.isPending || createItem.isPending || purchase.isPending || reorder.isPending;
 
   if (supplies.isPending || items.isPending) {
     return (
@@ -180,10 +183,13 @@ export default function PantryPage() {
         </div>
         <div className="mt-2 flex flex-col gap-2">
           {openItems.map((i) => (
-            <div
+            <DragRow
               key={i.id}
-              className="bg-card-wash border-line shadow-soft lift-hover flex min-h-[3.25rem] items-center gap-3 rounded-xl border px-3 py-2"
+              itemId={i.id}
+              disabled={reorder.isPending}
+              onReorder={(v) => reorder.mutate(v)}
             >
+              <div className="bg-card-wash border-line shadow-soft lift-hover flex min-h-[3.25rem] w-full items-center gap-3 rounded-xl border px-3 py-2">
               {/* Cart tile, not a ✓ — a checkmark on a pending row read as
                   "already done" (UI/UX iteration 1). */}
               <span
@@ -201,7 +207,8 @@ export default function PantryPage() {
               >
                 {t('ops.buy')}
               </Button>
-            </div>
+              </div>
+            </DragRow>
           ))}
           {openItems.length === 0 && (
             <p className="text-muted mt-1 text-sm">{t('ops.shoppingEmptyHint')}</p>
