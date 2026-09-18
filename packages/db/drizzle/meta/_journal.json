@@ -85,6 +85,13 @@
       "when": 1789704994275,
       "tag": "0011_unique_zodiak",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1789722162931,
+      "tag": "0012_flowery_azazel",
+      "breakpoints": true
     }
   ]
 }
