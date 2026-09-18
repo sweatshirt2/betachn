@@ -1,5 +1,5 @@
 import { addDays, expandRule, type ExpandableRule } from '@chorify/core/schedule';
-import { currentRotationTurn } from '@chorify/core';
+import { currentRotationTurn } from '@chorify/core/occurrence-helpers';
 import type { RuleInput, RuleRecord } from '@chorify/core';
 
 /** Composer shape of one assignment rule (mirrors core ruleInputSchema). */
