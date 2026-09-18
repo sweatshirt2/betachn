@@ -128,7 +128,11 @@ export default function TodayPage() {
         ) : (
           <div className="mt-2 flex flex-col gap-3">
             {data.todayOccurrences.map((o, index) => (
-              <SwipeCard key={o.id} onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}>
+              <SwipeCard
+                key={o.id}
+                onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}
+                onSwipeLeft={() => act.mutate({ id: o.id, action: 'skip' })}
+              >
                 <TaskActionRow
                   className="stagger-item"
                   style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}
@@ -161,7 +165,11 @@ export default function TodayPage() {
           <p className="text-muted mt-0.5 text-xs font-semibold">{t('today.missedHint')}</p>
           <div className="mt-2 flex flex-col gap-2.5">
             {data.missedInGrace.map((o, index) => (
-              <SwipeCard key={o.id} onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}>
+              <SwipeCard
+                key={o.id}
+                onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}
+                onSwipeLeft={() => act.mutate({ id: o.id, action: 'skip' })}
+              >
                 <TaskMissedRow
                   className="stagger-item"
                   style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}
