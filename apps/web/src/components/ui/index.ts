@@ -15,6 +15,7 @@ export { Switch } from './Switch';
 export { Field } from './Field';
 export { Sheet } from './Sheet';
 export { SwipeCard } from './SwipeCard';
+export { DragRow } from './DragRow';
 export { TaskActionRow, TaskCard, TaskDoneRow, TaskMissedRow, TaskUpcomingRow, GlyphTile, crayon } from './TaskRow';
 export { PersonAvatar } from './PersonAvatar';
 export { TickNumber } from './TickNumber';

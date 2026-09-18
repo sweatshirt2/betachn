@@ -47,7 +47,8 @@ export type GlyphName =
   | 'masks'
   | 'skip'
   | 'close'
-  | 'sun';
+  | 'sun'
+  | 'grip';
 
 const strokeProps = {
   stroke: 'currentColor',
@@ -285,6 +286,11 @@ const PATHS: Record<GlyphName, React.ReactNode> = {
     <>
       <circle cx="12" cy="12" r="4" />
       <path d="M12 3.2v2M12 18.8v2M3.2 12h2M18.8 12h2M5.8 5.8l1.4 1.4M16.8 16.8l1.4 1.4M18.2 5.8l-1.4 1.4M7.2 16.8l-1.4 1.4" />
+    </>
+  ),
+  grip: (
+    <>
+      <path d="M9.2 6.4v.2M14.8 6.4v.2M9.2 12v.2M14.8 12v.2M9.2 17.6v.2M14.8 17.6v.2" />
     </>
   ),
 };

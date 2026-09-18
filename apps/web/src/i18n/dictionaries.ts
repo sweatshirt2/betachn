@@ -316,6 +316,7 @@ export type Dict = {
     noRoom: string;
     addAsset: string;
     markAria: string;
+    dragAria: string;
     serviceLogged: string;
     itemPlaceholder: string;
     supplyPlaceholder: string;
@@ -891,6 +892,7 @@ export const en: Dict = {
     noRoom: 'No room',
     addAsset: 'Add asset',
     markAria: 'Mark {{name}} {{state}}',
+    dragAria: 'Hold and drag to reorder',
     serviceLogged: 'Service logged.',
     itemPlaceholder: 'Rice',
     supplyPlaceholder: 'Detergent',
@@ -1470,6 +1472,7 @@ export const am: Dict = {
     noRoom: 'ክፍል የለም',
     addAsset: 'ንብረት ጨምር',
     markAria: '{{name}} ን እንደ {{state}} አስቀምጥ',
+    dragAria: 'ለማስተካከል ይያዙና ይጎትቱ',
     serviceLogged: 'አገልግሎት ተመዝግቧል።',
     itemPlaceholder: 'ሩዝ',
     supplyPlaceholder: 'ሳሙና',
