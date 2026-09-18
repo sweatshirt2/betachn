@@ -516,13 +516,25 @@ export async function deviceSupplyEvents(supplyId: string): Promise<{
 export async function deviceShoppingItems(): Promise<{ items: DeviceShoppingPayload[] }> {
   const db = await deviceContext();
   const rows = await db.select().from(schema.shoppingItems);
+  // Manual drag order first (D115), then creation time for ties/pre-sortKey rows.
+  const items = rows.map((i) => ({
+    id: i.id,
+    name: i.name,
+    purchasedAt: i.purchasedAt,
+    quantityText: i.quantityText,
+    sortKey: i.sortKey,
+    createdAt: i.createdAt,
+  }));
+  items.sort((a, b) => {
+    const ka = a.sortKey;
+    const kb = b.sortKey;
+    if (ka !== null && kb !== null && ka !== kb) return ka - kb;
+    if (ka !== null && kb === null) return -1;
+    if (ka === null && kb !== null) return 1;
+    return a.createdAt.localeCompare(b.createdAt);
+  });
   return {
-    items: rows.map((i) => ({
-      id: i.id,
-      name: i.name,
-      purchasedAt: i.purchasedAt,
-      quantityText: i.quantityText,
-    })),
+    items: items.map(({ createdAt: _createdAt, ...rest }) => rest),
   };
 }
 
