@@ -7,10 +7,11 @@ import {
   deviceOccurrences,
   deviceResponsibilityDetail,
   devicePeople,
+  deviceSwaps,
 } from '@/lib/device/reads';
 import type { RootState } from '@/store';
 import { choresEndpoints } from '../chores.endpoints';
-import type { ResponsibilityDetail, TodayPayload, TitledOccurrence } from '../chores.types';
+import type { OccurrenceSwap, ResponsibilityDetail, TodayPayload, TitledOccurrence } from '../chores.types';
 
 /**
  * Reads branch on session mode (Phase A2/A4): device households compute
@@ -77,6 +78,26 @@ export function usePeopleMap() {
       queryFn:
         mode === 'device'
           ? () => devicePeople().then((people) => ({ people }))
+          : undefined,
+    },
+  });
+}
+
+/** Open (pending) swaps for the active person — §16b / D113. */
+export function useSwaps(role: 'incoming' | 'outgoing') {
+  const mode = useSelector((state: RootState) => state.auth.mode);
+  const activePersonId = useSelector((state: RootState) => {
+    const auth = state.auth;
+    return auth.viewAsPersonId ?? auth.activePerson?.id ?? '';
+  });
+  return useApiQuery<{ swaps: OccurrenceSwap[] }>({
+    endpoint: choresEndpoints.swaps,
+    queryParams: { role },
+    key: ['swaps', role] as const,
+    options: {
+      queryFn:
+        mode === 'device'
+          ? () => deviceSwaps(role, activePersonId) as Promise<{ swaps: OccurrenceSwap[] }>
           : undefined,
     },
   });

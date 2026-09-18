@@ -38,6 +38,12 @@ function describe(t: TFunction, type: string, params: Record<string, unknown>): 
       return t('notify.missedDetected', { title });
     case 'notify.backup.nudge':
       return t('notify.backupNudge', { name });
+    case 'notify.swap.requested': {
+      const fromName = typeof params.fromName === 'string' ? params.fromName : '';
+      return t('notify.swapRequested', { title, who: fromName });
+    }
+    case 'notify.swap.declined':
+      return t('notify.swapDeclined', { title });
     default:
       return title;
   }

@@ -9,7 +9,7 @@ export const routines = sqliteTable('routines', {
     .notNull()
     .references(() => households.id),
   name: text('name').notNull(),
-  icon: text('icon').notNull().default('🌅'),
+  icon: text('icon').notNull().default('sun'),
   timeBucket: text('time_bucket', { enum: ['morning', 'afternoon', 'evening', 'anytime'] })
     .notNull()
     .default('anytime'),
@@ -27,7 +27,7 @@ export const responsibilities = sqliteTable('responsibilities', {
   roomId: text('room_id').references(() => rooms.id),
   archivedAt: text('archived_at'),
   createdByPersonId: text('created_by_person_id').references(() => people.id),
-  icon: text('icon').notNull().default('📌'),
+  icon: text('icon').notNull().default('pin'),
   /** §4A.2/D107 mirror — required ⇒ completion blocks until ≥1 proof. */
   proofMode: text('proof_mode').notNull().default('optional'),
   createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
@@ -110,3 +110,31 @@ export type ResponsibilityRow = typeof responsibilities.$inferSelect;
 export type SubtaskRow = typeof subtasks.$inferSelect;
 export type AssignmentRuleRow = typeof assignmentRules.$inferSelect;
 export type OccurrenceRow = typeof occurrences.$inferSelect;
+
+/**
+ * Occurrence-level mutual swaps mirror (§16b / D113). Row-level LWW; status
+ * transitions ride as updates. Timestamps ISO strings like every mirror row.
+ */
+export const occurrenceSwaps = sqliteTable('occurrence_swaps', {
+  id: text('id').primaryKey(),
+  householdId: text('household_id')
+    .notNull()
+    .references(() => households.id),
+  occurrenceId: text('occurrence_id')
+    .notNull()
+    .references(() => occurrences.id),
+  fromPersonId: text('from_person_id')
+    .notNull()
+    .references(() => people.id),
+  toPersonId: text('to_person_id')
+    .notNull()
+    .references(() => people.id),
+  status: text('status', { enum: ['pending', 'accepted', 'declined', 'cancelled'] })
+    .notNull()
+    .default('pending'),
+  clientUuid: text('client_uuid'),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').notNull().$defaultFn(() => new Date().toISOString()),
+});
+
+export type OccurrenceSwapRow = typeof occurrenceSwaps.$inferSelect;

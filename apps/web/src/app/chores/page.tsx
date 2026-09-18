@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
-import { Button, ChoreCheck, EmptyState, Glyph, choreGlyph, SectionWatermark, Skeleton, SwipeCard, TaskCard } from '@/components/ui';
+import { Button, ChoreCheck, EmptyState, SectionWatermark, Skeleton, SwipeCard, TaskCard, storedIconGlyph } from '@/components/ui';
 import { useOccurrenceAct, useOccurrences, usePeopleMap, type TitledOccurrence } from '@/features/chores';
 import { type RootState } from '@/store';
 import { formatDate } from '@/lib/dates';
@@ -27,7 +27,6 @@ export default function ChoresPage() {
   const occurrences = useOccurrences({ from, to });
   const people = usePeopleMap();
   const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
-  const emojis = new Map((people.data?.people ?? []).map((p) => [p.id, p.avatarEmoji ?? null] as const));
 
   if (occurrences.isPending) {
     return (
@@ -59,7 +58,7 @@ export default function ChoresPage() {
   const peopleOf = (o: TitledOccurrence) =>
     o.personIds.map((id) => {
       const name = names.get(id) ?? '?';
-      return { initial: name.trim().charAt(0).toUpperCase() || '?', label: name, emoji: emojis.get(id) ?? null };
+      return { label: name };
     });
 
   const dueLabelOf = (o: TitledOccurrence) => {
@@ -106,6 +105,7 @@ export default function ChoresPage() {
                 title={o.title}
                 meta={label(o)}
                 dueLabel={dueLabelOf(o)}
+                glyph={storedIconGlyph(o.icon, o.title)}
                 overdue={o.dueDate < from}
                 crayonIndex={index}
                 people={peopleOf(o)}

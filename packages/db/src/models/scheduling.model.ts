@@ -23,7 +23,7 @@ export const routines = pgTable(
       .notNull()
       .references(() => households.id),
     name: text('name').notNull(),
-    icon: text('icon').notNull().default('🌅'),
+    icon: text('icon').notNull().default('sun'),
     timeBucket: text('time_bucket')
       .$type<'morning' | 'afternoon' | 'evening' | 'anytime'>()
       .notNull()
@@ -46,7 +46,7 @@ export const responsibilities = pgTable(
     roomId: uuid('room_id').references(() => rooms.id),
     archivedAt: timestamp('archived_at', { withTimezone: true }),
     createdByPersonId: uuid('created_by_person_id').references(() => people.id),
-    icon: text('icon').notNull().default('📌'),
+    icon: text('icon').notNull().default('pin'),
     /** §4A.2/D107: required ⇒ completion blocks until ≥1 proof exists. */
     proofMode: text('proof_mode').$type<'optional' | 'required'>().notNull().default('optional'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -162,3 +162,43 @@ export type Responsibility = typeof responsibilities.$inferSelect;
 export type Subtask = typeof subtasks.$inferSelect;
 export type AssignmentRule = typeof assignmentRules.$inferSelect;
 export type Occurrence = typeof occurrences.$inferSelect;
+
+/**
+ * Occurrence-level mutual swaps (§16b / D113): pending → accepted applies a
+ * §6.3 reassign exactly once; declined/cancelled are terminal no-ops. Row is
+ * the full coordination state — row-level LWW syncs it; accepted swaps emit
+ * the existing occurrence.reassigned story so owners see the trade.
+ */
+export const occurrenceSwaps = pgTable(
+  'occurrence_swaps',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    householdId: uuid('household_id')
+      .notNull()
+      .references(() => households.id),
+    occurrenceId: uuid('occurrence_id')
+      .notNull()
+      .references(() => occurrences.id),
+    fromPersonId: uuid('from_person_id')
+      .notNull()
+      .references(() => people.id),
+    toPersonId: uuid('to_person_id')
+      .notNull()
+      .references(() => people.id),
+    status: text('status')
+      .$type<'pending' | 'accepted' | 'declined' | 'cancelled'>()
+      .notNull()
+      .default('pending'),
+    clientUuid: text('client_uuid'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('occurrence_swaps_occurrence_idx').on(t.occurrenceId),
+    index('occurrence_swaps_to_pending_idx')
+      .on(t.toPersonId)
+      .where(sql`status = 'pending'`),
+  ],
+);
+
+export type OccurrenceSwap = typeof occurrenceSwaps.$inferSelect;

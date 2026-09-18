@@ -36,7 +36,18 @@ export type GlyphName =
   | 'alert'
   | 'info'
   | 'camera'
-  | 'repeat';
+  | 'repeat'
+  // emoji-replacement batch (UI iteration 3)
+  | 'pin'
+  | 'plant'
+  | 'water'
+  | 'gear'
+  | 'lock'
+  | 'wrench'
+  | 'masks'
+  | 'skip'
+  | 'close'
+  | 'sun';
 
 const strokeProps = {
   stroke: 'currentColor',
@@ -211,6 +222,71 @@ const PATHS: Record<GlyphName, React.ReactNode> = {
       <path d="M9 21l-2.8-2.6L9 15.8" />
     </>
   ),
+  pin: (
+    <>
+      <path d="M12 3.6a3.4 3.4 0 0 1 3.4 3.4c0 2.4-3.4 6.6-3.4 6.6s-3.4-4.2-3.4-6.6A3.4 3.4 0 0 1 12 3.6Z" />
+      <path d="M12 7h.02" />
+      <path d="M12 13.6V20.4" />
+    </>
+  ),
+  plant: (
+    <>
+      <path d="M12 20.4v-6.8" />
+      <path d="M12 13.6c0-3.2-2.4-5.6-5.8-5.8.2 3.4 2.6 5.8 5.8 5.8Z" />
+      <path d="M12 11.4c0-2.8 2.2-5 5.4-5.2-.2 3-2.4 5.2-5.4 5.2Z" />
+      <path d="M7.4 20.4h9.2" />
+    </>
+  ),
+  water: (
+    <>
+      <path d="M12 3.6s6.2 6.4 6.2 10.4a6.2 6.2 0 0 1-12.4 0C5.8 10 12 3.6 12 3.6Z" />
+      <path d="M9.4 13.6a2.8 2.8 0 0 0 2.6 2.6" />
+    </>
+  ),
+  gear: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 4.4v2M12 17.6v2M4.4 12h2M17.6 12h2M6.5 6.5l1.4 1.4M16.1 16.1l1.4 1.4M17.5 6.5l-1.4 1.4M7.9 16.1l-1.4 1.4" />
+    </>
+  ),
+  lock: (
+    <>
+      <rect x="5.6" y="10.6" width="12.8" height="9" rx="2" />
+      <path d="M8.6 10.6V7.8a3.4 3.4 0 0 1 6.8 0v2.8" />
+      <path d="M12 14.4v1.8" />
+    </>
+  ),
+  wrench: (
+    <>
+      <path d="M14.8 6.2a4 4 0 0 1 4.4-1l-2.9 2.9 1.6 1.6 2.9-2.9a4 4 0 0 1-5.4 5L8.2 19a2.2 2.2 0 0 1-3.2-3.2l7.2-7.2a4 4 0 0 1 2.6-2.4Z" />
+    </>
+  ),
+  masks: (
+    <>
+      <path d="M4.6 6.4h7v6.2a3.5 3.5 0 0 1-7 0Z" />
+      <path d="M12.4 6.4h7v6.2a3.5 3.5 0 0 1-7 0Z" />
+      <path d="M6.4 9h3.4M14.2 9h3.4" />
+    </>
+  ),
+  skip: (
+    <>
+      <path d="M5.4 5.4 18.6 18.6" />
+      <path d="M18.6 8.4l3-3M18.6 8.4l-3-3" />
+      <path d="M5.4 12.6v6h6" />
+    </>
+  ),
+  close: (
+    <>
+      <path d="M6.4 6.4 17.6 17.6" />
+      <path d="M17.6 6.4 6.4 17.6" />
+    </>
+  ),
+  sun: (
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 3.2v2M12 18.8v2M3.2 12h2M18.8 12h2M5.8 5.8l1.4 1.4M16.8 16.8l1.4 1.4M18.2 5.8l-1.4 1.4M7.2 16.8l-1.4 1.4" />
+    </>
+  ),
 };
 
 /** Stroke glyph — system chrome's emoji replacement; ink follows currentColor. */
@@ -238,6 +314,42 @@ export function choreGlyph(title: string): GlyphName {
     if (pattern.test(title)) return glyph;
   }
   return 'basket';
+}
+
+/**
+ * Legacy `responsibility.icon` values are emoji strings from the pre-Glyph
+ * era (and new ones are GlyphName from the composer picker). Map any emoji
+ * legacy value to its intuitive glyph; unknown values fall back to the
+ * title-keyword match so hand-drawn icons survive the migration.
+ */
+const LEGACY_ICON_RULES: Array<[RegExp, GlyphName]> = [
+  [/📌|pin|location|place/i, 'pin'],
+  [/🧺|basket|laundry|hamper/i, 'basket'],
+  [/🍳|cooking|kitchen|meal|food/i, 'cooking'],
+  [/🗑|trash|garbage|bin|waste/i, 'trash'],
+  [/🧹|clean|sweep|mop|dust/i, 'cleaning'],
+  [/🪴|plant|garden|water(?!.*drop)|flower/i, 'plant'],
+  [/🛒|cart|shop|grocer/i, 'cart'],
+  [/💧|water|drop/i, 'water'],
+  [/🏠|home|house/i, 'door'],
+  [/🔧|wrench|fix|repair|maintenance/i, 'wrench'],
+  [/🌅|sun|dawn|morning|routine/i, 'sun'],
+  [/🧴|bottle|soap|supply/i, 'bottle'],
+  [/🎭|role|masks/i, 'masks'],
+  [/🔔|bell|notif/i, 'bell'],
+  [/⚙|gear|setting/i, 'gear'],
+  [/🙂|😊|😀|face|smile|person/i, 'people'],
+];
+
+/** Stored chore icon (emoji legacy or GlyphName) → glyph to render. */
+export function storedIconGlyph(icon: string | null | undefined, title: string): GlyphName {
+  if (icon) {
+    if ((PATHS as Record<string, unknown>)[icon as GlyphName] !== undefined) return icon as GlyphName;
+    for (const [pattern, glyph] of LEGACY_ICON_RULES) {
+      if (pattern.test(icon)) return glyph;
+    }
+  }
+  return choreGlyph(title);
 }
 
 const SUPPLY_RULES: Array<[RegExp, GlyphName]> = [

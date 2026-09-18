@@ -6,10 +6,20 @@ import { useTranslation } from 'react-i18next';
 import { ApiError, queryKeys, useApiMutation, useDeviceMutation } from '@/lib/api';
 import { useToast } from '@/components/ui';
 import { buzz, celebrateChore } from '@/lib/motion';
-import { deviceOccurrenceAct, deviceCreateResponsibility } from '@/lib/device/writes';
+import {
+  deviceOccurrenceAct,
+  deviceCreateResponsibility,
+  deviceCreateSwap,
+  deviceResolveSwap,
+} from '@/lib/device/writes';
 import type { RootState } from '@/store';
 import { choresEndpoints } from '../chores.endpoints';
-import type { CreateResponsibilityBody, OccurrenceAction, TitledOccurrence } from '../chores.types';
+import type {
+  CreateResponsibilityBody,
+  OccurrenceAction,
+  OccurrenceSwap,
+  TitledOccurrence,
+} from '../chores.types';
 
 type ActVariables = { id: string } & OccurrenceAction;
 
@@ -115,4 +125,89 @@ export function useCreateResponsibility() {
   });
 
   return mode === 'device' ? device : server;
+}
+
+// ————————————————————————————————————————————————
+// Occurrence swaps (§16b / D113)
+// ————————————————————————————————————————————————
+
+type CreateSwapVariables = { occurrenceId: string; toPersonId: string };
+type ResolveSwapVariables = { occurrenceId: string; swapId: string; action: 'accept' | 'decline' | 'cancel' };
+
+function useInvalidateChores() {
+  const queryClient = useQueryClient();
+  return () => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.today() });
+    void queryClient.invalidateQueries({ queryKey: ['occurrences'] });
+    void queryClient.invalidateQueries({ queryKey: ['swaps'] });
+  };
+}
+
+/** Requester offers THEIR pending turn to another member. */
+export function useCreateSwap() {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const mode = useSelector((state: RootState) => state.auth.mode);
+  const refresh = useInvalidateChores();
+
+  const onSuccess = () => {
+    refresh();
+    toast(t('chores.swapRequestedToast'), { kind: 'success' });
+  };
+  const onError = (error: ApiError) => {
+    if (error.code === 'CONFLICT') {
+      refresh();
+      toast(t('chores.swapAlreadyPending'), { kind: 'info' });
+    }
+  };
+
+  const server = useApiMutation<{ swap: OccurrenceSwap }, CreateSwapVariables>({
+    endpoint: choresEndpoints.createSwap,
+    options: { onSuccess, onError },
+  });
+  const device = useDeviceMutation<{ swap: OccurrenceSwap }, CreateSwapVariables>({
+    write: ({ occurrenceId, toPersonId }, identity) =>
+      deviceCreateSwap({ ...identity, occurrenceId, toPersonId }).then(() => ({ swap: null as never })),
+    options: { onSuccess, onError },
+  });
+
+  return (mode === 'device' ? device : server);
+}
+
+/** Target accepts/declines; requester cancels. Accept = reassign (one code path). */
+export function useResolveSwap() {
+  const { t } = useTranslation();
+  const { toast } = useToast();
+  const mode = useSelector((state: RootState) => state.auth.mode);
+  const refresh = useInvalidateChores();
+
+  const onSuccess = (_data: unknown, vars: ResolveSwapVariables) => {
+    refresh();
+    toast(
+      vars.action === 'accept'
+        ? t('chores.swapAcceptedToast')
+        : vars.action === 'decline'
+          ? t('chores.swapDeclinedToast')
+          : t('chores.swapCancelledToast'),
+      { kind: 'success' },
+    );
+  };
+  const onError = (error: ApiError) => {
+    if (error.code === 'ALREADY_DONE') {
+      refresh();
+      toast(t('chores.swapAlreadyResolved'), { kind: 'info' });
+    }
+  };
+
+  const server = useApiMutation<{ swap: OccurrenceSwap }, ResolveSwapVariables>({
+    endpoint: choresEndpoints.resolveSwap,
+    options: { onSuccess, onError },
+  });
+  const device = useDeviceMutation<{ swap: OccurrenceSwap }, ResolveSwapVariables>({
+    write: ({ swapId, action }, identity) =>
+      deviceResolveSwap({ ...identity, swapId, action }).then(() => ({ swap: null as never })),
+    options: { onSuccess, onError },
+  });
+
+  return (mode === 'device' ? device : server);
 }

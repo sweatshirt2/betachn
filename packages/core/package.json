@@ -16,6 +16,7 @@
     "./calendar": "./src/calendar.ts",
     "./today": "./src/modules/occurrences/today.aggregate.ts",
     "./occurrence-rules": "./src/modules/occurrences/occurrences.rules.ts",
+    "./occurrence-helpers": "./src/modules/occurrences/occurrences.helpers.ts",
     "./resources-rules": "./src/modules/resources/resources.rules.ts",
     "./auth-rules": "./src/modules/auth/auth.rules.ts"
   },

@@ -25,7 +25,6 @@ export type Dict = {
   nav: {
     today: string;
     chores: string;
-    duties: string;
     pantry: string;
     household: string;
     more: string;
@@ -91,6 +90,11 @@ export type Dict = {
     comingUp: string;
     completedWeek: string;
     upForGrabs: string;
+    missedHint: string;
+    daysLate: string;
+    skipAria: string;
+    skipAction: string;
+    whySeeingHint: string;
   };
   chores: {
     title: string;
@@ -147,6 +151,23 @@ export type Dict = {
     reassignHint: string;
     claim: string;
     assignedToShort: string;
+    turnNow: string;
+    swapAction: string;
+    swapSheetTitle: string;
+    swapSheetHint: string;
+    swapToLabel: string;
+    swapIncomingTitle: string;
+    swapIncomingLine: string;
+    swapAccept: string;
+    swapDecline: string;
+    swapCancel: string;
+    swapMinePending: string;
+    swapRequestedToast: string;
+    swapAlreadyPending: string;
+    swapAcceptedToast: string;
+    swapDeclinedToast: string;
+    swapCancelledToast: string;
+    swapAlreadyResolved: string;
     history: string;
     historyAll: string;
     statusCompleted: string;
@@ -275,6 +296,9 @@ export type Dict = {
     supplyAvailable: string;
     supplyLow: string;
     supplyOut: string;
+    supplyLowHint: string;
+    supplyOutHint: string;
+    maintenanceHint: string;
     dueDate: string;
     buy: string;
     buyAria: string;
@@ -324,6 +348,8 @@ export type Dict = {
     completionRecorded: string;
     missedDetected: string;
     backupNudge: string;
+    swapRequested: string;
+    swapDeclined: string;
     caughtUpHint: string;
     prefsAria: string;
     categoryAria: string;
@@ -571,7 +597,6 @@ export const en: Dict = {
   nav: {
     today: 'Today',
     chores: 'Chores',
-    duties: 'Duties',
     pantry: 'Pantry',
     household: 'Household',
     more: 'More',
@@ -637,6 +662,11 @@ export const en: Dict = {
     comingUp: 'Coming up',
     completedWeek: 'responsibilities completed this week.',
     upForGrabs: 'Up for grabs',
+    missedHint: 'Still within the undo window — finish or skip.',
+    daysLate: '{{count}} day late',
+    skipAria: 'Skip {{title}}',
+    skipAction: 'Skip this turn',
+    whySeeingHint: 'This shows because the chore is due today and you are a member of the household. You can change schedules any time.',
   },
   chores: {
     title: 'Chores',
@@ -693,6 +723,23 @@ export const en: Dict = {
     reassignHint: 'Moves this occurrence only — the weekly plan stays as is.',
     claim: 'Take this',
     assignedToShort: 'Assigned: {{who}}',
+    turnNow: "{{who}}'s turn · until {{until}}",
+    swapAction: 'Swap this turn',
+    swapSheetTitle: 'Offer this turn',
+    swapSheetHint: 'They can accept or decline — the weekly plan stays as is.',
+    swapToLabel: 'Who should take it?',
+    swapIncomingTitle: 'Swap requests',
+    swapIncomingLine: '{{who}} asks you to take “{{title}}” ({{date}})',
+    swapAccept: 'Take it',
+    swapDecline: 'No thanks',
+    swapCancel: 'Cancel request',
+    swapMinePending: 'Waiting for {{who}} to answer',
+    swapRequestedToast: 'Swap request sent.',
+    swapAlreadyPending: 'A swap is already waiting for this chore.',
+    swapAcceptedToast: 'Swap accepted — the chore is yours.',
+    swapDeclinedToast: 'Swap declined.',
+    swapCancelledToast: 'Swap request cancelled.',
+    swapAlreadyResolved: 'That swap was already handled.',
     history: 'History',
     historyAll: 'Show all',
     statusCompleted: 'Completed {{date}}',
@@ -824,6 +871,9 @@ export const en: Dict = {
     supplyAvailable: 'Available',
     supplyLow: 'Running low',
     supplyOut: 'Out',
+    supplyLowHint: 'Add it to the shopping list before it runs out.',
+    supplyOutHint: 'Grab it on the next shopping run.',
+    maintenanceHint: 'Regular upkeep keeps it working for years.',
     dueDate: 'Due {{date}}',
     buy: 'Buy',
     buyAria: 'Buy {{name}}',
@@ -873,6 +923,8 @@ export const en: Dict = {
     completionRecorded: '{{title}} completed.',
     missedDetected: '{{title}} was missed.',
     backupNudge: 'Back up {{name}} — save a copy.',
+    swapRequested: '{{who}} asks you to take “{{title}}” — open Today to respond.',
+    swapDeclined: '{{who}} declined the swap for “{{title}}”.',
     caughtUpHint: 'Reminders and updates land here.',
     prefsAria: 'Preferences',
     categoryAria: '{{category}} notifications',
@@ -1127,7 +1179,6 @@ export const am: Dict = {
   nav: {
     today: 'ዛሬ',
     chores: 'ሥራዎች',
-    duties: 'ተጠያቂነቶች',
     pantry: 'ማከማቻ',
     household: 'ቤተሰብ',
     more: 'ተጨማሪ',
@@ -1193,6 +1244,11 @@ export const am: Dict = {
     comingUp: 'የሚመጣ',
     completedWeek: 'ኃላፊነቶች በዚህ ሳምንት ተጠናቀዋል።',
     upForGrabs: 'ለሁሉም ክፍት',
+    missedHint: 'እስከ አሁን መመለስ ይቻላል — ይጨርሱት ወይም ይዝለሉት።',
+    daysLate: 'በ{{count}} ቀን ዘግይቷል',
+    skipAria: '{{title}} ይዝለሉ',
+    skipAction: 'ይህንን ተራ ይዝለሉ',
+    whySeeingHint: 'ይህ ይታያል ምክንያቱም ሥራው ዛሬ ይጠበቃል እና የቤተሰቡ አባል ነዎት። ዕቅዶችን በማንኛውም ጊዜ ማስተካከል ይችላሉ።',
   },
   chores: {
     title: 'ሥራዎች',
@@ -1249,6 +1305,23 @@ export const am: Dict = {
     reassignHint: 'ይህንን ቀን ብቻ ያሳውራል — የሳምንቱ ዕቅድ እንደነበረ ይቀራል።',
     claim: 'ያዝበት',
     assignedToShort: 'የተመደበ፦ {{who}}',
+    turnNow: 'የ{{who}} ተራ · እስከ {{until}}',
+    swapAction: 'ተራዬን አላዋወጥ',
+    swapSheetTitle: 'ተራውን አቅርብ',
+    swapSheetHint: 'እሱ መቀበል ወይም መከለል ይችላል — የሳምንቱ ዕቅድ እንደነበረ ይቀራል።',
+    swapToLabel: 'ማን ይውሰድ?',
+    swapIncomingTitle: 'የመለዋወጫ ጥያቄዎች',
+    swapIncomingLine: '{{who}} “{{title}}” ({{date}}) እንዲወስዱ ጠይቀዋል',
+    swapAccept: 'አወስደዋለሁ',
+    swapDecline: 'አላወድኩም',
+    swapCancel: 'ጥያቄውን ሰርዝ',
+    swapMinePending: '{{who}} መልስ እስኪሰጡ በመጠበቅ ላይ',
+    swapRequestedToast: 'የመለዋወጥ ጥያቄ ተልኳል።',
+    swapAlreadyPending: 'ለዚህ ሥራ መለዋወጫ አስቀድሞ ቆይቷል።',
+    swapAcceptedToast: 'መለዋወጡ ተቀብለዋል — ሥራው የእርስዎ ነው።',
+    swapDeclinedToast: 'መለዋወጡ አልተቀበለም።',
+    swapCancelledToast: 'የመለዋወጥ ጥያቄ ተሰርዟል።',
+    swapAlreadyResolved: 'ያ መለዋወጥ አስቀድሞ ተከናውኗል።',
     history: 'ታሪክ',
     historyAll: 'ሁሉንም አሳይ',
     statusCompleted: 'የተጠናቀቀ {{date}}',
@@ -1377,6 +1450,9 @@ export const am: Dict = {
     supplyAvailable: 'አለ',
     supplyLow: 'በመቀነስ ላይ',
     supplyOut: 'አልቋል',
+    supplyLowHint: 'ከመበታተኑ በፊት ወደ ግዢ ዝርዝሩ ይጨምሩት።',
+    supplyOutHint: 'በቀጣዩ ግዢ ጊዜ ያምጡት።',
+    maintenanceHint: 'መደበኛ እንክብካቤ ለዓመታት እንዲሠራ ያቆየዋል።',
     dueDate: 'የሚጠበቅበት {{date}}',
     buy: 'ግዛ',
     buyAria: 'ግዛ፦ {{name}}',
@@ -1426,6 +1502,8 @@ export const am: Dict = {
     completionRecorded: '{{title}} ተጠናቋል።',
     missedDetected: '{{title}} ተረስኗል።',
     backupNudge: '{{name}} ን ያስቀምጡ — ቅጂ ይቆጥቡ።',
+    swapRequested: '{{who}} “{{title}}” እንዲወስዱ ጠይቀዋል — ለመመለስ ወደ ዛሬ ይሂዱ።',
+    swapDeclined: '{{who}} ለ“{{title}}” መለዋወጥ አልተቀበሉም።',
     caughtUpHint: 'አስታዋሾችና ዜናዎች እዚህ ይደርሳሉ።',
     prefsAria: 'ምርጫዎች',
     categoryAria: '{{category}} ማሳወቂያዎች',

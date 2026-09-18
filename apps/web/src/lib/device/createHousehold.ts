@@ -180,7 +180,7 @@ export async function localRoleMap(db: DeviceDb, householdId: string): Promise<R
 
 /** The payload setDeviceSession consumes — same shape as the rehydrate thunk's. */
 export type DeviceSwitchResult = {
-  household: { id: string; name: string; code: string };
+  household: { id: string; name: string; code: string; timezone?: string };
   activePerson: { id: string; name: string };
   permissionMap: Record<string, boolean>;
 };
@@ -210,7 +210,12 @@ export async function switchDeviceProfile(personId: string): Promise<DeviceSwitc
   });
   writeDeviceSession({ householdId: household.id, activePersonId: person.id });
   return {
-    household: { id: household.id, name: household.name, code: household.code },
+    household: {
+      id: household.id,
+      name: household.name,
+      code: household.code,
+      timezone: household.timezone,
+    },
     activePerson: { id: person.id, name: person.name },
     permissionMap,
   };

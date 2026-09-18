@@ -33,16 +33,7 @@ export function ProfileChip({ onOpen }: { onOpen: () => void }) {
       className="lift-hover bg-card-wash border-line shadow-soft flex items-center gap-2.5 rounded-full border py-1.5 pl-1.5 pr-3 text-left"
       aria-label={t('auth.switchProfileAria', { name: activePerson.name })}
     >
-      {me?.avatarEmoji ? (
-        <PersonAvatar emoji={me.avatarEmoji} index={0} size="sm" />
-      ) : (
-        <span
-          aria-hidden
-          className="shadow-soft text-ink flex h-8 w-8 items-center justify-center rounded-[30%] bg-[var(--chorify-crayon-1)] text-sm font-bold"
-        >
-          {activePerson.name.trim().charAt(0).toUpperCase() || '?'}
-        </span>
-      )}
+      <PersonAvatar name={activePerson.name} index={0} size="sm" />
       <span className="min-w-0">
         <span className="block max-w-28 truncate text-sm font-bold leading-tight sm:max-w-40">{activePerson.name}</span>
         <span className="text-muted block max-w-28 truncate text-[10px] font-semibold leading-tight sm:max-w-40">

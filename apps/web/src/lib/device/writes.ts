@@ -171,6 +171,7 @@ export async function deviceOccurrenceAct(input: {
     where: eq(schema.responsibilities.id, row.responsibilityId),
   });
   const title = responsibility?.title ?? 'Chore';
+  const icon = responsibility?.icon ?? null;
 
   const transition: TransitionInput & { completedAt: Date | null } = {
     status: row.status,
@@ -263,6 +264,7 @@ export async function deviceOccurrenceAct(input: {
     status: after?.status ?? row.status,
     completedByPersonId: after?.completedByPersonId ?? null,
     title,
+    icon,
   };
 }
 
@@ -271,6 +273,156 @@ async function ruleCreator(db: DeviceDb, ruleId: string): Promise<string | null>
     where: eq(schema.assignmentRules.id, ruleId),
   });
   return rule?.createdByPersonId ?? null;
+}
+
+// ————————————————————————————————————————————————
+// Occurrence swaps (§16b / D113) — device twins of the swap routes
+// ————————————————————————————————————————————————
+
+export async function deviceCreateSwap(input: {
+  householdId: string;
+  actorPersonId: string;
+  occurrenceId: string;
+  toPersonId: string;
+}): Promise<void> {
+  const db = await requireDeviceDb();
+  const row = await db.query.occurrences!.findFirst({
+    where: eq(schema.occurrences.id, input.occurrenceId),
+  });
+  if (!row) throw new AppError('NOT_FOUND', 'Occurrence not found');
+  requirePending(row.status);
+  const personIds = (row.personIds ?? []) as string[];
+  if (personIds.length > 0 && !personIds.includes(input.actorPersonId)) {
+    throw new AppError('FORBIDDEN', 'Only a current assignee can offer this turn');
+  }
+  const open = await db.query.occurrenceSwaps!.findMany({
+    where: eq(schema.occurrenceSwaps.status, 'pending'),
+  });
+  if (open.some((s) => s.occurrenceId === input.occurrenceId)) {
+    throw new AppError('CONFLICT', 'A swap is already pending for this occurrence');
+  }
+  const swapId = randomId();
+  const now = new Date().toISOString();
+  await db.insert(schema.occurrenceSwaps).values({
+    id: swapId,
+    householdId: input.householdId,
+    occurrenceId: input.occurrenceId,
+    fromPersonId: input.actorPersonId,
+    toPersonId: input.toPersonId,
+    status: 'pending',
+    createdAt: now,
+    updatedAt: now,
+  });
+  const title =
+    (
+      await db.query.responsibilities!.findFirst({
+        where: eq(schema.responsibilities.id, row.responsibilityId),
+        columns: { title: true },
+      })
+    )?.title ?? '';
+  await emitNotifications(
+    db,
+    input.householdId,
+    'assignment',
+    'notify.swap.requested',
+    { title, fromName: await personName(db, input.actorPersonId) },
+    '/chores',
+    { assigneePersonIds: [input.toPersonId], actorPersonId: input.actorPersonId },
+  );
+  enqueue(db, input.householdId, {
+    entity: 'occurrence_swaps',
+    entityId: swapId,
+    op: 'create',
+    payload: {
+      id: swapId,
+      householdId: input.householdId,
+      occurrenceId: input.occurrenceId,
+      fromPersonId: input.actorPersonId,
+      toPersonId: input.toPersonId,
+      status: 'pending',
+      clientUuid: swapId,
+      createdAt: now,
+      updatedAt: now,
+    },
+    domain: 'responsibilities',
+  });
+}
+
+export async function deviceResolveSwap(input: {
+  householdId: string;
+  actorPersonId: string;
+  swapId: string;
+  action: 'accept' | 'decline' | 'cancel';
+}): Promise<void> {
+  const db = await requireDeviceDb();
+  const swap = await db.query.occurrenceSwaps!.findFirst({
+    where: eq(schema.occurrenceSwaps.id, input.swapId),
+  });
+  if (!swap) throw new AppError('NOT_FOUND', 'Swap not found');
+  if (swap.status !== 'pending') {
+    throw new AppError('ALREADY_DONE', 'This swap is already resolved');
+  }
+  if (input.action === 'cancel') {
+    if (swap.fromPersonId !== input.actorPersonId) {
+      throw new AppError('FORBIDDEN', 'Only the requester can cancel a swap');
+    }
+  } else if (swap.toPersonId !== input.actorPersonId) {
+    throw new AppError('FORBIDDEN', 'Only the invited member can respond to a swap');
+  }
+
+  const status =
+    input.action === 'accept' ? 'accepted' : input.action === 'decline' ? 'declined' : 'cancelled';
+  await db
+    .update(schema.occurrenceSwaps)
+    .set({ status, updatedAt: new Date().toISOString() })
+    .where(eq(schema.occurrenceSwaps.id, input.swapId));
+
+  if (input.action === 'accept') {
+    // One code path: ride the existing act-reassign semantics for the row + story.
+    await deviceOccurrenceAct({
+      householdId: input.householdId,
+      actorPersonId: swap.fromPersonId,
+      occurrenceId: swap.occurrenceId,
+      action: { action: 'reassign', personIds: [swap.toPersonId] },
+    });
+  } else if (input.action === 'decline') {
+    const occ = await db.query.occurrences!.findFirst({
+      where: eq(schema.occurrences.id, swap.occurrenceId),
+    });
+    const title = occ
+      ? ((
+          await db.query.responsibilities!.findFirst({
+            where: eq(schema.responsibilities.id, occ.responsibilityId),
+            columns: { title: true },
+          })
+        )?.title ?? '')
+      : '';
+    await emitNotifications(
+      db,
+      input.householdId,
+      'assignment',
+      'notify.swap.declined',
+      { title },
+      '/chores',
+      { assigneePersonIds: [swap.fromPersonId], actorPersonId: input.actorPersonId },
+    );
+  }
+
+  enqueue(db, input.householdId, {
+    entity: 'occurrence_swaps',
+    entityId: input.swapId,
+    op: 'update',
+    payload: { ...swap, status, updatedAt: new Date().toISOString() },
+    domain: 'responsibilities',
+  });
+}
+
+async function personName(db: DeviceDb, personId: string): Promise<string> {
+  const row = await db.query.people!.findFirst({
+    where: eq(schema.people.id, personId),
+    columns: { name: true },
+  });
+  return row?.name ?? '';
 }
 
 // ————————————————————————————————————————————————
@@ -298,7 +450,7 @@ export async function deviceCreateResponsibility(input: {
     title: input.title,
     notes: input.notes ?? null,
     routineId: input.routineId ?? null,
-    icon: input.icon ?? '📌',
+    icon: input.icon ?? 'pin',
     createdByPersonId: actorPersonId,
     createdAt: now,
   });
@@ -357,7 +509,7 @@ export async function deviceCreateResponsibility(input: {
       title: input.title,
       notes: input.notes ?? null,
       routineId: input.routineId ?? null,
-      icon: input.icon ?? '📌',
+      icon: input.icon ?? 'pin',
       createdByPersonId: actorPersonId,
       archivedAt: null,
       roomId: null,
@@ -817,7 +969,7 @@ export async function deviceCreateRoutine(input: {
     id,
     householdId: input.householdId,
     name: input.name,
-    icon: '🌅',
+    icon: 'sun',
     timeBucket: 'anytime',
     createdAt: now,
   });
@@ -830,13 +982,13 @@ export async function deviceCreateRoutine(input: {
       id,
       householdId: input.householdId,
       name: input.name,
-      icon: '🌅',
+      icon: 'sun',
       timeBucket: 'anytime',
       createdAt: now,
     },
     domain: 'responsibilities',
   });
-  return { id, name: input.name, icon: '🌅', timeBucket: 'anytime' };
+  return { id, name: input.name, icon: 'sun', timeBucket: 'anytime' };
 }
 
 export async function deviceDeleteRoutine(input: {
@@ -883,7 +1035,7 @@ export async function deviceCreateRoom(input: {
     id,
     householdId: input.householdId,
     name: input.name,
-    icon: '🏠',
+    icon: 'door',
     createdAt: now,
   });
   await emitActivity(db, input.householdId, input.actorPersonId, 'room.added', { name: input.name });
@@ -891,10 +1043,10 @@ export async function deviceCreateRoom(input: {
     entity: 'rooms',
     entityId: id,
     op: 'create',
-    payload: { id, householdId: input.householdId, name: input.name, icon: '🏠', createdAt: now },
+    payload: { id, householdId: input.householdId, name: input.name, icon: 'door', createdAt: now },
     domain: 'home',
   });
-  return { id, name: input.name, icon: '🏠' };
+  return { id, name: input.name, icon: 'door' };
 }
 
 export async function deviceCreateAsset(input: {
@@ -911,7 +1063,7 @@ export async function deviceCreateAsset(input: {
     householdId: input.householdId,
     roomId: input.roomId ?? null,
     name: input.name,
-    icon: '🔧',
+    icon: 'wrench',
     maintenanceIntervalDays: null,
     createdAt: now,
   });
@@ -925,13 +1077,13 @@ export async function deviceCreateAsset(input: {
       householdId: input.householdId,
       roomId: input.roomId ?? null,
       name: input.name,
-      icon: '🔧',
+      icon: 'wrench',
       maintenanceIntervalDays: null,
       createdAt: now,
     },
     domain: 'home',
   });
-  return { id, name: input.name, icon: '🔧', roomId: input.roomId ?? null, maintenanceIntervalDays: null };
+  return { id, name: input.name, icon: 'wrench', roomId: input.roomId ?? null, maintenanceIntervalDays: null };
 }
 
 export async function deviceLogService(input: {

@@ -11,6 +11,8 @@ export type TitledOccurrence = {
   status: OccurrenceStatus;
   completedByPersonId: string | null;
   title: string;
+  /** Responsibility icon (legacy emoji or glyph key) for tile rendering. */
+  icon: string | null;
 };
 
 export type SupplyPayload = { id: string; name: string; state: string };
@@ -33,6 +35,18 @@ export type OccurrenceAction =
   | { action: 'skip'; skipReason?: string }
   | { action: 'reopen' }
   | { action: 'reassign'; personIds: string[] };
+
+/** Occurrence-level mutual swap (§16b / D113) — mirrors core occurrenceSwapRowSchema. */
+export type OccurrenceSwap = {
+  id: string;
+  householdId: string;
+  occurrenceId: string;
+  fromPersonId: string;
+  toPersonId: string;
+  status: 'pending' | 'accepted' | 'declined' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+};
 
 export type ResponsibilityDetail = {
   responsibility: {

@@ -20,7 +20,7 @@ import { ProfileSwitcher } from './ProfileSwitcher';
 
 type TabKey =
   | 'today'
-  | 'duties'
+  | 'chores'
   | 'pantry'
   | 'family'
   | 'routines'
@@ -34,7 +34,7 @@ type TabItem = { href: string; key: TabKey; icon: NavIconName };
 /** Five destinations per the §5.5 nav spec: Home, Tasks, Pantry, Family, Settings. */
 const TABS: TabItem[] = [
   { href: '/', key: 'today', icon: 'today' },
-  { href: '/chores', key: 'duties', icon: 'chores' },
+  { href: '/chores', key: 'chores', icon: 'chores' },
   { href: '/pantry', key: 'pantry', icon: 'supplies' },
   { href: '/family', key: 'family', icon: 'household' },
   { href: '/settings', key: 'settings', icon: 'settings' },

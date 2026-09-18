@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Field } from '@/components/ui';
+import { Button, Card, Field, Glyph } from '@/components/ui';
 import { clearApiCache } from '@/lib/api';
 import { clearPasscodeGate, tryUnlock } from '@/lib/device/passcodeGate';
 
@@ -48,7 +48,9 @@ export function LockScreen({ onUnlocked }: { onUnlocked: () => void }) {
   return (
     <main className="bg-cream text-ink flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-sm">
-        <h1 className="font-display text-center text-2xl">🔒 {t('lock.title')}</h1>
+        <h1 className="font-display text-center text-2xl">
+          <Glyph name="lock" className="text-terracotta mr-1.5 inline-block h-6 w-6 align-[-4px]" aria-hidden /> {t('lock.title')}
+        </h1>
         <p className="text-muted mt-1 text-center text-sm">{t('lock.subtitle')}</p>
         <form onSubmit={submit} className="mt-4 flex flex-col gap-3">
           <Field

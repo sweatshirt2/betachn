@@ -149,7 +149,7 @@ export function PersonSheet({
   const roleName = roleDisplayName(role, t);
 
   return (
-    <Sheet open onClose={onClose} title={`${person.avatarEmoji} ${person.name}`}>
+    <Sheet open onClose={onClose} title={person.name}>
       <div className="flex flex-col gap-4">
         <Card>
           <p className="text-sm">

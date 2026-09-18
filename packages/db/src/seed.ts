@@ -114,14 +114,14 @@ async function main(): Promise<void> {
         householdId: household.id,
         name: 'Hana',
         sex: 'female' as const,
-        avatarEmoji: '👩🏽',
+        
         roleId: ownerRole.id,
       },
       {
         householdId: household.id,
         name: 'Abebe',
         sex: 'male' as const,
-        avatarEmoji: '👨🏽',
+        
         roleId: builtinRoleIds.get('father'),
       },
       {
@@ -129,7 +129,7 @@ async function main(): Promise<void> {
         name: 'Daniel',
         sex: 'male' as const,
         birthDate: addDays(today, -Math.round(13 * 365.25)),
-        avatarEmoji: '🧑🏽',
+        
         roleId: builtinRoleIds.get('responsible_child'),
       },
       {
@@ -137,14 +137,14 @@ async function main(): Promise<void> {
         name: 'Sami',
         sex: 'male' as const,
         birthDate: addDays(today, -Math.round(8 * 365.25)),
-        avatarEmoji: '👦🏽',
+        
         roleId: builtinRoleIds.get('child'),
       },
       {
         householdId: household.id,
         name: 'Sara',
         sex: 'female' as const,
-        avatarEmoji: '👩🏾',
+        
         roleId: builtinRoleIds.get('guardian'),
       },
     ])
@@ -168,8 +168,8 @@ async function main(): Promise<void> {
   const roomRows = await db
     .insert(rooms)
     .values([
-      { householdId: household.id, name: 'Kitchen', icon: '🍳' },
-      { householdId: household.id, name: 'Living Room', icon: '🛋️' },
+      { householdId: household.id, name: 'Kitchen', icon: 'cooking' },
+      { householdId: household.id, name: 'Living Room', icon: 'door' },
     ])
     .returning();
   const kitchen = roomRows.find((r) => r.name === 'Kitchen');
@@ -180,7 +180,7 @@ async function main(): Promise<void> {
       householdId: household.id,
       roomId: kitchen?.id ?? null,
       name: 'Washing Machine',
-      icon: '🌀',
+      icon: 'repeat',
       maintenanceIntervalDays: 60,
     })
     .returning();
@@ -198,20 +198,20 @@ async function main(): Promise<void> {
       {
         householdId: household.id,
         title: 'Laundry',
-        icon: '🧺',
+        icon: 'basket',
         roomId: null,
         createdByPersonId: hana.id,
       },
       {
         householdId: household.id,
         title: 'Trash',
-        icon: '🗑️',
+        icon: 'trash',
         createdByPersonId: hana.id,
       },
       {
         householdId: household.id,
         title: 'Dishes',
-        icon: '🍽️',
+        icon: 'dishes',
         roomId: kitchen?.id ?? null,
         createdByPersonId: hana.id,
       },

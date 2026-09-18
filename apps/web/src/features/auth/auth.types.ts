@@ -10,7 +10,7 @@ export type AuthContextPayload = {
   session: SessionPayload;
   username: string | null;
   activePersonName: string;
-  household: { id: string; name: string; code: string };
+  household: { id: string; name: string; code: string; timezone?: string };
   permissionMap: Record<string, boolean>;
 };
 
@@ -43,6 +43,9 @@ export function toAuthState(token: string, context: AuthContextPayload) {
       id: context.household.id,
       name: context.household.name,
       code: context.household.code,
+      // D112: day-boundary math (turn chips) runs in household tz. Optional
+      // so sessions persisted before this field tolerate rehydrate.
+      timezone: context.household.timezone,
     },
     permissionMap: context.permissionMap,
   };

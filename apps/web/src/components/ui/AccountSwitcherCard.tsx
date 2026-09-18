@@ -18,7 +18,6 @@ import type { CSSProperties, ReactNode } from 'react';
 export type AccountSwitcherStatus = 'active' | 'password' | 'pick';
 
 export function AccountSwitcherCard({
-  emoji,
   name,
   who,
   status,
@@ -33,7 +32,7 @@ export function AccountSwitcherCard({
   index = 0,
   style,
 }: {
-  emoji: string;
+  /** Person display name — initial renders on the avatar tile. */
   name: string;
   /** The identity line under the name — role, relation, or "no role". */
   who?: ReactNode;
@@ -52,10 +51,10 @@ export function AccountSwitcherCard({
   const tile = (
     <span
       aria-hidden
-      className="shadow-soft inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[34%] text-xl leading-none"
+      className="shadow-soft font-display inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[34%] text-lg font-bold leading-none text-ink"
       style={{ background: `var(--chorify-crayon-${(index % 4) + 1})` }}
     >
-      {emoji}
+      {name.trim().charAt(0).toUpperCase() || '?'}
     </span>
   );
 

@@ -38,9 +38,50 @@ export type OccurrenceStatus = z.infer<typeof occurrenceStatusSchema>;
 export type OccurrenceRecord = z.infer<typeof occurrenceRowSchema>;
 export type OccurrenceAction = z.infer<typeof occurrenceActionSchema>;
 
-/** List wire shape (§4.14): occurrence row + responsibility title join. */
+/**
+ * Occurrence-level mutual swap (§16b / D113): a member offers THEIR turn to
+ * another member; acceptance reuses the §6.3 reassign path. Mutual consent
+ * only — no owner approval — but every accept emits the reassign story.
+ * Terminal statuses are immutable (first-write-wins, §6).
+ */
+export const swapStatusSchema = z.enum(['pending', 'accepted', 'declined', 'cancelled']);
+
+export const occurrenceSwapRowSchema = z.object({
+  id: z.string().uuid(),
+  householdId: z.string().uuid(),
+  occurrenceId: z.string().uuid(),
+  fromPersonId: z.string().uuid(),
+  toPersonId: z.string().uuid(),
+  status: swapStatusSchema,
+  clientUuid: z.string().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+});
+
+/** POST /occurrences/:id/swaps — requester offers this turn to `toPersonId`. */
+export const createSwapSchema = z.object({
+  toPersonId: z.string().uuid(),
+  /** Client idempotency key (= pending_ops uuid, D59). */
+  clientUuid: z.string().min(8).max(64).optional(),
+});
+
+/** PATCH /occurrences/:id/swaps/:swapId — target accepts/declines, requester cancels. */
+export const swapActionSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('accept') }),
+  z.object({ action: z.literal('decline') }),
+  z.object({ action: z.literal('cancel') }),
+]);
+
+export type SwapStatus = z.infer<typeof swapStatusSchema>;
+export type OccurrenceSwapRecord = z.infer<typeof occurrenceSwapRowSchema>;
+export type CreateSwapInput = z.infer<typeof createSwapSchema>;
+export type SwapAction = z.infer<typeof swapActionSchema>;
+
+/** List wire shape (§4.14): occurrence row + responsibility title/icon join. */
 export const titledOccurrenceSchema = occurrenceRowSchema.extend({
   title: z.string().min(1),
+  /** Responsibility icon (legacy emoji or glyph key) — clients render a tile. */
+  icon: z.string().nullable(),
 });
 export type TitledOccurrenceRecord = z.infer<typeof titledOccurrenceSchema>;
 

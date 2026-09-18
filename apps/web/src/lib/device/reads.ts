@@ -7,6 +7,7 @@ import * as schema from '@chorify/local-db/schema';
 import type { DeviceDb } from './createHousehold';
 import type {
   OccurrenceStatus,
+  OccurrenceSwap,
   ResponsibilityDetail,
   TodayPayload,
   TitledOccurrence,
@@ -198,7 +199,7 @@ export async function deviceToday(): Promise<TodayPayload> {
     schedules[rule.id] = { pattern: rule.pattern as SchedulePattern, interval: rule.interval };
   }
 
-  const titles = new Map(responsibilities.map((r) => [r.id, r.title] as const));
+  const titles = new Map(responsibilities.map((r) => [r.id, r] as const));
   const titled = (rows: typeof occurrences): TitledOccurrence[] =>
     rows.map((o) => ({
       id: o.id,
@@ -208,7 +209,8 @@ export async function deviceToday(): Promise<TodayPayload> {
       personIds: o.personIds,
       status: o.status as OccurrenceStatus,
       completedByPersonId: o.completedByPersonId,
-      title: titles.get(o.responsibilityId) ?? 'Chore',
+      title: titles.get(o.responsibilityId)?.title ?? 'Chore',
+      icon: titles.get(o.responsibilityId)?.icon ?? null,
     }));
 
   const aggregate = aggregateToday({
@@ -261,9 +263,9 @@ export async function deviceOccurrences(filters: {
     .from(schema.occurrences)
     .where(eq(schema.occurrences.householdId, household.id));
   const responsibilities = await db
-    .select({ id: schema.responsibilities.id, title: schema.responsibilities.title })
+    .select({ id: schema.responsibilities.id, title: schema.responsibilities.title, icon: schema.responsibilities.icon })
     .from(schema.responsibilities);
-  const titles = new Map(responsibilities.map((r) => [r.id, r.title] as const));
+  const titles = new Map(responsibilities.map((r) => [r.id, r] as const));
   let records = rows.map((o) => ({
     id: o.id,
     responsibilityId: o.responsibilityId,
@@ -272,7 +274,8 @@ export async function deviceOccurrences(filters: {
     personIds: o.personIds as string[],
     status: o.status as OccurrenceStatus,
     completedByPersonId: o.completedByPersonId,
-    title: titles.get(o.responsibilityId) ?? 'Chore',
+    title: titles.get(o.responsibilityId)?.title ?? 'Chore',
+    icon: titles.get(o.responsibilityId)?.icon ?? null,
   }));
   if (filters.from) records = records.filter((o) => o.dueDate >= filters.from!);
   if (filters.to) records = records.filter((o) => o.dueDate <= filters.to!);
@@ -280,6 +283,34 @@ export async function deviceOccurrences(filters: {
   if (filters.personId) records = records.filter((o) => o.personIds.includes(filters.personId!));
   records.sort((a, b) => (a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0));
   return { occurrences: records };
+}
+
+/**
+ * Open (pending) swaps for the active person (§16b / D113) — twin of
+ * GET /occurrences/swaps. Incoming = offered TO me; outgoing = offered BY me.
+ */
+export async function deviceSwaps(
+  role: 'incoming' | 'outgoing',
+  activePersonId: string,
+): Promise<{ swaps: OccurrenceSwap[] }> {
+  const db = await deviceContext();
+  const column = role === 'incoming' ? schema.occurrenceSwaps.toPersonId : schema.occurrenceSwaps.fromPersonId;
+  const rows = await db
+    .select()
+    .from(schema.occurrenceSwaps)
+    .where(and(eq(column, activePersonId), eq(schema.occurrenceSwaps.status, 'pending')));
+  return {
+    swaps: rows.map((s) => ({
+      id: s.id,
+      householdId: s.householdId,
+      occurrenceId: s.occurrenceId,
+      fromPersonId: s.fromPersonId,
+      toPersonId: s.toPersonId,
+      status: s.status,
+      createdAt: s.createdAt,
+      updatedAt: s.updatedAt,
+    })),
+  };
 }
 
 /** Chore detail — twin of GET /api/v1/responsibilities/:id. */

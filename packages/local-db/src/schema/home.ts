@@ -7,7 +7,7 @@ export const rooms = sqliteTable('rooms', {
     .notNull()
     .references(() => households.id),
   name: text('name').notNull(),
-  icon: text('icon').notNull().default('🏠'),
+  icon: text('icon').notNull().default('door'),
   createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
 });
 
@@ -18,7 +18,7 @@ export const assets = sqliteTable('assets', {
     .references(() => households.id),
   roomId: text('room_id').references(() => rooms.id),
   name: text('name').notNull(),
-  icon: text('icon').notNull().default('🔧'),
+  icon: text('icon').notNull().default('wrench'),
   maintenanceIntervalDays: integer('maintenance_interval_days'),
   createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
 });

@@ -107,7 +107,7 @@ export class ResponsibilitiesService {
         notes: input.notes ?? null,
         routineId: input.routineId ?? null,
         roomId: input.roomId ?? null,
-        icon: input.icon ?? '📌',
+        icon: input.icon ?? 'pin',
         proofMode: input.proofMode,
         createdByPersonId: actorPersonId,
       }).returning();

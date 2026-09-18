@@ -19,6 +19,7 @@ export const SYNC_ENTITIES = [
   'subtasks',
   'assignment_rules',
   'occurrences',
+  'occurrence_swaps',
   'rooms',
   'assets',
   'service_records',

@@ -1,5 +1,6 @@
 import { addDays, expandRule, type ExpandableRule } from '@chorify/core/schedule';
-import type { RuleInput } from '@chorify/core';
+import { currentRotationTurn } from '@chorify/core/occurrence-helpers';
+import type { RuleInput, RuleRecord } from '@chorify/core';
 
 /** Composer shape of one assignment rule (mirrors core ruleInputSchema). */
 export type ComposerPattern =
@@ -71,4 +72,36 @@ export function previewDates(rule: ComposerRule, today: string, count = 3): stri
   const horizon = addDays(today, 35);
   const hits = expandRule(previewRule(rule), today, horizon);
   return hits.slice(0, count).map((h) => h.date);
+}
+
+/** ISO today in the household timezone (§6.8) — same shape the server uses. */
+export function isoTodayInTz(timezone: string): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
+/**
+ * D112 current-turn info for a rotation rule: occurrence assignees win when a
+ * pending occurrence covers today (they may carry a §6.3 temporary reassign);
+ * otherwise the anchored phase decides. Null when the rule isn't a rotation
+ * covering today or the roster is empty.
+ */
+export function currentTurnForRule(
+  rule: RuleRecord,
+  today: string,
+  pending: Array<{ dueDate: string; personIds: string[] }>,
+): { personId: string; endsAt: string } | null {
+  if (!rule.rotation || rule.rotation.personIds.length === 0) return null;
+  return currentRotationTurn(
+    rule.rotation,
+    rule.anchorDate ?? rule.startDate,
+    today,
+    rule.startDate,
+    rule.endDate,
+    pending,
+  );
 }

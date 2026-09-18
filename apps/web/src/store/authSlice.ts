@@ -16,7 +16,7 @@ export type AuthState = {
   token: string | null;
   user: { id: string; username: string } | null;
   activePerson: { id: string; name: string } | null;
-  household: { id: string; name: string; code: string } | null;
+  household: { id: string; name: string; code: string; timezone?: string } | null;
   permissionMap: Record<string, boolean>;
   /** Read-only preview target (§4.6) — mutations are blocked server-side. */
   viewAsPersonId: string | null;
@@ -29,7 +29,7 @@ export type AuthState = {
 };
 
 export type DeviceSessionPayload = {
-  household: { id: string; name: string; code: string };
+  household: { id: string; name: string; code: string; timezone?: string };
   activePerson: { id: string; name: string };
   permissionMap: Record<string, boolean>;
 };
@@ -85,7 +85,12 @@ export const rehydrateDeviceSession = createAsyncThunk(
       role: role ? { isOwnerRole: role.isOwnerRole, permissions: role.permissions } : null,
     });
     return {
-      household: { id: household.id, name: household.name, code: household.code },
+      household: {
+        id: household.id,
+        name: household.name,
+        code: household.code,
+        timezone: household.timezone,
+      },
       activePerson: { id: person.id, name: person.name },
       permissionMap,
     };
