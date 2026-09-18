@@ -30,9 +30,12 @@ import {
   type TitledOccurrence,
 } from '@/features/chores';
 import { formatDate } from '@/lib/dates';
+import { flushNow } from '@/lib/sync/syncClient';
+import { usePullToRefresh } from '@/lib/pullToRefresh';
 import { useLongPress } from '@/lib/gestures';
 import { usePermission } from '@/lib/permissions';
 import { useSelector } from 'react-redux';
+import type { RootState } from '@/store';
 
 /** Whole days an occurrence is past due (missed-in-grace rows). */
 function daysLate(dueDate: string): number {
@@ -79,6 +82,18 @@ export default function TodayPage() {
   const resolveSwap = useResolveSwap();
   const canReassign = usePermission('responsibilities.reassign');
   const [contextFor, setContextFor] = useState<TitledOccurrence | null>(null);
+  const mode = useSelector((state: RootState) => state.auth.mode);
+
+  // Pull-to-refresh (D115): device households flush the sync engine (push +
+  // pull + cache invalidation ride refreshAfterFlush); server households
+  // just refetch. Same paths as the visible retry controls.
+  const { pull, refreshing, handlers: ptrHandlers } = usePullToRefresh(async () => {
+    if (mode === 'device') {
+      await flushNow();
+    } else {
+      await today.refetch();
+    }
+  });
   const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
 
   if (today.isPending) {
@@ -118,7 +133,17 @@ export default function TodayPage() {
   const swaps = incomingSwaps.data?.swaps ?? [];
 
   return (
-    <div className="page-enter relative">
+    <div className="page-enter relative" data-ptr-root {...ptrHandlers}>
+      {/* Pull-to-refresh indicator (D115): touch-only, subtle. */}
+      {(pull > 0 || refreshing) && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-center text-xs font-bold text-ink/60"
+          style={{ height: Math.max(pull, refreshing ? 28 : 0) }}
+        >
+          {refreshing ? '…' : pull >= 72 ? '↑' : '↓'}
+        </div>
+      )}
       <SectionWatermark variant="leaves" />
 
       {swaps.length > 0 && (
