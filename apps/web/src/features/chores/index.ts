@@ -10,3 +10,4 @@ export type {
 } from './chores.types';
 export { useOccurrences, useResponsibility, useToday, usePeopleMap, useSwaps } from './api/chores.queries';
 export { useCreateResponsibility, useOccurrenceAct, useCreateSwap, useResolveSwap } from './api/chores.mutations';
+export { OccurrenceContextSheet } from './components/OccurrenceContextSheet';

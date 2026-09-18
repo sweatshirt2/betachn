@@ -93,6 +93,8 @@ export type Dict = {
     missedHint: string;
     daysLate: string;
     skipAria: string;
+    skipAction: string;
+    whySeeingHint: string;
   };
   chores: {
     title: string;
@@ -663,6 +665,8 @@ export const en: Dict = {
     missedHint: 'Still within the undo window — finish or skip.',
     daysLate: '{{count}} day late',
     skipAria: 'Skip {{title}}',
+    skipAction: 'Skip this turn',
+    whySeeingHint: 'This shows because the chore is due today and you are a member of the household. You can change schedules any time.',
   },
   chores: {
     title: 'Chores',
@@ -1243,6 +1247,8 @@ export const am: Dict = {
     missedHint: 'እስከ አሁን መመለስ ይቻላል — ይጨርሱት ወይም ይዝለሉት።',
     daysLate: 'በ{{count}} ቀን ዘግይቷል',
     skipAria: '{{title}} ይዝለሉ',
+    skipAction: 'ይህንን ተራ ይዝለሉ',
+    whySeeingHint: 'ይህ ይታያል ምክንያቱም ሥራው ዛሬ ይጠበቃል እና የቤተሰቡ አባል ነዎት። ዕቅዶችን በማንኛውም ጊዜ ማስተካከል ይችላሉ።',
   },
   chores: {
     title: 'ሥራዎች',

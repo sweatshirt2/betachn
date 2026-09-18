@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Button,
@@ -25,15 +26,48 @@ import {
   useSwaps,
   useToday,
   usePeopleMap,
+  OccurrenceContextSheet,
   type TitledOccurrence,
 } from '@/features/chores';
 import { formatDate } from '@/lib/dates';
+import { useLongPress } from '@/lib/gestures';
+import { usePermission } from '@/lib/permissions';
+import { useSelector } from 'react-redux';
 
 /** Whole days an occurrence is past due (missed-in-grace rows). */
 function daysLate(dueDate: string): number {
   const due = new Date(`${dueDate}T00:00:00Z`).getTime();
   const now = Date.now();
   return Math.max(1, Math.floor((now - due) / 86_400_000));
+}
+
+/**
+ * Long-press → context sheet opener for one task row (D115): touch-only,
+ * wraps the row and reports the occurrence upward; visual press cue via a
+ * soft scale on the wrapped content.
+ */
+function LongPressTaskRow({
+  occurrence,
+  onOpen,
+  children,
+}: {
+  occurrence: TitledOccurrence;
+  onOpen: (o: TitledOccurrence) => void;
+  children: React.ReactNode;
+}) {
+  const { pressing, handlers } = useLongPress(() => onOpen(occurrence));
+  return (
+    <div {...handlers} style={{ touchAction: 'pan-y' }}>
+      <div
+        style={{
+          transform: pressing ? 'scale(0.985)' : 'scale(1)',
+          transition: 'transform 150ms ease-out',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
 }
 
 export default function TodayPage() {
@@ -43,6 +77,8 @@ export default function TodayPage() {
   const people = usePeopleMap();
   const incomingSwaps = useSwaps('incoming');
   const resolveSwap = useResolveSwap();
+  const canReassign = usePermission('responsibilities.reassign');
+  const [contextFor, setContextFor] = useState<TitledOccurrence | null>(null);
   const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
 
   if (today.isPending) {
@@ -128,29 +164,30 @@ export default function TodayPage() {
         ) : (
           <div className="mt-2 flex flex-col gap-3">
             {data.todayOccurrences.map((o, index) => (
-              <SwipeCard
-                key={o.id}
-                onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}
-                onSwipeLeft={() => act.mutate({ id: o.id, action: 'skip' })}
-              >
-                <TaskActionRow
-                  className="stagger-item"
-                  style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}
-                  accent={crayon(index)}
-                  title={o.title}
-                  meta={assigneeLabel(o)}
-                  glyph={storedIconGlyph(o.icon, o.title)}
-                  people={assigneePeople(o)}
-                  action={
-                    <ChoreCheck
-                      done={o.status === 'completed'}
-                      disabled={act.isPending}
-                      onClick={() => act.mutate({ id: o.id, action: 'complete' })}
-                      label={t('chores.completeAria', { title: o.title })}
-                    />
-                  }
-                />
-              </SwipeCard>
+              <LongPressTaskRow key={o.id} occurrence={o} onOpen={setContextFor}>
+                <SwipeCard
+                  onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}
+                  onSwipeLeft={() => act.mutate({ id: o.id, action: 'skip' })}
+                >
+                  <TaskActionRow
+                    className="stagger-item"
+                    style={{ animationDelay: `${Math.min(index, 9) * 30}ms` }}
+                    accent={crayon(index)}
+                    title={o.title}
+                    meta={assigneeLabel(o)}
+                    glyph={storedIconGlyph(o.icon, o.title)}
+                    people={assigneePeople(o)}
+                    action={
+                      <ChoreCheck
+                        done={o.status === 'completed'}
+                        disabled={act.isPending}
+                        onClick={() => act.mutate({ id: o.id, action: 'complete' })}
+                        label={t('chores.completeAria', { title: o.title })}
+                      />
+                    }
+                  />
+                </SwipeCard>
+              </LongPressTaskRow>
             ))}
           </div>
         )}
@@ -165,8 +202,8 @@ export default function TodayPage() {
           <p className="text-muted mt-0.5 text-xs font-semibold">{t('today.missedHint')}</p>
           <div className="mt-2 flex flex-col gap-2.5">
             {data.missedInGrace.map((o, index) => (
+              <LongPressTaskRow key={o.id} occurrence={o} onOpen={setContextFor}>
               <SwipeCard
-                key={o.id}
                 onSwipeRight={() => act.mutate({ id: o.id, action: 'complete' })}
                 onSwipeLeft={() => act.mutate({ id: o.id, action: 'skip' })}
               >
@@ -207,10 +244,22 @@ export default function TodayPage() {
                   }
                 />
               </SwipeCard>
+              </LongPressTaskRow>
             ))}
           </div>
         </section>
       )}
+
+      <OccurrenceContextSheet
+        occurrenceId={contextFor?.id ?? null}
+        title={contextFor?.title ?? ''}
+        choreId={contextFor?.responsibilityId ?? ''}
+        canReassign={canReassign}
+        onSkip={() => {
+          if (contextFor) act.mutate({ id: contextFor.id, action: 'skip' });
+        }}
+        onClose={() => setContextFor(null)}
+      />
 
       {(data.lowSupplies.length > 0 || data.maintenanceDue.length > 0) && (
         <section aria-label={t('today.attention')} className="mt-6">
