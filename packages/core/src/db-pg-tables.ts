@@ -25,6 +25,7 @@ const DB_EXPORT_BY_ENTITY: Record<string, string> = {
   supply_events: 'supplyEvents',
   shopping_items: 'shoppingItems',
   recurring_shopping_items: 'recurringShoppingItems',
+  occurrence_swaps: 'occurrenceSwaps',
   activity_events: 'activityEvents',
   notifications: 'notifications',
   notification_prefs: 'notificationPrefs',
