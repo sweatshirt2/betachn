@@ -16,6 +16,7 @@ import type {
   CreateShoppingItemInput,
   CreateSupplyEventInput,
   CreateSupplyInput,
+  ReorderShoppingItemInput,
   RecurringItemRecord,
   ShoppingItemRecord,
   SupplyEventRecord,
@@ -133,7 +134,70 @@ export class ResourcesService {
     const rows = await this.uow.exec.query.shoppingItems!.findMany({
       where: eq(shoppingItems.householdId, householdId),
     });
-    return rows.map((row) => shoppingItemRowSchema.parse(row));
+    // Manual drag order first (D115), then creation time for ties/pre-sortKey rows.
+    const parsed = rows.map((row) => shoppingItemRowSchema.parse(row));
+    parsed.sort((a, b) => {
+      const ka = a.sortKey;
+      const kb = b.sortKey;
+      if (ka !== null && kb !== null && ka !== kb) return ka - kb;
+      if (ka !== null && kb === null) return -1;
+      if (ka === null && kb !== null) return 1;
+      return a.createdAt.getTime() - b.createdAt.getTime();
+    });
+    return parsed;
+  }
+
+  /**
+   * D115 drag-to-reorder: assign the dragged item a sparse sortKey between
+   * its new neighbors — one row written, row-level LWW syncs the position.
+   * Null neighbors (open ends / pre-feature rows) fall back to ±1000 steps.
+   */
+  async reorderShoppingItem(
+    actorPersonId: string | null,
+    householdId: string,
+    input: ReorderShoppingItemInput,
+  ): Promise<ShoppingItemRecord> {
+    return this.uow.transact(async (tx) => {
+      const rows = await tx.query.shoppingItems!.findMany({
+        where: eq(shoppingItems.householdId, householdId),
+        orderBy: [shoppingItems.createdAt],
+      });
+      const byId = new Map(rows.map((r) => [r.id, r]));
+      if (!byId.has(input.itemId)) throw new AppError('NOT_FOUND', 'Shopping item not found');
+      const before = input.beforeItemId ? byId.get(input.beforeItemId) : undefined;
+      const after = input.afterItemId ? byId.get(input.afterItemId) : undefined;
+      if (input.beforeItemId && !before) throw new AppError('VALIDATION_ERROR', 'Unknown before item');
+      if (input.afterItemId && !after) throw new AppError('VALIDATION_ERROR', 'Unknown after item');
+
+      const keyOf = (row: { sortKey: number | null } | undefined): number | undefined =>
+        row === undefined ? undefined : (row.sortKey ?? 0);
+      const beforeKey = keyOf(before as { sortKey: number | null } | undefined);
+      const afterKey = keyOf(after as { sortKey: number | null } | undefined);
+
+      let sortKey: number;
+      if (beforeKey !== undefined && afterKey !== undefined) {
+        sortKey = (beforeKey + afterKey) / 2;
+      } else if (beforeKey !== undefined) {
+        sortKey = beforeKey + 1000;
+      } else if (afterKey !== undefined) {
+        sortKey = afterKey - 1000;
+      } else {
+        // Freed to the end of the list.
+        let maxKey = 0;
+        for (const r of rows) {
+          const k = Number(r.sortKey);
+          if (!Number.isNaN(k) && k > maxKey) maxKey = k;
+        }
+        sortKey = maxKey + 1000;
+      }
+
+      const [updated] = await tx
+        .update(shoppingItems)
+        .set({ sortKey })
+        .where(eq(shoppingItems.id, input.itemId))
+        .returning();
+      return shoppingItemRowSchema.parse(updated);
+    });
   }
 
   async createShoppingItem(
