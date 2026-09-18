@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { households } from './households';
 
 export const supplies = sqliteTable('supplies', {
@@ -46,6 +46,8 @@ export const shoppingItems = sqliteTable('shopping_items', {
   category: text('category'),
   sourceSupplyId: text('source_supply_id').references(() => supplies.id),
   purchasedAt: text('purchased_at'),
+  /** Manual drag order (D115): sparse decimals synced row-level via LWW. */
+  sortKey: real('sort_key'),
   createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
 });
 

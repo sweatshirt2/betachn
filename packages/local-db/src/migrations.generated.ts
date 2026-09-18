@@ -43,5 +43,9 @@ export const DEVICE_MIGRATIONS: readonly DeviceMigration[] = [
   {
     "tag": "0008_certain_boomer",
     "sql": "CREATE TABLE `occurrence_swaps` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`household_id` text NOT NULL,\n\t`occurrence_id` text NOT NULL,\n\t`from_person_id` text NOT NULL,\n\t`to_person_id` text NOT NULL,\n\t`status` text DEFAULT 'pending' NOT NULL,\n\t`client_uuid` text,\n\t`created_at` text NOT NULL,\n\t`updated_at` text NOT NULL,\n\tFOREIGN KEY (`household_id`) REFERENCES `households`(`id`) ON UPDATE no action ON DELETE no action,\n\tFOREIGN KEY (`occurrence_id`) REFERENCES `occurrences`(`id`) ON UPDATE no action ON DELETE no action,\n\tFOREIGN KEY (`from_person_id`) REFERENCES `people`(`id`) ON UPDATE no action ON DELETE no action,\n\tFOREIGN KEY (`to_person_id`) REFERENCES `people`(`id`) ON UPDATE no action ON DELETE no action\n);\n"
+  },
+  {
+    "tag": "0009_small_nuke",
+    "sql": "ALTER TABLE `shopping_items` ADD `sort_key` real;"
   }
 ];
