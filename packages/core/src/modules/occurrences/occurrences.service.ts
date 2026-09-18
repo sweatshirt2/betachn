@@ -6,7 +6,9 @@ import {
   notifications,
   notificationPrefs,
   occurrenceProofs,
+  occurrenceSwaps,
   occurrences,
+  people,
   responsibilities,
 } from '@chorify/db';
 import type { OccurrenceSubtaskState } from '@chorify/db';
@@ -19,12 +21,18 @@ import { KIND_CATEGORY, filterByPrefs, resolveRecipients, type NotifyKind } from
 import { ownerHolderPersonIds } from '../people';
 import { applyCompletion, applyReopen, applySkip, requirePending } from './occurrences.rules';
 import {
+  createSwapSchema,
   occurrenceProofRowSchema,
   occurrenceRowSchema,
+  occurrenceSwapRowSchema,
+  swapActionSchema,
   titledOccurrenceSchema,
+  type CreateSwapInput,
   type OccurrenceAction,
   type OccurrenceRecord,
   type OccurrenceStatus,
+  type OccurrenceSwapRecord,
+  type SwapAction,
   type TitledOccurrenceRecord,
 } from './occurrences.schema';
 
@@ -342,6 +350,149 @@ export class OccurrencesService {
     });
   }
 
+  /**
+   * D113 — mutual swap: requester (a current assignee) offers THIS turn to
+   * another member. No special permission — the turn is theirs to offer.
+   * Guard rails: occurrence must be pending, target ≠ requester, one open
+   * swap per occurrence (idempotent on clientUuid via feed replay).
+   */
+  async createSwap(
+    actorPersonId: string,
+    householdId: string,
+    occurrenceId: string,
+    input: CreateSwapInput,
+  ): Promise<OccurrenceSwapRecord> {
+    createSwapSchema.parse(input);
+    return this.uow.transact(async (tx) => {
+      const row = occurrenceRowSchema.parse(await this.findRow(tx, householdId, occurrenceId));
+      requirePending(row.status);
+      if (input.toPersonId === actorPersonId) {
+        throw new AppError('VALIDATION_ERROR', 'Swap target must be another member');
+      }
+      const targetPerson = await tx.query.people!.findFirst({
+        where: eq(people.id, input.toPersonId),
+        columns: { householdId: true },
+      });
+      if (!targetPerson || String(targetPerson.householdId) !== householdId) {
+        throw new AppError('VALIDATION_ERROR', 'Swap target must be a household member');
+      }
+      if (row.personIds.length > 0 && !row.personIds.includes(actorPersonId)) {
+        throw new AppError('FORBIDDEN', 'Only a current assignee can offer this turn');
+      }
+      const open = await tx.query.occurrenceSwaps!.findMany({
+        where: and(eq(occurrenceSwaps.occurrenceId, row.id), eq(occurrenceSwaps.status, 'pending')),
+      });
+      if (open.length > 0) {
+        throw new AppError('CONFLICT', 'A swap is already pending for this occurrence');
+      }
+      const inserted = await tx
+        .insert(occurrenceSwaps)
+        .values({
+          householdId,
+          occurrenceId: row.id,
+          fromPersonId: actorPersonId,
+          toPersonId: input.toPersonId,
+          status: 'pending' as const,
+          clientUuid: input.clientUuid ?? null,
+        })
+        .returning();
+      const title = await this.responsibilityTitle(tx, row.responsibilityId);
+      await this.emitNotifications(tx, householdId, {
+        kind: 'assignment',
+        typeKey: 'notify.swap.requested',
+        paramsJson: { title, fromName: await personName(tx, actorPersonId) },
+        linkPath: '/chores',
+      }, row.ruleId, actorPersonId, [input.toPersonId]);
+      return occurrenceSwapRowSchema.parse(inserted[0]);
+    });
+  }
+
+  /**
+   * D113 — resolve a swap: accept (target only) applies the §6.3 reassign in
+   * the SAME transaction and emits the reassigned story; decline (target)
+   * and cancel (requester) are terminal no-ops. Terminal rows are immutable
+   * (first-write-wins, §6).
+   */
+  async resolveSwap(
+    actorPersonId: string,
+    householdId: string,
+    swapId: string,
+    action: SwapAction,
+  ): Promise<OccurrenceSwapRecord> {
+    return this.uow.transact(async (tx) => {
+      const found = await tx.query.occurrenceSwaps!.findFirst({
+        where: and(eq(occurrenceSwaps.id, swapId), eq(occurrenceSwaps.householdId, householdId)),
+      });
+      if (!found) throw new AppError('NOT_FOUND', 'Swap not found');
+      const swap = occurrenceSwapRowSchema.parse(found);
+      if (swap.status !== 'pending') {
+        throw new AppError('ALREADY_DONE', 'This swap is already resolved');
+      }
+
+      if (action.action === 'cancel') {
+        if (swap.fromPersonId !== actorPersonId) {
+          throw new AppError('FORBIDDEN', 'Only the requester can cancel a swap');
+        }
+      } else if (swap.toPersonId !== actorPersonId) {
+        throw new AppError('FORBIDDEN', 'Only the invited member can respond to a swap');
+      }
+
+      const now = this.clock.now();
+      if (action.action === 'accept') {
+        // One code path: apply through the existing reassign semantics.
+        const row = occurrenceRowSchema.parse(
+          await this.findRow(tx, householdId, swap.occurrenceId),
+        );
+        requirePending(row.status);
+        await tx.update(occurrences)
+          .set({ personIds: [swap.toPersonId] })
+          .where(eq(occurrences.id, row.id));
+        const title = await this.responsibilityTitle(tx, row.responsibilityId);
+        await emitActivity(tx, householdId, swap.fromPersonId, 'occurrence.reassigned', {
+          title, personIds: [swap.toPersonId], swapped: true,
+        });
+      } else if (action.action === 'decline') {
+        await this.emitNotifications(tx, householdId, {
+          kind: 'assignment',
+          typeKey: 'notify.swap.declined',
+          paramsJson: {},
+          linkPath: '/chores',
+        }, await ruleIdFor(tx, swap.occurrenceId), actorPersonId, [swap.fromPersonId]);
+      }
+
+      const status = action.action === 'accept' ? 'accepted' : action.action === 'decline' ? 'declined' : 'cancelled';
+      const updated = await tx.update(occurrenceSwaps)
+        .set({ status, updatedAt: now })
+        .where(eq(occurrenceSwaps.id, swap.id))
+        .returning();
+      return occurrenceSwapRowSchema.parse(updated[0]);
+    });
+  }
+
+  /** Open (pending) swaps targeting `personId` — Today swap cards. */
+  async listIncomingSwaps(householdId: string, personId: string): Promise<OccurrenceSwapRecord[]> {
+    const rows = await this.uow.exec.query.occurrenceSwaps!.findMany({
+      where: and(
+        eq(occurrenceSwaps.householdId, householdId),
+        eq(occurrenceSwaps.toPersonId, personId),
+        eq(occurrenceSwaps.status, 'pending'),
+      ),
+    });
+    return rows.map((r) => occurrenceSwapRowSchema.parse(r));
+  }
+
+  /** Open swaps REQUESTED by `personId` (cancel entry on the chore page). */
+  async listOutgoingSwaps(householdId: string, personId: string): Promise<OccurrenceSwapRecord[]> {
+    const rows = await this.uow.exec.query.occurrenceSwaps!.findMany({
+      where: and(
+        eq(occurrenceSwaps.householdId, householdId),
+        eq(occurrenceSwaps.fromPersonId, personId),
+        eq(occurrenceSwaps.status, 'pending'),
+      ),
+    });
+    return rows.map((r) => occurrenceSwapRowSchema.parse(r));
+  }
+
   private async findRow(exec: Executor, householdId: string, occurrenceId: string) {
     const row = await exec.query.occurrences!.findFirst({
       where: and(eq(occurrences.id, occurrenceId), eq(occurrences.householdId, householdId)),
@@ -424,6 +575,23 @@ export class OccurrencesService {
       )
       .map(({ responsibility: _r, active: _a, ...rule }) => rule);
   }
+}
+
+/** Swap notification deep-links need the person's name (§6.13 params). */
+async function personName(exec: Executor, personId: string): Promise<string> {
+  const row = await exec.query.people!.findFirst({
+    where: eq(people.id, personId),
+    columns: { name: true },
+  });
+  return String(row?.name ?? '');
+}
+
+async function ruleIdFor(exec: Executor, occurrenceId: string): Promise<string> {
+  const row = await exec.query.occurrences!.findFirst({
+    where: eq(occurrences.id, occurrenceId),
+    columns: { ruleId: true },
+  });
+  return String(row?.ruleId ?? '');
 }
 
 async function emitActivity(
