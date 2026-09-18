@@ -1,38 +1,54 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useSelector } from 'react-redux';
-import { Accordion, Button, Card, Field, Glyph, ThemeSwatch, useToast } from '@/components/ui';
-import { api, ApiError } from '@/lib/api';
-import { useLogout } from '@/features/auth';
-import { THEME_IDS, useTheme, type ThemeId } from '@/theme';
-import { LANGUAGE_STORAGE_KEY, LOCALES } from '@/i18n/dictionaries';
-import i18n from '@/i18n';
-import { readPasscodeGateState, setPasscodeGate, clearPasscodeGate, MemoryTierError, type PasscodeGateState } from '@/lib/device/passcodeGate';
-import type { RootState } from '@/store';
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useSelector } from "react-redux";
+import {
+  Accordion,
+  Button,
+  Card,
+  Field,
+  Glyph,
+  ThemeSwatch,
+  useToast,
+} from "@/components/ui";
+import { api, ApiError } from "@/lib/api";
+import { useLogout } from "@/features/auth";
+import { CoachTourOverlay, useCoachTour } from "@/features/onboarding";
+import { THEME_IDS, useTheme, type ThemeId } from "@/theme";
+import { LANGUAGE_STORAGE_KEY, LOCALES } from "@/i18n/dictionaries";
+import i18n from "@/i18n";
+import {
+  readPasscodeGateState,
+  setPasscodeGate,
+  clearPasscodeGate,
+  MemoryTierError,
+  type PasscodeGateState,
+} from "@/lib/device/passcodeGate";
+import type { RootState } from "@/store";
 
-const CALENDAR_STORAGE_KEY = 'chorify-calendar';
-type CalendarPref = 'gregorian' | 'ethiopian' | 'both';
+const CALENDAR_STORAGE_KEY = "chorify-calendar";
+type CalendarPref = "gregorian" | "ethiopian" | "both";
 
 /** Theme labels resolve through i18n (EN+AM parity per the AM-parity law). */
-const THEME_DICT_KEYS: Record<ThemeId, `settings.theme${Capitalize<ThemeId>}`> = {
-  sky: 'settings.themeSky',
-  peach: 'settings.themePeach',
-  caramel: 'settings.themeCaramel',
-  mint: 'settings.themeMint',
-  butter: 'settings.themeButter',
-  rose: 'settings.themeRose',
-};
+const THEME_DICT_KEYS: Record<ThemeId, `settings.theme${Capitalize<ThemeId>}`> =
+  {
+    sky: "settings.themeSky",
+    peach: "settings.themePeach",
+    caramel: "settings.themeCaramel",
+    mint: "settings.themeMint",
+    butter: "settings.themeButter",
+    rose: "settings.themeRose",
+  };
 
 function readCalendar(): CalendarPref {
   try {
     const v = localStorage.getItem(CALENDAR_STORAGE_KEY);
-    if (v === 'ethiopian' || v === 'both' || v === 'gregorian') return v;
+    if (v === "ethiopian" || v === "both" || v === "gregorian") return v;
   } catch {
     // ignore
   }
-  return 'gregorian';
+  return "gregorian";
 }
 
 export default function SettingsPage() {
@@ -43,6 +59,9 @@ export default function SettingsPage() {
   const household = useSelector((state: RootState) => state.auth.household);
   const [calendar, setCalendar] = useState<CalendarPref>(readCalendar);
   const [busy, setBusy] = useState(false);
+  // D114 replay: "How this works" plays the coach bubbles on demand —
+  // WITHOUT re-arming the once-flag (micro-74: no surprise re-triggers).
+  const guide = useCoachTour({ replay: true });
 
   function pickCalendar(pref: CalendarPref) {
     setCalendar(pref);
@@ -56,16 +75,18 @@ export default function SettingsPage() {
   async function exportHousehold() {
     setBusy(true);
     try {
-      const res = await api.get('/export/household.txt', { responseType: 'blob' });
+      const res = await api.get("/export/household.txt", {
+        responseType: "blob",
+      });
       const url = URL.createObjectURL(res as unknown as Blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `My-Household-${new Date().toISOString().slice(0, 10)}.txt`;
       a.click();
       URL.revokeObjectURL(url);
-      toast(t('settings.exportSaved'), { kind: 'success' });
+      toast(t("settings.exportSaved"), { kind: "success" });
     } catch {
-      toast(t('settings.exportFailed'), { kind: 'error' });
+      toast(t("settings.exportFailed"), { kind: "error" });
     } finally {
       setBusy(false);
     }
@@ -75,17 +96,19 @@ export default function SettingsPage() {
     setBusy(true);
     try {
       const text = await file.text();
-      await api.post('/import', text, { headers: { 'content-type': 'text/plain' } });
-      toast(t('settings.importOpened'), { kind: 'success' });
+      await api.post("/import", text, {
+        headers: { "content-type": "text/plain" },
+      });
+      toast(t("settings.importOpened"), { kind: "success" });
     } catch (err) {
       // micro-67: conflict-class failures get their verbatim copy; the device
       // twin (local import) surfaces its own message.
-      if (err instanceof ApiError && err.code === 'IMPORT_CONFLICT') {
-        toast(t('settings.importConflict'), { kind: 'error' });
-      } else if (err instanceof ApiError && err.code === 'IMPORT_TOO_NEW') {
-        toast(t('settings.importTooNew'), { kind: 'error' });
+      if (err instanceof ApiError && err.code === "IMPORT_CONFLICT") {
+        toast(t("settings.importConflict"), { kind: "error" });
+      } else if (err instanceof ApiError && err.code === "IMPORT_TOO_NEW") {
+        toast(t("settings.importTooNew"), { kind: "error" });
       } else {
-        toast(t('settings.importBlocked'), { kind: 'error' });
+        toast(t("settings.importBlocked"), { kind: "error" });
       }
     } finally {
       setBusy(false);
@@ -94,23 +117,27 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <h1 className="font-display text-2xl">{t('settings.title')}</h1>
+      <h1 className="font-display text-2xl">{t("settings.title")}</h1>
 
       {/* Security & privacy (UI/UX iteration 1): passcode + future privacy
           controls grouped under one accordion so the page stays scannable. */}
       <div className="mt-4">
-        <Accordion title={t('settings.security')} hint={t('settings.securityHint')} glyph="shield">
+        <Accordion
+          title={t("settings.security")}
+          hint={t("settings.securityHint")}
+          glyph="shield"
+        >
           <PasscodeSection />
         </Accordion>
       </div>
 
-      <section aria-label={t('settings.language')} className="mt-4">
-        <h2 className="font-display text-lg">{t('settings.language')} / ቋንቋ</h2>
+      <section aria-label={t("settings.language")} className="mt-4">
+        <h2 className="font-display text-lg">{t("settings.language")} / ቋንቋ</h2>
         <div className="mt-2 flex gap-2">
           {LOCALES.map((locale) => (
             <Button
               key={locale}
-              tone={i18n.language === locale ? 'primary' : 'quiet'}
+              tone={i18n.language === locale ? "primary" : "quiet"}
               onClick={() => {
                 void i18n.changeLanguage(locale);
                 try {
@@ -120,18 +147,22 @@ export default function SettingsPage() {
                 }
               }}
             >
-              {locale === 'en' ? 'English' : 'አማርኛ'}
+              {locale === "en" ? "English" : "አማርኛ"}
             </Button>
           ))}
         </div>
       </section>
 
-      <section aria-label={t('settings.theme')} className="mt-4">
-        <h2 className="font-display text-lg">{t('settings.theme')}</h2>
+      <section aria-label={t("settings.theme")} className="mt-4">
+        <h2 className="font-display text-lg">{t("settings.theme")}</h2>
         {/* Live-token previews (UI/UX iteration 2): each card is a miniature
             of the app scoped via data-theme — no hardcoded hexes, so the
             picker can never drift from the real UI. */}
-        <div className="mt-2 grid grid-cols-3 gap-2.5 sm:grid-cols-6" role="group" aria-label={t('settings.theme')}>
+        <div
+          className="mt-2 grid grid-cols-3 gap-2.5 sm:grid-cols-6"
+          role="group"
+          aria-label={t("settings.theme")}
+        >
           {THEME_IDS.map((id) => {
             const selected = theme === id;
             return (
@@ -142,18 +173,24 @@ export default function SettingsPage() {
                 aria-pressed={selected}
                 className={`lift-hover bg-card-wash rounded-md border p-1.5 text-left ${
                   selected
-                    ? 'border-terracotta ring-terracotta/40 shadow-soft ring-2'
-                    : 'border-line hover:shadow-soft'
+                    ? "border-terracotta ring-terracotta/40 shadow-soft ring-2"
+                    : "border-line hover:shadow-soft"
                 }`}
               >
                 <ThemeSwatch theme={id} />
                 <span
                   className={`mt-1 flex items-center justify-between px-0.5 text-xs font-bold ${
-                    selected ? 'text-ink' : 'text-muted'
+                    selected ? "text-ink" : "text-muted"
                   }`}
                 >
                   {t(THEME_DICT_KEYS[id])}
-                  {selected && <Glyph name="check-circle" className="text-terracotta h-3.5 w-3.5" aria-hidden />}
+                  {selected && (
+                    <Glyph
+                      name="check-circle"
+                      className="text-terracotta h-3.5 w-3.5"
+                      aria-hidden
+                    />
+                  )}
                 </span>
               </button>
             );
@@ -161,35 +198,47 @@ export default function SettingsPage() {
         </div>
       </section>
 
-      <section aria-label={t('settings.calendar')} className="mt-4">
-        <h2 className="font-display text-lg">{t('settings.calendar')}</h2>
+      <section aria-label={t("settings.calendar")} className="mt-4">
+        <h2 className="font-display text-lg">{t("settings.calendar")}</h2>
         <div className="mt-2 flex gap-2">
-          {(['gregorian', 'ethiopian', 'both'] as CalendarPref[]).map((pref) => (
-            <Button key={pref} tone={calendar === pref ? 'primary' : 'quiet'} onClick={() => pickCalendar(pref)}>
-              {pref === 'gregorian' ? t('settings.gregorian') : pref === 'ethiopian' ? t('settings.ethiopian') : t('settings.both')}
-            </Button>
-          ))}
+          {(["gregorian", "ethiopian", "both"] as CalendarPref[]).map(
+            (pref) => (
+              <Button
+                key={pref}
+                tone={calendar === pref ? "primary" : "quiet"}
+                onClick={() => pickCalendar(pref)}
+              >
+                {pref === "gregorian"
+                  ? t("settings.gregorian")
+                  : pref === "ethiopian"
+                    ? t("settings.ethiopian")
+                    : t("settings.both")}
+              </Button>
+            ),
+          )}
         </div>
       </section>
 
       {household && (
-        <section aria-label={t('settings.household')} className="mt-4">
-          <h2 className="font-display text-lg">{t('settings.household')}</h2>
+        <section aria-label={t("settings.household")} className="mt-4">
+          <h2 className="font-display text-lg">{t("settings.household")}</h2>
           <Card className="mt-2">
             <p className="text-sm font-semibold">{household.name}</p>
-            <p className="text-muted text-xs">{t('settings.codeShare', { code: household.code })}</p>
+            <p className="text-muted text-xs">
+              {t("settings.codeShare", { code: household.code })}
+            </p>
           </Card>
         </section>
       )}
 
-      <section aria-label={t('settings.backup')} className="mt-4">
-        <h2 className="font-display text-lg">{t('settings.backup')}</h2>
+      <section aria-label={t("settings.backup")} className="mt-4">
+        <h2 className="font-display text-lg">{t("settings.backup")}</h2>
         <Card className="mt-2 flex flex-col gap-2">
           <Button tone="quiet" disabled={busy} onClick={exportHousehold}>
-            {t('settings.saveCopy')}
+            {t("settings.saveCopy")}
           </Button>
           <label className="bg-surface-alt text-ink border-line shadow-soft tap-spring cursor-pointer rounded-md border px-4 py-2 text-center text-sm font-semibold">
-            {t('settings.openCopy')}
+            {t("settings.openCopy")}
             <input
               type="file"
               accept=".txt"
@@ -198,19 +247,43 @@ export default function SettingsPage() {
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) void importHousehold(file);
-                e.target.value = '';
+                e.target.value = "";
               }}
             />
           </label>
-          <p className="text-muted text-xs">{t('settings.noPasswords')}</p>
+          <p className="text-muted text-xs">{t("settings.noPasswords")}</p>
         </Card>
       </section>
 
       <div className="mt-6">
-        <Button tone="quiet" disabled={logout.isPending} onClick={() => logout.mutate({})}>
-          {t('settings.signOut')}
+        <Button
+          tone="quiet"
+          disabled={logout.isPending}
+          onClick={() => logout.mutate({})}
+        >
+          {t("settings.signOut")}
         </Button>
       </div>
+
+      {/* D114 replay entry: Settings → "How this works". */}
+      <section aria-label={t("coach.replay")} className="mt-4">
+        <Card className="mt-2 flex items-center gap-3">
+          <Glyph
+            name="sparkle"
+            className="text-muted h-5 w-5 shrink-0"
+            aria-hidden
+          />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold">{t("coach.replay")}</p>
+            <p className="text-muted text-xs">{t("coach.replayHint")}</p>
+          </div>
+          <Button tone="quiet" onClick={guide.start}>
+            {t("coach.next")}
+          </Button>
+        </Card>
+      </section>
+
+      <CoachTourOverlay replay />
     </div>
   );
 }
@@ -224,15 +297,19 @@ function PasscodeSection() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const mode = useSelector((state: RootState) => state.auth.mode);
-  const [state, setState] = useState<PasscodeGateState | 'checking'>('checking');
-  const [passcode, setPasscode] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [hint, setHint] = useState('');
+  const [state, setState] = useState<PasscodeGateState | "checking">(
+    "checking",
+  );
+  const [passcode, setPasscode] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [hint, setHint] = useState("");
   const [busy, setBusy] = useState(false);
   const [removing, setRemoving] = useState(false);
   // Per-field errors (UI/UX iteration 1): validation speaks under the input
   // it belongs to, not in a toast far from the cause.
-  const [errors, setErrors] = useState<{ passcode?: string; confirm?: string }>({});
+  const [errors, setErrors] = useState<{ passcode?: string; confirm?: string }>(
+    {},
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -241,7 +318,7 @@ function PasscodeSection() {
         if (!cancelled) setState(s);
       })
       .catch(() => {
-        if (!cancelled) setState({ status: 'none' });
+        if (!cancelled) setState({ status: "none" });
       });
     return () => {
       cancelled = true;
@@ -250,21 +327,27 @@ function PasscodeSection() {
 
   async function save() {
     const next: { passcode?: string; confirm?: string } = {};
-    if (passcode.length < 4) next.passcode = t('settings.passcodeTooShort');
-    if (passcode.length >= 4 && passcode !== confirm) next.confirm = t('settings.passcodeMismatch');
+    if (passcode.length < 4) next.passcode = t("settings.passcodeTooShort");
+    if (passcode.length >= 4 && passcode !== confirm)
+      next.confirm = t("settings.passcodeMismatch");
     setErrors(next);
     if (Object.keys(next).length > 0) return;
     setBusy(true);
     try {
       await setPasscodeGate(passcode, hint.trim() || null);
-      toast(t('settings.passcodeSaved'), { kind: 'success' });
-      setPasscode('');
-      setConfirm('');
-      setHint('');
-      setState({ status: 'gate', hint: hint.trim() || null });
+      toast(t("settings.passcodeSaved"), { kind: "success" });
+      setPasscode("");
+      setConfirm("");
+      setHint("");
+      setState({ status: "gate", hint: hint.trim() || null });
     } catch (err) {
-      console.error('passcode save failed', err);
-      toast(err instanceof MemoryTierError ? t('settings.passcodeNeedsDurable') : t('common.loadError'), { kind: 'error' });
+      console.error("passcode save failed", err);
+      toast(
+        err instanceof MemoryTierError
+          ? t("settings.passcodeNeedsDurable")
+          : t("common.loadError"),
+        { kind: "error" },
+      );
     } finally {
       setBusy(false);
     }
@@ -274,68 +357,76 @@ function PasscodeSection() {
     setBusy(true);
     try {
       await clearPasscodeGate();
-      toast(t('settings.passcodeRemoved'), { kind: 'success' });
-      setState({ status: 'none' });
+      toast(t("settings.passcodeRemoved"), { kind: "success" });
+      setState({ status: "none" });
       setRemoving(false);
     } finally {
       setBusy(false);
     }
   }
 
-  const locked = state !== 'checking' && state.status === 'gate';
+  const locked = state !== "checking" && state.status === "gate";
 
   return (
-    <section aria-label={t('settings.passcode')}>
-      <h2 className="font-display text-lg">{t('settings.passcode')}</h2>
+    <section aria-label={t("settings.passcode")}>
+      <h2 className="font-display text-lg">{t("settings.passcode")}</h2>
       <Card className="mt-2 flex flex-col gap-2">
         <p className="text-muted text-xs">
-          {mode === 'server' ? t('settings.passcodeExplainSynced') : t('settings.passcodeExplainOffline')}
+          {mode === "server"
+            ? t("settings.passcodeExplainSynced")
+            : t("settings.passcodeExplainOffline")}
         </p>
-        {state === 'checking' ? null : locked ? (
+        {state === "checking" ? null : locked ? (
           <>
-            <p className="text-sm font-semibold">{t('settings.passcodeOn')}</p>
+            <p className="text-sm font-semibold">{t("settings.passcodeOn")}</p>
             {removing ? (
               <div className="flex gap-2">
                 <Button disabled={busy} onClick={() => void remove()}>
-                  {t('settings.passcodeRemoveConfirm')}
+                  {t("settings.passcodeRemoveConfirm")}
                 </Button>
                 <Button tone="quiet" onClick={() => setRemoving(false)}>
-                  {t('common.cancel')}
+                  {t("common.cancel")}
                 </Button>
               </div>
             ) : (
               <Button tone="quiet" onClick={() => setRemoving(true)}>
-                {t('settings.passcodeRemove')}
+                {t("settings.passcodeRemove")}
               </Button>
             )}
           </>
         ) : (
           <div className="flex flex-col gap-2">
             <Field
-              label={t('settings.passcodeNew')}
+              label={t("settings.passcodeNew")}
               type="password"
               value={passcode}
               onChange={(e) => {
                 setPasscode(e.target.value);
-                if (errors.passcode) setErrors((cur) => ({ ...cur, passcode: undefined }));
+                if (errors.passcode)
+                  setErrors((cur) => ({ ...cur, passcode: undefined }));
               }}
               error={errors.passcode}
               autoComplete="new-password"
             />
             <Field
-              label={t('settings.passcodeConfirm')}
+              label={t("settings.passcodeConfirm")}
               type="password"
               value={confirm}
               onChange={(e) => {
                 setConfirm(e.target.value);
-                if (errors.confirm) setErrors((cur) => ({ ...cur, confirm: undefined }));
+                if (errors.confirm)
+                  setErrors((cur) => ({ ...cur, confirm: undefined }));
               }}
               error={errors.confirm}
               autoComplete="new-password"
             />
-            <Field label={t('settings.passcodeHint')} value={hint} onChange={(e) => setHint(e.target.value)} />
+            <Field
+              label={t("settings.passcodeHint")}
+              value={hint}
+              onChange={(e) => setHint(e.target.value)}
+            />
             <Button disabled={busy} onClick={() => void save()}>
-              {t('settings.passcodeSave')}
+              {t("settings.passcodeSave")}
             </Button>
           </div>
         )}
