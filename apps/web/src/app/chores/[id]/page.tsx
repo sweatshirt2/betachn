@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import { use, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, ChoreCheck, EmptyState, Glyph, Sheet, Skeleton, storedIconGlyph } from '@/components/ui';
 import { useOccurrenceAct, useOccurrences, useResponsibility, usePeopleMap } from '@/features/chores';
+import { currentTurnForRule, isoTodayInTz } from '@/features/chores/chores.helpers';
 import { ProofSheet } from '@/features/chores/components/ProofSheet';
+import { formatDate } from '@/lib/dates';
 import type { RootState } from '@/store';
+import { useSelector } from 'react-redux';
 
 function addDaysIso(iso: string, days: number): string {
   const d = new Date(`${iso}T00:00:00Z`);
@@ -66,6 +68,14 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
   const all = occurrences.data?.occurrences ?? [];
   const related = all.filter((o) => o.responsibilityId === id && o.status === 'pending');
 
+  // D112 current-turn chip: the pending occurrence covering today wins (it
+  // may carry a §6.3 temporary reassign); otherwise the anchored phase.
+  const timezone = useSelector((s: RootState) => s.auth.household?.timezone) ?? 'Africa/Addis_Ababa';
+  const todayIso = isoTodayInTz(timezone);
+  const turn = rules
+    .map((rule) => currentTurnForRule(rule, todayIso, related.map((o) => ({ dueDate: o.dueDate, personIds: o.personIds }))))
+    .find((t): t is { personId: string; endsAt: string } => t !== null) ?? null;
+
   // History strip (§5.5): newest-first, terminal occurrences only. Filter
   // toggle: all members or this chore's finished rows only (member filter is
   // satisfied by the per-person stats on their sheet).
@@ -110,6 +120,15 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
         <div className="min-w-0 flex-1">
           <h1 className="font-display truncate text-2xl">{responsibility.title}</h1>
           {readout && <p className="text-muted mt-0.5 truncate text-sm">↻ {readout}</p>}
+          {turn && (
+            <p className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-full bg-surface-alt px-2.5 py-0.5 text-xs font-bold text-ink border border-line">
+              <Glyph name="repeat" className="h-3 w-3" aria-hidden />
+              {t('chores.turnNow', {
+                who: names.get(turn.personId) ?? '…',
+                until: formatDate(turn.endsAt),
+              })}
+            </p>
+          )}
         </div>
       </div>
       {responsibility.notes && <p className="text-muted mt-2 text-sm">{responsibility.notes}</p>}

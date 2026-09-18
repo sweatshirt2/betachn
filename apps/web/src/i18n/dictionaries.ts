@@ -149,6 +149,7 @@ export type Dict = {
     reassignHint: string;
     claim: string;
     assignedToShort: string;
+    turnNow: string;
     history: string;
     historyAll: string;
     statusCompleted: string;
@@ -700,6 +701,7 @@ export const en: Dict = {
     reassignHint: 'Moves this occurrence only — the weekly plan stays as is.',
     claim: 'Take this',
     assignedToShort: 'Assigned: {{who}}',
+    turnNow: "{{who}}'s turn · until {{until}}",
     history: 'History',
     historyAll: 'Show all',
     statusCompleted: 'Completed {{date}}',
@@ -1261,6 +1263,7 @@ export const am: Dict = {
     reassignHint: 'ይህንን ቀን ብቻ ያሳውራል — የሳምንቱ ዕቅድ እንደነበረ ይቀራል።',
     claim: 'ያዝበት',
     assignedToShort: 'የተመደበ፦ {{who}}',
+    turnNow: 'የ{{who}} ተራ · እስከ {{until}}',
     history: 'ታሪክ',
     historyAll: 'ሁሉንም አሳይ',
     statusCompleted: 'የተጠናቀቀ {{date}}',
