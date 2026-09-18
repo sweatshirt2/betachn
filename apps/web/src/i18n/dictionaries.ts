@@ -150,6 +150,22 @@ export type Dict = {
     claim: string;
     assignedToShort: string;
     turnNow: string;
+    swapAction: string;
+    swapSheetTitle: string;
+    swapSheetHint: string;
+    swapToLabel: string;
+    swapIncomingTitle: string;
+    swapIncomingLine: string;
+    swapAccept: string;
+    swapDecline: string;
+    swapCancel: string;
+    swapMinePending: string;
+    swapRequestedToast: string;
+    swapAlreadyPending: string;
+    swapAcceptedToast: string;
+    swapDeclinedToast: string;
+    swapCancelledToast: string;
+    swapAlreadyResolved: string;
     history: string;
     historyAll: string;
     statusCompleted: string;
@@ -330,6 +346,8 @@ export type Dict = {
     completionRecorded: string;
     missedDetected: string;
     backupNudge: string;
+    swapRequested: string;
+    swapDeclined: string;
     caughtUpHint: string;
     prefsAria: string;
     categoryAria: string;
@@ -702,6 +720,22 @@ export const en: Dict = {
     claim: 'Take this',
     assignedToShort: 'Assigned: {{who}}',
     turnNow: "{{who}}'s turn · until {{until}}",
+    swapAction: 'Swap this turn',
+    swapSheetTitle: 'Offer this turn',
+    swapSheetHint: 'They can accept or decline — the weekly plan stays as is.',
+    swapToLabel: 'Who should take it?',
+    swapIncomingTitle: 'Swap requests',
+    swapIncomingLine: '{{who}} asks you to take “{{title}}” ({{date}})',
+    swapAccept: 'Take it',
+    swapDecline: 'No thanks',
+    swapCancel: 'Cancel request',
+    swapMinePending: 'Waiting for {{who}} to answer',
+    swapRequestedToast: 'Swap request sent.',
+    swapAlreadyPending: 'A swap is already waiting for this chore.',
+    swapAcceptedToast: 'Swap accepted — the chore is yours.',
+    swapDeclinedToast: 'Swap declined.',
+    swapCancelledToast: 'Swap request cancelled.',
+    swapAlreadyResolved: 'That swap was already handled.',
     history: 'History',
     historyAll: 'Show all',
     statusCompleted: 'Completed {{date}}',
@@ -885,6 +919,8 @@ export const en: Dict = {
     completionRecorded: '{{title}} completed.',
     missedDetected: '{{title}} was missed.',
     backupNudge: 'Back up {{name}} — save a copy.',
+    swapRequested: '{{who}} asks you to take “{{title}}” — open Today to respond.',
+    swapDeclined: '{{who}} declined the swap for “{{title}}”.',
     caughtUpHint: 'Reminders and updates land here.',
     prefsAria: 'Preferences',
     categoryAria: '{{category}} notifications',
@@ -1264,6 +1300,22 @@ export const am: Dict = {
     claim: 'ያዝበት',
     assignedToShort: 'የተመደበ፦ {{who}}',
     turnNow: 'የ{{who}} ተራ · እስከ {{until}}',
+    swapAction: 'ተራዬን አላዋወጥ',
+    swapSheetTitle: 'ተራውን አቅርብ',
+    swapSheetHint: 'እሱ መቀበል ወይም መከለል ይችላል — የሳምንቱ ዕቅድ እንደነበረ ይቀራል።',
+    swapToLabel: 'ማን ይውሰድ?',
+    swapIncomingTitle: 'የመለዋወጫ ጥያቄዎች',
+    swapIncomingLine: '{{who}} “{{title}}” ({{date}}) እንዲወስዱ ጠይቀዋል',
+    swapAccept: 'አወስደዋለሁ',
+    swapDecline: 'አላወድኩም',
+    swapCancel: 'ጥያቄውን ሰርዝ',
+    swapMinePending: '{{who}} መልስ እስኪሰጡ በመጠበቅ ላይ',
+    swapRequestedToast: 'የመለዋወጥ ጥያቄ ተልኳል።',
+    swapAlreadyPending: 'ለዚህ ሥራ መለዋወጫ አስቀድሞ ቆይቷል።',
+    swapAcceptedToast: 'መለዋወጡ ተቀብለዋል — ሥራው የእርስዎ ነው።',
+    swapDeclinedToast: 'መለዋወጡ አልተቀበለም።',
+    swapCancelledToast: 'የመለዋወጥ ጥያቄ ተሰርዟል።',
+    swapAlreadyResolved: 'ያ መለዋወጥ አስቀድሞ ተከናውኗል።',
     history: 'ታሪክ',
     historyAll: 'ሁሉንም አሳይ',
     statusCompleted: 'የተጠናቀቀ {{date}}',
@@ -1444,6 +1496,8 @@ export const am: Dict = {
     completionRecorded: '{{title}} ተጠናቋል።',
     missedDetected: '{{title}} ተረስኗል።',
     backupNudge: '{{name}} ን ያስቀምጡ — ቅጂ ይቆጥቡ።',
+    swapRequested: '{{who}} “{{title}}” እንዲወስዱ ጠይቀዋል — ለመመለስ ወደ ዛሬ ይሂዱ።',
+    swapDeclined: '{{who}} ለ“{{title}}” መለዋወጥ አልተቀበሉም።',
     caughtUpHint: 'አስታዋሾችና ዜናዎች እዚህ ይደርሳሉ።',
     prefsAria: 'ምርጫዎች',
     categoryAria: '{{category}} ማሳወቂያዎች',

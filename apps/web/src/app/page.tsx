@@ -19,7 +19,14 @@ import {
   supplyGlyph,
   crayon,
 } from '@/components/ui';
-import { useOccurrenceAct, useToday, usePeopleMap, type TitledOccurrence } from '@/features/chores';
+import {
+  useOccurrenceAct,
+  useResolveSwap,
+  useSwaps,
+  useToday,
+  usePeopleMap,
+  type TitledOccurrence,
+} from '@/features/chores';
 import { formatDate } from '@/lib/dates';
 
 /** Whole days an occurrence is past due (missed-in-grace rows). */
@@ -34,6 +41,8 @@ export default function TodayPage() {
   const today = useToday();
   const act = useOccurrenceAct();
   const people = usePeopleMap();
+  const incomingSwaps = useSwaps('incoming');
+  const resolveSwap = useResolveSwap();
   const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
 
   if (today.isPending) {
@@ -70,9 +79,48 @@ export default function TodayPage() {
       return { label: name };
     });
 
+  const swaps = incomingSwaps.data?.swaps ?? [];
+
   return (
     <div className="page-enter relative">
       <SectionWatermark variant="leaves" />
+
+      {swaps.length > 0 && (
+        <section aria-label={t('chores.swapIncomingTitle')} className="mb-6">
+          <h2 className="font-display text-xl">{t('chores.swapIncomingTitle')}</h2>
+          <div className="mt-2 flex flex-col gap-2">
+            {swaps.map((s) => {
+              const occurrence =
+                data.todayOccurrences.find((o) => o.id === s.occurrenceId) ??
+                data.upcoming.find((o) => o.id === s.occurrenceId);
+              return (
+                <Card key={s.id} className="flex flex-wrap items-center gap-2 py-3">
+                  <p className="min-w-0 flex-1 text-sm">
+                    {t('chores.swapIncomingLine', {
+                      who: names.get(s.fromPersonId) ?? '…',
+                      title: occurrence?.title ?? t('chores.title'),
+                      date: occurrence ? formatDate(occurrence.dueDate) : '',
+                    })}
+                  </p>
+                  <Button
+                    disabled={resolveSwap.isPending}
+                    onClick={() => resolveSwap.mutate({ occurrenceId: s.occurrenceId, swapId: s.id, action: 'accept' })}
+                  >
+                    {t('chores.swapAccept')}
+                  </Button>
+                  <Button
+                    tone="quiet"
+                    disabled={resolveSwap.isPending}
+                    onClick={() => resolveSwap.mutate({ occurrenceId: s.occurrenceId, swapId: s.id, action: 'decline' })}
+                  >
+                    {t('chores.swapDecline')}
+                  </Button>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      )}
       <section aria-label={t('today.today')}>
         <h2 className="font-display text-xl">{t('today.today')}</h2>
         {data.todayOccurrences.length === 0 ? (

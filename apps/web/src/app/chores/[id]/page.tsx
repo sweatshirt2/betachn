@@ -7,6 +7,8 @@ import { Button, Card, ChoreCheck, EmptyState, Glyph, Sheet, Skeleton, storedIco
 import { useOccurrenceAct, useOccurrences, useResponsibility, usePeopleMap } from '@/features/chores';
 import { currentTurnForRule, isoTodayInTz } from '@/features/chores/chores.helpers';
 import { ProofSheet } from '@/features/chores/components/ProofSheet';
+import { SwapSheet } from '@/features/chores/components/SwapSheet';
+import { useResolveSwap, useSwaps } from '@/features/chores';
 import { formatDate } from '@/lib/dates';
 import type { RootState } from '@/store';
 import { useSelector } from 'react-redux';
@@ -28,12 +30,20 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
   const act = useOccurrenceAct();
   const people = usePeopleMap();
   const occurrences = useOccurrences({});
+  const outgoingSwaps = useSwaps('outgoing');
+  const resolveSwap = useResolveSwap();
+  const pendingSwapByOccurrence = new Map(
+    (outgoingSwaps.data?.swaps ?? []).map((s) => [s.occurrenceId, s] as const),
+  );
   const names = new Map((people.data?.people ?? []).map((p) => [p.id, p.name] as const));
 
   const [reassignFor, setReassignFor] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   /** Required-proof gate (§4A.4): occurrence id awaiting photo completion. */
   const [proofFor, setProofFor] = useState<string | null>(null);
+  /** D113 mutual swap: occurrence id being offered to another member. */
+  const [swapFor, setSwapFor] = useState<string | null>(null);
+  const activePersonId = useSelector((s: RootState) => s.auth.viewAsPersonId ?? s.auth.activePerson?.id ?? null);
 
   /** Shared completion entry — routes through the proof sheet when required. */
   const requestComplete = (occurrenceId: string) => {
@@ -203,12 +213,31 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
           <div className="mt-2 flex flex-col gap-2">
             {related.map((o) => {
               const upForGrabs = o.personIds.length === 0;
+              const isMine = activePersonId !== null && o.personIds.includes(activePersonId);
+              const pendingSwap = pendingSwapByOccurrence.get(o.id);
               return (
-                <Card key={o.id} className="lift-hover flex items-center gap-3.5 py-3">
-                  <p className="flex-1 text-sm">
+                <Card key={o.id} className="lift-hover flex flex-wrap items-center gap-2 py-3">
+                  <p className="min-w-0 flex-1 text-sm">
                     {t('chores.due', { date: o.dueDate })} ·{' '}
                     {o.personIds.map((pid) => names.get(pid) ?? '…').join(', ') || t('today.upForGrabs')}
                   </p>
+                  {pendingSwap && (
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-alt border border-line px-2.5 py-1 text-xs font-bold text-ink">
+                      {t('chores.swapMinePending', { who: names.get(pendingSwap.toPersonId) ?? '…' })}
+                      <button
+                        type="button"
+                        className="text-terracotta font-bold"
+                        onClick={() => resolveSwap.mutate({ occurrenceId: o.id, swapId: pendingSwap.id, action: 'cancel' })}
+                      >
+                        {t('chores.swapCancel')}
+                      </button>
+                    </span>
+                  )}
+                  {isMine && !pendingSwap && (
+                    <Button tone="quiet" disabled={resolveSwap.isPending} onClick={() => setSwapFor(o.id)}>
+                      {t('chores.swapAction')}
+                    </Button>
+                  )}
                   {canReassign && !upForGrabs && (
                     <Button tone="quiet" onClick={() => setReassignFor(o.id)}>
                       {t('chores.reassign')}
@@ -227,6 +256,13 @@ export default function ChoreDetailPage({ params }: { params: Promise<{ id: stri
         </section>
       )}
 
+      <SwapSheet
+        open={swapFor !== null}
+        occurrenceId={swapFor}
+        people={(people.data?.people ?? []).map((p) => ({ id: p.id, name: p.name }))}
+        excludePersonId={activePersonId}
+        onClose={() => setSwapFor(null)}
+      />
       <ReassignSheet
         occurrenceId={reassignFor}
         onClose={() => setReassignFor(null)}
