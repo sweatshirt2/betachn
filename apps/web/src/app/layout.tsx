@@ -30,6 +30,11 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: '#F4F7FB',
+  // 'cover' keeps env(safe-area-inset-*) honest on notched devices;
+  // 'resizes-content' makes the keyboard shrink the LAYOUT viewport so the
+  // fixed bottom nav + FAB ride above it instead of hiding underneath.
+  viewportFit: 'cover',
+  interactiveWidget: 'resizes-content',
 };
 
 /**

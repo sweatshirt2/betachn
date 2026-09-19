@@ -110,7 +110,7 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="bg-page-wash ambient mx-auto flex min-h-screen w-full max-w-sm flex-col justify-center px-4 py-10">
+    <main className="bg-page-wash ambient mx-auto flex min-h-svh w-full max-w-sm flex-col justify-center px-4 py-10">
       {step === 0 && (
         <div className="page-enter flex flex-col">
           <AuthArt variant="language" />
