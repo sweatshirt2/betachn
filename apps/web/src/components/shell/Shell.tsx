@@ -313,7 +313,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </button>
 
         <nav
-          className="border-line/70 bg-surface/90 fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
+          className="border-line/70 bg-surface/95 fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t px-2 pb-[env(safe-area-inset-bottom)] lg:hidden"
           aria-label={t("nav.primary")}
           data-no-print
         >
