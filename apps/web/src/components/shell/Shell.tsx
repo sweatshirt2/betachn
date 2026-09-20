@@ -135,7 +135,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
   if (gateState === "checking") {
-    return <div className="bg-page-wash min-h-screen" aria-busy="true" />;
+    return <div className="bg-page-wash min-h-svh" aria-busy="true" />;
   }
   if (gateState === "locked") {
     return (
@@ -165,7 +165,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="ambient bg-page-wash text-ink min-h-screen lg:flex">
+    // min-h-svh: size against the SMALLEST viewport so the URL bar
+    // showing/hiding never overshoots the visible screen or snaps the layout.
+    <div className="ambient bg-page-wash text-ink min-h-svh lg:flex">
       <aside
         className="border-line/70 bg-surface/80 hidden w-56 shrink-0 flex-col gap-1 border-r p-4 backdrop-blur-sm lg:flex"
         data-no-print
@@ -311,7 +313,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </button>
 
         <nav
-          className="border-line/70 bg-surface/90 fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
+          className="border-line/70 bg-surface/95 fixed inset-x-0 bottom-0 z-40 flex items-stretch justify-around border-t px-2 pb-[env(safe-area-inset-bottom)] lg:hidden"
           aria-label={t("nav.primary")}
           data-no-print
         >
@@ -378,7 +380,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 function SignedOutDoor() {
   const { t } = useTranslation();
   return (
-    <main className="bg-page-wash ambient page-enter flex min-h-screen w-full flex-col items-center justify-center px-4 py-10">
+    <main className="bg-page-wash ambient page-enter flex min-h-svh w-full flex-col items-center justify-center px-4 py-10">
       <AuthArt variant="welcome" />
       <h1 className="font-display mt-4 text-center text-3xl">
         {t("auth.welcomeBack")}

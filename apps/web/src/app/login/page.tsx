@@ -178,7 +178,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="bg-page-wash ambient flex min-h-screen w-full flex-col items-center justify-center px-4 py-10">
+    <main className="bg-page-wash ambient flex min-h-svh w-full flex-col items-center justify-center px-4 py-10">
       <div className="page-enter flex flex-col items-center">
         <AuthArt variant="welcome" />
         <h1 className="font-display mt-4 text-center text-3xl">{t('auth.welcomeBack')}</h1>

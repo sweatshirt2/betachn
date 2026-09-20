@@ -46,7 +46,7 @@ export function LockScreen({ onUnlocked }: { onUnlocked: () => void }) {
   }
 
   return (
-    <main className="bg-cream text-ink flex min-h-screen items-center justify-center px-4">
+    <main className="bg-cream text-ink flex min-h-svh items-center justify-center px-4">
       <Card className="w-full max-w-sm">
         <h1 className="font-display text-center text-2xl">
           <Glyph name="lock" className="text-terracotta mr-1.5 inline-block h-6 w-6 align-[-4px]" aria-hidden /> {t('lock.title')}

@@ -338,8 +338,9 @@ async function main(): Promise<void> {
       name: 'Detergent',
       quantityText: '1 bottle',
       sourceSupplyId: detergent?.id ?? null,
+      sortKey: 1000,
     },
-    { householdId: household.id, name: 'Teff flour', quantityText: '5 kg', category: 'Market' },
+    { householdId: household.id, name: 'Teff flour', quantityText: '5 kg', category: 'Market', sortKey: 2000 },
   ]);
 
   // ── Activity story (localized keys, never prose) ─────────────────────────

@@ -19,9 +19,16 @@ import { Button } from "./Button";
  * - Reduced-motion respected via the existing motion utilities (transition
  *   only; no confetti-grade theatrics).
  *
- * Anchoring is deliberately simple (getBoundingClientRect at step start +
- * window resize re-measure) — coach marks run once, on calm screens, so a
- * full popper engine would be weight without benefit.
+ * Anchoring is deliberately simple (getBoundingClientRect per step) — coach
+ * marks run once, on calm screens, so a full popper engine would be weight
+ * without benefit. But the rect is a moving target in practice: page scroll,
+ * browser URL-bar show/hide and the on-screen keyboard all shift anchors.
+ * Measurement therefore re-runs on scroll (captured, so inner scrollers
+ * count), on `visualViewport` resize/scroll (browser chrome + keyboard),
+ * on window resize, and is rAF-batched so overlapping events cost one
+ * measure. While the tour is active the body is also scroll-locked —
+ * belt and suspenders: the lock stops *intentional* page scrolling from
+ * dragging anchors away mid-step, the listeners catch everything else.
  */
 export type CoachStep = {
   /** DOM id of the element to spotlight (must exist on the current page). */
@@ -54,13 +61,33 @@ export function CoachMark({
 
   useEffect(() => {
     if (!step) return;
+    let raf = 0;
     const measure = () => {
-      const el = document.getElementById(step.anchorId);
-      setRect(el ? el.getBoundingClientRect() : null);
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const el = document.getElementById(step.anchorId);
+        setRect(el ? el.getBoundingClientRect() : null);
+      });
     };
     measure();
+    // Capture-phase scroll catches scrolls of ANY element (the document,
+    // inner overflow containers), not just the window.
+    window.addEventListener("scroll", measure, true);
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    window.visualViewport?.addEventListener("resize", measure);
+    window.visualViewport?.addEventListener("scroll", measure);
+    // Scroll-lock the page while the tour is active so a stray drag can't
+    // leave the spotlight behind (restored on cleanup).
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", measure, true);
+      window.removeEventListener("resize", measure);
+      window.visualViewport?.removeEventListener("resize", measure);
+      window.visualViewport?.removeEventListener("scroll", measure);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [step]);
 
   useEffect(() => {
