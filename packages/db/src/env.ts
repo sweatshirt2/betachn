@@ -22,6 +22,22 @@ const envSchema = z.object({
 
 export type DbEnv = z.infer<typeof envSchema>;
 
+/**
+ * Postgres connection-string warning. `sslmode=no-verify` (and its alias
+ * `no-verify`) disables certificate validation entirely — acceptable for a
+ * throwaway dev database, dangerous against any shared/hosted Postgres.
+ * Surfaced loudly at boot so it can never slip through silently.
+ */
+function warnOnInsecureSsl(url: URL): void {
+  const mode = url.searchParams.get('sslmode');
+  if (mode === 'no-verify' || mode === 'none') {
+    console.warn(
+      `WARNING: DATABASE_URL uses sslmode=${mode} — server identity is NOT verified. ` +
+        'Use only for local development; hosted databases must use sslmode=require or stricter.',
+    );
+  }
+}
+
 /** Parses and validates the environment at boot; throws (fail-fast) when invalid. */
 export function readDbEnv(env: NodeJS.ProcessEnv = process.env): DbEnv {
   const parsed = envSchema.safeParse(env);
@@ -29,6 +45,7 @@ export function readDbEnv(env: NodeJS.ProcessEnv = process.env): DbEnv {
     const detail = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');
     throw new Error(`Invalid environment variables — ${detail}. See .env.example.`);
   }
+  warnOnInsecureSsl(new URL(parsed.data.DATABASE_URL));
   return parsed.data;
 }
 
