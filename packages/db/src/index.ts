@@ -10,4 +10,5 @@ export {
   systemClock,
 } from './adapters';
 export { pgUnitOfWork } from './unit-of-work';
+export { runDataBackfills } from './data-migrations';
 export * from './models';
