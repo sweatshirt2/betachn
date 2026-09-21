@@ -126,7 +126,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const unreadCount = (notifications.data?.notifications ?? []).filter(
     (n) => n.readAt === null,
   ).length;
-  const signedIn = useSelector(hasSession);
+  const signedIn = useSelector((state: RootState) => hasSession(state.auth));
 
   const chromeless = CHROMELESS.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
