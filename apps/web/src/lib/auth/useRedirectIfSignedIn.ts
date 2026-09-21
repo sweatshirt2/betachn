@@ -22,7 +22,7 @@ import { readPasscodeGateState } from '@/lib/device/passcodeGate';
  */
 export function useRedirectIfSignedIn(): void {
   const router = useRouter();
-  const signedIn = useSelector(hasSession);
+  const signedIn = useSelector((state: RootState) => hasSession(state.auth));
   const sessionValidated = useSelector((state: RootState) => state.auth.sessionValidated);
   const reduxReady = useSelector((state: RootState) => state.auth._persist?.rehydrated ?? false);
 
